@@ -55,17 +55,35 @@
 // export default App;
 
 
+// import { BrowserRouter, Routes, Route } from "react-router-dom";
+// import WelcomePage from "./assets/pages/public/WelcomePage";
+
+
+// function App() {
+//   return (
+//     <BrowserRouter>
+//       <Routes>
+//         <Route path="/" element={<WelcomePage />} />
+      
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
+
+// export default App;
+
+
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import WelcomePage from "./assets/pages/public/WelcomePage";
-
+import HomePage from "./assets/pages/public/HomePage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<WelcomePage />} />
-        {/* <Route path="/login" element={<Login />} /> */}
-        {/* <Route path="/register" element={<Register />} /> */}
+        <Route path="/home" element={<HomePage />} />
       </Routes>
     </BrowserRouter>
   );
