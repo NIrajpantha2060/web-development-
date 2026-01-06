@@ -78,6 +78,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import WelcomePage from "./assets/pages/public/WelcomePage";
 import HomePage from "./assets/pages/public/HomePage";
 import SignUp from "./assets/pages/public/SignUp";
+import Login from "./assets/pages/public/Login";
 
 function App() {
   return (
@@ -86,6 +87,7 @@ function App() {
         <Route path="/" element={<WelcomePage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/signup" element={<SignUp />} />
+         <Route path="/login" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );

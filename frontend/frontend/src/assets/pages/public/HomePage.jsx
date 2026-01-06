@@ -715,7 +715,8 @@ const HomePage = () => {
   };
 
   const handleLogin = () => {
-    console.log('Navigate to Login');
+    navigate('/login');
+
     // Add navigation logic: navigate('/login');
   };
 

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import '../../css/SignUp.css';
+import { useNavigate } from 'react-router-dom';
+
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +11,9 @@ const SignUp = () => {
     password: '',
     confirmPassword: ''
   });
+
+  const navigate = useNavigate();
+
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -171,7 +176,8 @@ const SignUp = () => {
   };
 
   const handleLogin = () => {
-    console.log('Navigate to Login');
+    
+    navigate('/Login');
     // Add navigation to login page
   };
 
