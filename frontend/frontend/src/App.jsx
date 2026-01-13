@@ -37,6 +37,7 @@ import HomePage from "./assets/pages/public/HomePage";
 import SignUp from "./assets/pages/public/SignUp";
 import Login from "./assets/pages/public/Login";
 import Dashboard from "./assets/pages/private/Dashboard";
+import AdminDashboard from "./assets/pages/private/AdminDashboard";
 
 function App() {
   return (
@@ -57,6 +58,15 @@ function App() {
               </ProtectedRoute>
             } 
           />
+
+          <Route 
+  path="/admin"
+  element={
+    <ProtectedRoute>
+      <AdminDashboard />
+    </ProtectedRoute>
+  }
+/>
         </Routes>
       </AuthProvider>
     </BrowserRouter>

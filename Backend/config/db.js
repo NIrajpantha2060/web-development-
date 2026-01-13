@@ -13,7 +13,4 @@ const sequelize = new Sequelize(
 
 module.exports = sequelize;
 
-// sir used axios
-
-// i will do npm install axios 
 

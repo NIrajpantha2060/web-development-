@@ -150,6 +150,48 @@
   border-color: #EF4444;
 }
 
+/* Password Input Wrapper with Eye Icon - NEW */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper .form-input {
+  width: 100%;
+  padding-right: 3rem;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.password-toggle-icon:hover {
+  color: #4DA3FF;
+}
+
+.password-toggle-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.password-toggle-icon:focus {
+  outline: 2px solid #4DA3FF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* Password Options - INCREASED */
 .password-options {
   display: flex;
@@ -233,4 +275,290 @@
 .signup-link:hover {
   color: #2563EB;
   text-decoration: underline;
+}
+
+/* ============================================ */
+/* RESPONSIVE DESIGN - MOBILE & TABLET */
+/* ============================================ */
+
+/* Tablet and below (iPad, smaller screens) */
+@media (max-width: 1024px) {
+  .login-left {
+    width: 50%;
+  }
+  
+  .login-right {
+    width: 50%;
+  }
+  
+  .logo-section {
+    padding: 28px 35px;
+    gap: 20px;
+  }
+  
+  .login-logo {
+    height: 100px;
+    width: 100px;
+  }
+  
+  .login-title {
+    font-size: 1.8rem;
+  }
+  
+  .login-subtitle {
+    font-size: 1rem;
+  }
+  
+  .form-wrapper {
+    padding: 30px 35px;
+  }
+}
+
+/* Mobile Landscape & Small Tablets */
+@media (max-width: 768px) {
+  .login-page {
+    flex-direction: column;
+  }
+  
+  .login-left {
+    width: 100%;
+    min-height: 250px;
+    max-height: 300px;
+  }
+  
+  .login-right {
+    width: 100%;
+    min-height: calc(100vh - 300px);
+  }
+  
+  .logo-section {
+    padding: 24px 30px;
+    gap: 18px;
+  }
+  
+  .login-logo {
+    height: 85px;
+    width: 85px;
+  }
+  
+  .login-title {
+    font-size: 1.6rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.95rem;
+  }
+  
+  .form-wrapper {
+    padding: 30px;
+  }
+  
+  .form-content {
+    max-width: 100%;
+  }
+}
+
+/* Mobile Portrait */
+@media (max-width: 576px) {
+  .login-left {
+    min-height: 200px;
+    max-height: 220px;
+  }
+  
+  .login-right {
+    min-height: calc(100vh - 220px);
+  }
+  
+  .logo-section {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+    gap: 12px;
+  }
+  
+  .login-logo {
+    height: 70px;
+    width: 70px;
+  }
+  
+  .logo-title-section {
+    align-items: center;
+  }
+  
+  .login-title {
+    font-size: 1.4rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .form-wrapper {
+    padding: 24px 20px;
+  }
+  
+  .login-form {
+    gap: 1.3rem;
+  }
+  
+  .form-label {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-input {
+    padding: 0.9rem 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .password-input-wrapper .form-input {
+    padding-right: 2.8rem;
+  }
+  
+  .password-toggle-icon {
+    right: 0.8rem;
+  }
+  
+  .password-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 0.5rem;
+  }
+  
+  .forgot-password-link {
+    font-size: 0.95rem;
+  }
+  
+  .checkbox-label {
+    font-size: 0.95rem;
+  }
+  
+  .login-button {
+    padding: 1rem;
+    font-size: 1.05rem;
+    margin-top: 0.8rem;
+  }
+  
+  .signup-text {
+    font-size: 0.95rem;
+    margin-top: 1.2rem;
+  }
+  
+  .error-text {
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 380px) {
+  .login-left {
+    min-height: 180px;
+    max-height: 180px;
+  }
+  
+  .logo-section {
+    padding: 16px;
+  }
+  
+  .login-logo {
+    height: 60px;
+    width: 60px;
+  }
+  
+  .login-title {
+    font-size: 1.25rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .form-wrapper {
+    padding: 20px 16px;
+  }
+  
+  .login-form {
+    gap: 1.2rem;
+  }
+  
+  .form-input {
+    padding: 0.85rem 0.9rem;
+    font-size: 0.9rem;
+  }
+  
+  .password-input-wrapper .form-input {
+    padding-right: 2.5rem;
+  }
+  
+  .password-toggle-icon {
+    right: 0.7rem;
+  }
+  
+  .login-button {
+    padding: 0.95rem;
+    font-size: 1rem;
+  }
+}
+
+/* Landscape Mode for Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-page {
+    flex-direction: row;
+  }
+  
+  .login-left {
+    width: 40%;
+    min-height: 100vh;
+    max-height: none;
+  }
+  
+  .login-right {
+    width: 60%;
+    min-height: 100vh;
+  }
+  
+  .logo-section {
+    flex-direction: row;
+    padding: 16px 24px;
+    gap: 16px;
+  }
+  
+  .login-logo {
+    height: 50px;
+    width: 50px;
+  }
+  
+  .login-title {
+    font-size: 1.2rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .form-wrapper {
+    padding: 20px 30px;
+  }
+  
+  .login-form {
+    gap: 1rem;
+  }
+  
+  .form-input {
+    padding: 0.7rem 0.9rem;
+  }
+  
+  .password-input-wrapper .form-input {
+    padding-right: 2.5rem;
+  }
+  
+  .login-button {
+    padding: 0.8rem;
+    margin-top: 0.5rem;
+  }
+  
+  .signup-text {
+    margin-top: 1rem;
+  }
 }

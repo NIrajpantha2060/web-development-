@@ -161,6 +161,48 @@
   font-weight: 400;
 }
 
+/* Password Input Wrapper with Eye Icon - NEW */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper .form-input {
+  width: 100%;
+  padding-right: 3rem;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.password-toggle-icon:hover {
+  color: #4DA3FF;
+}
+
+.password-toggle-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.password-toggle-icon:focus {
+  outline: 2px solid #4DA3FF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* Checkbox */
 .form-checkbox {
   display: flex;
@@ -208,6 +250,11 @@
 
 .signup-button:active {
   transform: translateY(0);
+}
+
+.signup-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Login Link */
@@ -302,6 +349,14 @@
   .signup-form {
     gap: 1rem;
   }
+
+  .password-input-wrapper .form-input {
+    padding-right: 2.8rem;
+  }
+
+  .password-toggle-icon {
+    right: 0.8rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -329,6 +384,14 @@
   .form-input {
     padding: 0.75rem 0.85rem;
     font-size: 0.95rem;
+  }
+
+  .password-input-wrapper .form-input {
+    padding-right: 2.5rem;
+  }
+
+  .password-toggle-icon {
+    right: 0.7rem;
   }
 
   .signup-button {
