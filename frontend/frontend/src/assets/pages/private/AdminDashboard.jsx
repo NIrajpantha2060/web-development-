@@ -1,16 +1,18 @@
 import React from "react";
 import { useAuth } from "../../../context/AuthContext";
+import { useNavigate } from 'react-router-dom';
 import '../../css/Dashboard.css';
 import '../../css/AdminDashboard.css';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="admin-container">
       <header className="admin-header">
         <h1>Lift Nepal – Admin Panel</h1>
-        <button onClick={logout} className="logout-btn">
+        <button onClick={() => { logout(); navigate('/login'); }} className="logout-btn">
           Logout
         </button>
       </header>
