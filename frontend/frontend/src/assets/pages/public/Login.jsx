@@ -1,13 +1,13 @@
 
 
 
+
 // import React, { useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
-// import { FiEye, FiEyeOff } from 'react-icons/fi'; // ✅ Eye icons
+// import { FiEye, FiEyeOff } from 'react-icons/fi';
 // import '../../css/Login.css';
 // import { useAuth } from "../../../context/AuthContext";
 // import { authAPI } from "../../../services/api";
-
 
 // const Login = () => {
 //   const navigate = useNavigate();
@@ -77,98 +77,45 @@
 //     }
 //   };
 
-// //   const handleSubmit = async (e) => {
-// //     e.preventDefault();
-    
-// //     if (!validateForm()) {
-// //       return;
-// //     }
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
 
-// //     setLoading(true);
-// //     setApiError('');
-
-// //     try {
-// //       // Call backend login API
-// //       const response = await authAPI.login({
-// //         email: formData.email,
-// //         password: formData.password,
-// //       });
-
-// //       // Store token and user data using AuthContext
-// //       login(response.user, response.token);
-
-// //       // Show success message
-// //       alert(`Welcome back, ${response.user.username}!`);
-      
-      
-// //       // Redirect to dashboard
-// //       // Store token and user data using AuthContext
-// // login(response.user, response.token);
-
-// const handleSubmit = async (e) => {
-//   e.preventDefault();
-
-//   if (!validateForm()) return;
-
-//   setLoading(true);
-//   setApiError('');
-
-//   try {
-//     const response = await authAPI.login({
-//       email: formData.email,
-//       password: formData.password,
-//     });
-
-//     // ✅ save user + token
-//     login(response.user, response.token);
-
-//     alert(`Welcome back, ${response.user.username}!`);
-
-//     // ✅ ROLE BASED REDIRECT (THIS IS THE KEY)
-//     if (response.user.role === "admin") {
-//       navigate("/admin");
-//     } else {
-//       navigate("/dashboard");
+//     if (!validateForm()) {
+//       return;
 //     }
 
-//   } catch (error) {
-//     console.error("Login error:", error);
+//     setLoading(true);
+//     setApiError('');
 
-//     if (error.response?.data?.message) {
-//       setApiError(error.response.data.message);
-//     } else if (error.message === "Network Error") {
-//       setApiError("Cannot connect to server. Please ensure backend is running.");
-//     } else {
-//       setApiError("Login failed. Please try again.");
-//     }
-//   } finally {
-//     setLoading(false);
-//   }
-// };
+//     try {
+//       const response = await authAPI.login({
+//         email: formData.email,
+//         password: formData.password,
+//       });
 
+//       // Save user + token
+//       login(response.user, response.token);
 
-// // Show success message
-// alert(`Welcome back, ${response.user.username}!`);
+//       alert(`Welcome back, ${response.user.username}!`);
 
-// // ✅ ROLE BASED REDIRECT
-// if (response.user.role === "admin") {
-//   navigate("/admin");
-// } else {
-//   navigate("/dashboard");
-// }
+//       // Role-based redirect
+//       if (response.user.role === "admin") {
+//         navigate("/admin");
+//       } else {
+//         navigate("/dashboard");
+//       }
 
-      
 //     } catch (error) {
-//       console.error('Login error:', error);
-      
+//       console.error("Login error:", error);
+
 //       if (error.response?.data?.message) {
 //         setApiError(error.response.data.message);
-//       } else if (error.message === 'Network Error') {
-//         setApiError('Cannot connect to server. Please ensure backend is running.');
+//       } else if (error.message === "Network Error") {
+//         setApiError("Cannot connect to server. Please ensure backend is running.");
 //       } else {
-//         setApiError('Login failed. Please try again.');
+//         setApiError("Login failed. Please try again.");
 //       }
-      
+//     } finally {
 //       setLoading(false);
 //     }
 //   };
@@ -417,7 +364,7 @@ const Login = () => {
   };
 
   const handleForgotPassword = () => {
-    alert('Forgot password feature coming soon!');
+    navigate('/forget-password'); // UPDATED: Navigate to forget password page
   };
 
   return (
