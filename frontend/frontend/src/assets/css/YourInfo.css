@@ -1,0 +1,290 @@
+/* Your Info Page - Matching ProfileDropdown Theme */
+.your-info-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #F0F7FF, #E6F7F5);
+  padding: 2rem;
+}
+
+.your-info-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.your-info-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #FFFFFF;
+  border: 2px solid #E4E7EB;
+  border-radius: 0.75rem;
+  color: #0B3C5D;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(11, 60, 93, 0.08);
+}
+
+.back-button:hover {
+  transform: translateX(-4px);
+  border-color: #4DA3FF;
+  background: #F0F7FF;
+  box-shadow: 0 4px 12px rgba(77, 163, 255, 0.15);
+}
+
+.back-button svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+}
+
+.your-info-header h1 {
+  color: #0B3C5D;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Info Card - Matching ProfileDropdown Style */
+.info-card {
+  background: #FFFFFF;
+  border-radius: 0.75rem;
+  padding: 2.5rem;
+  box-shadow: 0 8px 32px rgba(11, 60, 93, 0.2);
+  border: 1px solid #E4E7EB;
+}
+
+/* Avatar Section */
+.avatar-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #E4E7EB;
+}
+
+.large-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4DA3FF, #0B3C5D);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(77, 163, 255, 0.3);
+}
+
+/* Info Section */
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-item label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #52606D;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #F0F7FF;
+  border-radius: 0.5rem;
+  border: 1px solid #E4E7EB;
+  transition: all 0.2s ease;
+}
+
+.info-value:hover {
+  background: #E6F7F5;
+  border-color: #4DA3FF;
+}
+
+.info-value svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #4DA3FF;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.info-value span {
+  font-size: 1.1rem;
+  color: #1F2933;
+  font-weight: 500;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.375rem 1rem;
+  background: linear-gradient(135deg, #4DA3FF, #0B3C5D) !important;
+  color: #FFFFFF !important;
+  border-radius: 1.5rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 0.95rem;
+}
+
+.user-id {
+  font-family: 'Courier New', monospace;
+  color: #4DA3FF !important;
+  font-weight: 700;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #E4E7EB;
+}
+
+.edit-button,
+.change-password-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.edit-button svg,
+.change-password-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 2;
+}
+
+.edit-button {
+  background: linear-gradient(135deg, #4DA3FF, #0B3C5D);
+  color: #FFFFFF;
+  border-color: #4DA3FF;
+}
+
+.edit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(77, 163, 255, 0.4);
+}
+
+.change-password-button {
+  background: #FFFFFF;
+  color: #4DA3FF;
+  border-color: #4DA3FF;
+}
+
+.change-password-button:hover {
+  background: #4DA3FF;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(77, 163, 255, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .your-info-page {
+    padding: 1.5rem;
+  }
+
+  .your-info-header {
+    gap: 1rem;
+  }
+
+  .your-info-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .info-card {
+    padding: 2rem;
+  }
+
+  .large-avatar {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+  }
+
+  .info-value {
+    padding: 0.875rem 1rem;
+  }
+
+  .info-value span {
+    font-size: 1rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .edit-button,
+  .change-password-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .your-info-page {
+    padding: 1rem;
+  }
+
+  .your-info-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .back-button {
+    padding: 0.625rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .info-card {
+    padding: 1.5rem;
+  }
+
+  .large-avatar {
+    width: 90px;
+    height: 90px;
+    font-size: 2rem;
+  }
+
+  .info-item label {
+    font-size: 0.8rem;
+  }
+
+  .info-value {
+    padding: 0.75rem 0.875rem;
+  }
+
+  .info-value span {
+    font-size: 0.95rem;
+  }
+}

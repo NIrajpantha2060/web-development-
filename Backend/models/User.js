@@ -2,28 +2,6 @@
 // const sequelize = require("../config/db");
 
 // const User = sequelize.define("User", {
-//   fullName: {
-//     type: DataTypes.STRING,
-//     allowNull: false,
-//   },
-//   email: {
-//     type: DataTypes.STRING,
-//     allowNull: false,
-//     unique: true,
-//   },
-//   password: {
-//     type: DataTypes.STRING,
-//     allowNull: false,
-//   },
-// });
-
-// module.exports = User;
-
-
-// const { DataTypes } = require("sequelize");
-// const sequelize = require("../config/db");
-
-// const User = sequelize.define("User", {
 //   username: {
 //     type: DataTypes.STRING(30),
 //     allowNull: false,
@@ -48,12 +26,21 @@
 //     type: DataTypes.STRING,
 //     allowNull: false,
 //   },
+//   role: {
+//     type: DataTypes.STRING(20),
+//     allowNull: false,
+//     defaultValue: 'user',
+//     validate: {
+//       isIn: [['user', 'admin']]
+//     }
+//   }
 // }, {
 //   timestamps: true, // Adds createdAt and updatedAt
 //   tableName: 'users'
 // });
 
 // module.exports = User;
+
 
 
 const { DataTypes } = require("sequelize");
@@ -91,9 +78,14 @@ const User = sequelize.define("User", {
     validate: {
       isIn: [['user', 'admin']]
     }
+  },
+  profilePicture: {  
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    defaultValue: null
   }
 }, {
-  timestamps: true, // Adds createdAt and updatedAt
+  timestamps: true,
   tableName: 'users'
 });
 

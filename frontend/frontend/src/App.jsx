@@ -1,56 +1,6 @@
 
 
 
-// import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import { AuthProvider } from "./context/AuthContext";
-// import ProtectedRoute from "./assets/components/ProtectedRoute";
-// import WelcomePage from "./assets/pages/public/WelcomePage";
-// import HomePage from "./assets/pages/public/HomePage";
-// import SignUp from "./assets/pages/public/SignUp";
-// import Login from "./assets/pages/public/Login";
-// import Dashboard from "./assets/pages/private/Dashboard";
-// import AdminDashboard from "./assets/pages/private/AdminDashboard";
-
-// function App() {
-//   return (
-//     <BrowserRouter>
-//       <AuthProvider>
-//         <Routes>
-//           {/* Public Routes */}
-//           <Route path="/" element={<WelcomePage />} />
-//           <Route path="/home" element={<HomePage />} />
-//           <Route path="/signup" element={<SignUp />} />
-//           <Route path="/login" element={<Login />} />
-          
-//           {/* Protected Dashboard Routes */}
-//           <Route 
-//             path="/dashboard/*" 
-//             element={
-//               <ProtectedRoute>
-//                 <Dashboard />
-//               </ProtectedRoute>
-//             } 
-//           />
-
-//           {/* Admin Route */}
-//           <Route 
-//             path="/admin"
-//             element={
-//               <ProtectedRoute>
-//                 <AdminDashboard />
-//               </ProtectedRoute>
-//             }
-//           />
-//         </Routes>
-//       </AuthProvider>
-//     </BrowserRouter>
-//   );
-// }
-
-// export default App;
-
-
-
 // import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // import { AuthProvider, useAuth } from "./context/AuthContext";
 // import ProtectedRoute from "./assets/components/ProtectedRoute";
@@ -58,6 +8,8 @@
 // import HomePage from "./assets/pages/public/HomePage";
 // import SignUp from "./assets/pages/public/SignUp";
 // import Login from "./assets/pages/public/Login";
+// import ForgetPassword from "./assets/pages/public/ForgetPassword"; // ADD THIS
+// import ResetPassword from "./assets/pages/public/ResetPassword"; // ADD THIS
 // import Dashboard from "./assets/pages/private/Dashboard";
 // import AdminDashboard from "./assets/pages/private/AdminDashboard";
 
@@ -105,6 +57,8 @@
 //           <Route path="/home" element={<HomePage />} />
 //           <Route path="/signup" element={<SignUp />} />
 //           <Route path="/login" element={<Login />} />
+//           <Route path="/forget-password" element={<ForgetPassword />} /> {/* ADD THIS */}
+//           <Route path="/reset-password/:token" element={<ResetPassword />} /> {/* ADD THIS */}
           
 //           {/* Protected Dashboard Routes */}
 //           <Route 
@@ -134,7 +88,6 @@
 // export default App;
 
 
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./assets/components/ProtectedRoute";
@@ -142,10 +95,11 @@ import WelcomePage from "./assets/pages/public/WelcomePage";
 import HomePage from "./assets/pages/public/HomePage";
 import SignUp from "./assets/pages/public/SignUp";
 import Login from "./assets/pages/public/Login";
-import ForgetPassword from "./assets/pages/public/ForgetPassword"; // ADD THIS
-import ResetPassword from "./assets/pages/public/ResetPassword"; // ADD THIS
+import ForgetPassword from "./assets/pages/public/ForgetPassword";
+import ResetPassword from "./assets/pages/public/ResetPassword";
 import Dashboard from "./assets/pages/private/Dashboard";
 import AdminDashboard from "./assets/pages/private/AdminDashboard";
+import YourInfo from "./assets/pages/private/YourInfo"; // ✅ NEW IMPORT
 
 // Smart Root Component - Redirects based on authentication
 function RootRedirect() {
@@ -191,8 +145,8 @@ function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/forget-password" element={<ForgetPassword />} /> {/* ADD THIS */}
-          <Route path="/reset-password/:token" element={<ResetPassword />} /> {/* ADD THIS */}
+          <Route path="/forget-password" element={<ForgetPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           
           {/* Protected Dashboard Routes */}
           <Route 
@@ -200,6 +154,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* ✅ NEW: Your Info Route */}
+          <Route 
+            path="/your-info" 
+            element={
+              <ProtectedRoute>
+                <YourInfo />
               </ProtectedRoute>
             } 
           />
