@@ -1,3 +1,5 @@
+
+
 // const { DataTypes } = require("sequelize");
 // const sequelize = require("../config/db");
 
@@ -33,15 +35,18 @@
 //     validate: {
 //       isIn: [['user', 'admin']]
 //     }
+//   },
+//   profilePicture: {  
+//     type: DataTypes.STRING(255),
+//     allowNull: true,
+//     defaultValue: null
 //   }
 // }, {
-//   timestamps: true, // Adds createdAt and updatedAt
+//   timestamps: true,
 //   tableName: 'users'
 // });
 
 // module.exports = User;
-
-
 
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
@@ -83,10 +88,34 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING(255),
     allowNull: true,
     defaultValue: null
+  },
+  isVerifiedUser: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'True if user has verified citizenship (green tick)'
+  },
+  isVerifiedRider: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'True if user has verified driving license (purple tick)'
   }
 }, {
   timestamps: true,
   tableName: 'users'
 });
+
+// ✅ IMPORTANT: Define association method
+User.associate = (models) => {
+  User.hasMany(models.Verification, { 
+    foreignKey: 'userId',
+    as: 'verifications'
+  });
+  User.hasMany(models.Notification, { 
+    foreignKey: 'userId',
+    as: 'notifications'
+  });
+};
 
 module.exports = User;

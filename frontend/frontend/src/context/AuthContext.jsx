@@ -63,8 +63,15 @@
 //     return !!token && !!user;
 //   };
 
+//   // ✅ ADD this function to update user data
+//   const updateUser = (userData) => {
+//     setUser(userData);
+//     localStorage.setItem('user', JSON.stringify(userData));
+//   };
+
 //   const value = {
 //     user,
+//     setUser: updateUser,  // ✅ Export setUser
 //     token,
 //     login,
 //     logout,
@@ -90,11 +97,11 @@ import axios from 'axios';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is already logged in on app load
+  // ✅ FIX: Check if user is already logged in on app load
   useEffect(() => {
     const validateStoredToken = async () => {
       const storedToken = localStorage.getItem('token');
@@ -102,18 +109,19 @@ export const AuthProvider = ({ children }) => {
       
       if (storedToken && storedUser) {
         try {
-          // Verify token is still valid with backend
-          const response = await axios.get('http://localhost:5000/api/auth/verify', {
+          // ✅ FIX: Fetch fresh user data from server instead of using stale localStorage
+          const response = await axios.get('http://localhost:5000/api/user/info', {
             headers: {
               Authorization: `Bearer ${storedToken}`
             }
           });
 
-          // Token is valid, restore session
-          if (response.data.valid) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
-          }
+          // Token is valid and we have fresh user data
+          setToken(storedToken);
+          setUserState(response.data.user);
+          
+          // ✅ FIX: Update localStorage with fresh data
+          localStorage.setItem('user', JSON.stringify(response.data.user));
         } catch (error) {
           // Token expired or invalid - clear storage
           console.log('Token validation failed, logging out:', error.response?.data?.message);
@@ -129,14 +137,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData, authToken) => {
-    setUser(userData);
+    setUserState(userData);
     setToken(authToken);
     localStorage.setItem('token', authToken);
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
-    setUser(null);
+    setUserState(null);
     setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -146,15 +154,16 @@ export const AuthProvider = ({ children }) => {
     return !!token && !!user;
   };
 
-  // ✅ ADD this function to update user data
+  // ✅ FIX: Update user data in both state and localStorage
   const updateUser = (userData) => {
-    setUser(userData);
+    console.log('Updating user data:', userData); // Debug log
+    setUserState(userData);
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const value = {
     user,
-    setUser: updateUser,  // ✅ Export setUser
+    setUser: updateUser,
     token,
     login,
     logout,

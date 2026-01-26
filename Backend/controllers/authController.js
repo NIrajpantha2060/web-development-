@@ -1,6 +1,5 @@
 
 
-
 // const User = require("../models/User");
 // const bcrypt = require("bcryptjs");
 // const jwt = require("jsonwebtoken");
@@ -59,6 +58,8 @@
 //         username: user.username,
 //         phone: user.phone,
 //         email: user.email,
+//         role: user.role,
+//         createdAt: user.createdAt, // ✅ ADDED
 //       },
 //       token,
 //     });
@@ -105,7 +106,8 @@
 //         username: user.username,
 //         phone: user.phone,
 //         email: user.email,
-//          role: user.role,
+//         role: user.role,
+//         createdAt: user.createdAt, // ✅ ADDED
 //       },
 //       token,
 //     });
@@ -116,6 +118,7 @@
 // };
 
 // module.exports = { signup, login };
+
 
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
@@ -161,9 +164,13 @@ const signup = async (req, res) => {
       password: hashedPassword,
     });
 
-    // Generate token
+    // ✅ Generate token WITH ROLE
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { 
+        id: user.id, 
+        email: user.email,
+        role: user.role // ✅ ADDED ROLE
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -176,7 +183,7 @@ const signup = async (req, res) => {
         phone: user.phone,
         email: user.email,
         role: user.role,
-        createdAt: user.createdAt, // ✅ ADDED
+        createdAt: user.createdAt,
       },
       token,
     });
@@ -209,9 +216,13 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Generate JWT token
+    // ✅ Generate JWT token WITH ROLE
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { 
+        id: user.id, 
+        email: user.email,
+        role: user.role // ✅ ADDED ROLE
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -224,7 +235,7 @@ const login = async (req, res) => {
         phone: user.phone,
         email: user.email,
         role: user.role,
-        createdAt: user.createdAt, // ✅ ADDED
+        createdAt: user.createdAt,
       },
       token,
     });

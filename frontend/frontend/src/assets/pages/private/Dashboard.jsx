@@ -1,12 +1,187 @@
 
 
 
-// import { useState } from 'react';
+
+// import { useState, useRef } from 'react';
 // import RideCard from '../../components/RideCard';
 // import ProfileDropdown from '../../components/ProfileDropdown';
 // import { useAuth } from '../../../context/AuthContext';
 // import { userAPI } from '../../../services/api';
 // import '../../css/Dashboard.css';
+
+// // ✅ Upload Profile Page Component
+// const UploadProfilePage = () => {
+//   const { user, setUser } = useAuth();
+//   const [selectedFile, setSelectedFile] = useState(null);
+//   const [previewUrl, setPreviewUrl] = useState(null);
+//   const [uploading, setUploading] = useState(false);
+//   const [message, setMessage] = useState({ type: '', text: '' });
+
+//   const getProfilePictureUrl = () => {
+//     if (user?.profilePicture) {
+//       return `http://localhost:5000${user.profilePicture}`;
+//     }
+//     return null;
+//   };
+
+//   const handleFileSelect = (e) => {
+//     const file = e.target.files[0];
+//     if (file) {
+//       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+//       if (!validTypes.includes(file.type)) {
+//         setMessage({ type: 'error', text: 'Please select a valid image file (JPEG, PNG, GIF, WEBP)' });
+//         return;
+//       }
+
+//       if (file.size > 5 * 1024 * 1024) {
+//         setMessage({ type: 'error', text: 'File size must be less than 5MB' });
+//         return;
+//       }
+
+//       setSelectedFile(file);
+//       setPreviewUrl(URL.createObjectURL(file));
+//       setMessage({ type: '', text: '' });
+//     }
+//   };
+
+//   const handleUpload = async () => {
+//     if (!selectedFile) {
+//       setMessage({ type: 'error', text: 'Please select a file first' });
+//       return;
+//     }
+
+//     setUploading(true);
+//     setMessage({ type: '', text: '' });
+
+//     try {
+//       await userAPI.uploadProfilePicture(selectedFile);
+      
+//       const updatedUserData = await userAPI.getInfo();
+//       setUser(updatedUserData.user);
+
+//       setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
+//       setSelectedFile(null);
+//       setPreviewUrl(null);
+      
+//       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+//     } catch (error) {
+//       console.error('Upload error:', error);
+//       setMessage({
+//         type: 'error',
+//         text: error.response?.data?.message || 'Failed to upload profile picture'
+//       });
+//     } finally {
+//       setUploading(false);
+//     }
+//   };
+
+//   const handleDelete = async () => {
+//     if (!user?.profilePicture) return;
+
+//     if (!window.confirm('Are you sure you want to delete your profile picture?')) {
+//       return;
+//     }
+
+//     setUploading(true);
+//     setMessage({ type: '', text: '' });
+
+//     try {
+//       await userAPI.deleteProfilePicture();
+      
+//       const updatedUserData = await userAPI.getInfo();
+//       setUser(updatedUserData.user);
+
+//       setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
+//       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+//     } catch (error) {
+//       console.error('Delete error:', error);
+//       setMessage({
+//         type: 'error',
+//         text: error.response?.data?.message || 'Failed to delete profile picture'
+//       });
+//     } finally {
+//       setUploading(false);
+//     }
+//   };
+
+//   const getInitials = (name) => {
+//     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+//   };
+
+//   return (
+//     <div className="upload-profile-page">
+//       <div className="page-header">
+//         <h1>Upload Profile Picture</h1>
+//         <p>Add or update your profile picture</p>
+//       </div>
+
+//       {message.text && (
+//         <div className={`update-message ${message.type}`}>
+//           {message.text}
+//         </div>
+//       )}
+
+//       <div className="form-container">
+//         <div className="profile-preview-section">
+//           <div className="current-profile">
+//             <h3>Current Profile Picture</h3>
+//             <div className="profile-picture-display">
+//               {getProfilePictureUrl() ? (
+//                 <img src={getProfilePictureUrl()} alt="Profile" className="profile-img" />
+//               ) : (
+//                 <div className="profile-avatar-large">
+//                   {getInitials(user?.username)}
+//                 </div>
+//               )}
+//             </div>
+//             {user?.profilePicture && (
+//               <button 
+//                 className="btn-delete" 
+//                 onClick={handleDelete}
+//                 disabled={uploading}
+//               >
+//                 Delete Current Picture
+//               </button>
+//             )}
+//           </div>
+
+//           {(previewUrl || selectedFile) && (
+//             <div className="preview-section">
+//               <h3>Preview</h3>
+//               <div className="profile-picture-display">
+//                 <img src={previewUrl} alt="Preview" className="profile-img" />
+//               </div>
+//             </div>
+//           )}
+//         </div>
+
+//         <div className="upload-section">
+//           <div className="form-group">
+//             <label>Select New Photo</label>
+//             <input 
+//               type="file" 
+//               className="form-input" 
+//               accept="image/*"
+//               onChange={handleFileSelect}
+//               disabled={uploading}
+//             />
+//             <small className="form-help">
+//               Accepted formats: JPEG, PNG, GIF, WEBP (Max size: 5MB)
+//             </small>
+//           </div>
+
+//           <button 
+//             className="btn-submit" 
+//             onClick={handleUpload}
+//             disabled={!selectedFile || uploading}
+//           >
+//             {uploading ? 'Uploading...' : 'Upload Photo'}
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 // const Dashboard = () => {
 //   const { user, login } = useAuth();
@@ -365,21 +540,7 @@
 //         );
 
 //       case 'upload-profile':
-//         return (
-//           <div className="upload-profile-page">
-//             <div className="page-header">
-//               <h1>Upload Profile</h1>
-//               <p>Add your profile picture</p>
-//             </div>
-//             <div className="form-container">
-//               <div className="form-group">
-//                 <label>Upload New Photo</label>
-//                 <input type="file" className="form-input" accept="image/*" />
-//               </div>
-//               <button className="btn-submit">Upload Photo</button>
-//             </div>
-//           </div>
-//         );
+//         return <UploadProfilePage />;
 
 //       case 'verify-yourself':
 //         return (
@@ -584,11 +745,11 @@
 
 
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import RideCard from '../../components/RideCard';
 import ProfileDropdown from '../../components/ProfileDropdown';
 import { useAuth } from '../../../context/AuthContext';
-import { userAPI } from '../../../services/api';
+import { userAPI, verificationAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 
 // ✅ Upload Profile Page Component
@@ -626,65 +787,132 @@ const UploadProfilePage = () => {
     }
   };
 
+  // const handleUpload = async () => {
+  //   if (!selectedFile) {
+  //     setMessage({ type: 'error', text: 'Please select a file first' });
+  //     return;
+  //   }
+
+  //   setUploading(true);
+  //   setMessage({ type: '', text: '' });
+
+  //   try {
+  //     await userAPI.uploadProfilePicture(selectedFile);
+      
+  //     const updatedUserData = await userAPI.getInfo();
+  //     setUser(updatedUserData.user);
+
+  //     setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
+  //     setSelectedFile(null);
+  //     setPreviewUrl(null);
+      
+  //     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  //   } catch (error) {
+  //     console.error('Upload error:', error);
+  //     setMessage({
+  //       type: 'error',
+  //       text: error.response?.data?.message || 'Failed to upload profile picture'
+  //     });
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
   const handleUpload = async () => {
-    if (!selectedFile) {
-      setMessage({ type: 'error', text: 'Please select a file first' });
-      return;
-    }
+  if (!selectedFile) {
+    setMessage({ type: 'error', text: 'Please select a file first' });
+    return;
+  }
 
-    setUploading(true);
-    setMessage({ type: '', text: '' });
+  setUploading(true);
+  setMessage({ type: '', text: '' });
 
-    try {
-      await userAPI.uploadProfilePicture(selectedFile);
+  try {
+    await userAPI.uploadProfilePicture(selectedFile);
+    
+    // ✅ FIX: Fetch fresh user data from server
+    const updatedUserData = await userAPI.getInfo();
+    
+    // ✅ FIX: Update both state and localStorage
+    setUser(updatedUserData.user);
+
+    setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  } catch (error) {
+    console.error('Upload error:', error);
+    setMessage({
+      type: 'error',
+      text: error.response?.data?.message || 'Failed to upload profile picture'
+    });
+  } finally {
+    setUploading(false);
+  }
+};
+
+  // const handleDelete = async () => {
+  //   if (!user?.profilePicture) return;
+
+  //   if (!window.confirm('Are you sure you want to delete your profile picture?')) {
+  //     return;
+  //   }
+
+  //   setUploading(true);
+  //   setMessage({ type: '', text: '' });
+
+  //   try {
+  //     await userAPI.deleteProfilePicture();
       
-      const updatedUserData = await userAPI.getInfo();
-      setUser(updatedUserData.user);
+  //     const updatedUserData = await userAPI.getInfo();
+  //     setUser(updatedUserData.user);
 
-      setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
-      console.error('Upload error:', error);
-      setMessage({
-        type: 'error',
-        text: error.response?.data?.message || 'Failed to upload profile picture'
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
+  //     setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
+  //     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  //   } catch (error) {
+  //     console.error('Delete error:', error);
+  //     setMessage({
+  //       type: 'error',
+  //       text: error.response?.data?.message || 'Failed to delete profile picture'
+  //     });
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
 
   const handleDelete = async () => {
-    if (!user?.profilePicture) return;
+  if (!user?.profilePicture) return;
 
-    if (!window.confirm('Are you sure you want to delete your profile picture?')) {
-      return;
-    }
+  if (!window.confirm('Are you sure you want to delete your profile picture?')) {
+    return;
+  }
 
-    setUploading(true);
-    setMessage({ type: '', text: '' });
+  setUploading(true);
+  setMessage({ type: '', text: '' });
 
-    try {
-      await userAPI.deleteProfilePicture();
-      
-      const updatedUserData = await userAPI.getInfo();
-      setUser(updatedUserData.user);
+  try {
+    await userAPI.deleteProfilePicture();
+    
+    // ✅ FIX: Fetch fresh user data from server
+    const updatedUserData = await userAPI.getInfo();
+    
+    // ✅ FIX: Update both state and localStorage
+    setUser(updatedUserData.user);
 
-      setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
-      console.error('Delete error:', error);
-      setMessage({
-        type: 'error',
-        text: error.response?.data?.message || 'Failed to delete profile picture'
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
+    setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  } catch (error) {
+    console.error('Delete error:', error);
+    setMessage({
+      type: 'error',
+      text: error.response?.data?.message || 'Failed to delete profile picture'
+    });
+  } finally {
+    setUploading(false);
+  }
+};
 
   const getInitials = (name) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
@@ -765,6 +993,312 @@ const UploadProfilePage = () => {
   );
 };
 
+// ✅ Verify Yourself Page Component
+const VerifyYourselfPage = () => {
+  const { user, setUser } = useAuth();
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  
+  const [formData, setFormData] = useState({
+    citizenshipNumber: '',
+    drivingLicenseNumber: '',
+    verificationType: 'user_only'
+  });
+
+  const [files, setFiles] = useState({
+    citizenshipFront: null,
+    citizenshipBack: null,
+    drivingLicenseFront: null,
+    drivingLicenseBack: null
+  });
+
+  const [previews, setPreviews] = useState({
+    citizenshipFront: null,
+    citizenshipBack: null,
+    drivingLicenseFront: null,
+    drivingLicenseBack: null
+  });
+
+  useEffect(() => {
+    fetchVerificationStatus();
+  }, []);
+
+  const fetchVerificationStatus = async () => {
+    try {
+      const data = await verificationAPI.getStatus();
+      setVerificationStatus(data);
+    } catch (error) {
+      console.error('Error fetching verification status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e, fieldName) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        setMessage({ type: 'error', text: 'Please select a valid file (JPEG, PNG, PDF)' });
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        setMessage({ type: 'error', text: 'File size must be less than 10MB' });
+        return;
+      }
+
+      setFiles(prev => ({ ...prev, [fieldName]: file }));
+      
+      if (file.type.startsWith('image/')) {
+        setPreviews(prev => ({ ...prev, [fieldName]: URL.createObjectURL(file) }));
+      } else {
+        setPreviews(prev => ({ ...prev, [fieldName]: null }));
+      }
+      
+      setMessage({ type: '', text: '' });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!files.citizenshipFront || !files.citizenshipBack) {
+      setMessage({ type: 'error', text: 'Please upload both sides of your citizenship' });
+      return;
+    }
+
+    if ((formData.verificationType === 'rider' || formData.verificationType === 'both') &&
+        (!files.drivingLicenseFront || !files.drivingLicenseBack)) {
+      setMessage({ type: 'error', text: 'Please upload both sides of your driving license for rider verification' });
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const submitFormData = new FormData();
+      submitFormData.append('citizenshipNumber', formData.citizenshipNumber);
+      submitFormData.append('verificationType', formData.verificationType);
+      
+      if (files.citizenshipFront) submitFormData.append('citizenshipFront', files.citizenshipFront);
+      if (files.citizenshipBack) submitFormData.append('citizenshipBack', files.citizenshipBack);
+      
+      if (formData.drivingLicenseNumber) {
+        submitFormData.append('drivingLicenseNumber', formData.drivingLicenseNumber);
+      }
+      
+      if (files.drivingLicenseFront) submitFormData.append('drivingLicenseFront', files.drivingLicenseFront);
+      if (files.drivingLicenseBack) submitFormData.append('drivingLicenseBack', files.drivingLicenseBack);
+
+      await verificationAPI.submitVerification(submitFormData);
+      
+      setMessage({ type: 'success', text: 'Verification request submitted successfully! ✅' });
+      
+      setTimeout(() => {
+        fetchVerificationStatus();
+      }, 2000);
+    } catch (error) {
+      console.error('Verification submit error:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to submit verification request'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="verify-page">
+        <div className="loading-state">Loading...</div>
+      </div>
+    );
+  }
+
+  const getVerificationBadge = () => {
+    if (verificationStatus?.isVerifiedUser && verificationStatus?.isVerifiedRider) {
+      return <span className="badge badge-purple">✓ Fully Verified (User + Rider)</span>;
+    } else if (verificationStatus?.isVerifiedRider) {
+      return <span className="badge badge-purple">✓ Verified Rider</span>;
+    } else if (verificationStatus?.isVerifiedUser) {
+      return <span className="badge badge-green">✓ Verified User</span>;
+    } else {
+      return <span className="badge badge-gray">⚠ Unverified</span>;
+    }
+  };
+
+  const isPending = verificationStatus?.verification?.status === 'pending';
+  const isRejected = verificationStatus?.verification?.status === 'rejected';
+
+  return (
+    <div className="verify-page">
+      <div className="page-header">
+        <h1>Verify Yourself</h1>
+        <p>Upload your identity documents</p>
+        {getVerificationBadge()}
+      </div>
+
+      {message.text && (
+        <div className={`update-message ${message.type}`}>
+          {message.text}
+        </div>
+      )}
+
+      {isPending && (
+        <div className="info-banner pending">
+          <strong>⏳ Verification Pending</strong>
+          <p>Your verification request is under review. You'll be notified once it's processed.</p>
+        </div>
+      )}
+
+      {isRejected && (
+        <div className="info-banner rejected">
+          <strong>❌ Verification Rejected</strong>
+          <p><strong>Reason:</strong> {verificationStatus.verification.adminRemarks}</p>
+          <p>You can submit a new verification request below.</p>
+        </div>
+      )}
+
+      {!isPending && (
+        <form className="form-container" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Verification Type *</label>
+            <select 
+              name="verificationType"
+              className="form-input"
+              value={formData.verificationType}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="user_only">User Only (Citizenship only)</option>
+              <option value="rider">Rider Only (Citizenship + Driving License)</option>
+              <option value="both">Both User & Rider</option>
+            </select>
+            <small className="form-help">
+              • User Only: Request rides only (Green tick ✓)<br />
+              • Rider: Offer rides only (Purple tick ✓)<br />
+              • Both: Request and offer rides
+            </small>
+          </div>
+
+          <h3 style={{ marginTop: '2rem' }}>Citizenship Documents *</h3>
+          
+          <div className="form-group">
+            <label>Citizenship Number *</label>
+            <input 
+              type="text"
+              name="citizenshipNumber"
+              className="form-input"
+              value={formData.citizenshipNumber}
+              onChange={handleInputChange}
+              placeholder="Enter citizenship number"
+              required
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Citizenship Front *</label>
+              <input 
+                type="file"
+                className="form-input"
+                accept="image/*,application/pdf"
+                onChange={(e) => handleFileChange(e, 'citizenshipFront')}
+                required
+              />
+              {previews.citizenshipFront && (
+                <img src={previews.citizenshipFront} alt="Preview" className="file-preview" />
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>Citizenship Back *</label>
+              <input 
+                type="file"
+                className="form-input"
+                accept="image/*,application/pdf"
+                onChange={(e) => handleFileChange(e, 'citizenshipBack')}
+                required
+              />
+              {previews.citizenshipBack && (
+                <img src={previews.citizenshipBack} alt="Preview" className="file-preview" />
+              )}
+            </div>
+          </div>
+
+          {(formData.verificationType === 'rider' || formData.verificationType === 'both') && (
+            <>
+              <h3 style={{ marginTop: '2rem' }}>Driving License Documents *</h3>
+              
+              <div className="form-group">
+                <label>Driving License Number *</label>
+                <input 
+                  type="text"
+                  name="drivingLicenseNumber"
+                  className="form-input"
+                  value={formData.drivingLicenseNumber}
+                  onChange={handleInputChange}
+                  placeholder="Enter driving license number"
+                  required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Driving License Front *</label>
+                  <input 
+                    type="file"
+                    className="form-input"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => handleFileChange(e, 'drivingLicenseFront')}
+                    required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+                  />
+                  {previews.drivingLicenseFront && (
+                    <img src={previews.drivingLicenseFront} alt="Preview" className="file-preview" />
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Driving License Back *</label>
+                  <input 
+                    type="file"
+                    className="form-input"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => handleFileChange(e, 'drivingLicenseBack')}
+                    required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+                  />
+                  {previews.drivingLicenseBack && (
+                    <img src={previews.drivingLicenseBack} alt="Preview" className="file-preview" />
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          <button 
+            type="submit"
+            className="btn-submit"
+            disabled={submitting}
+          >
+            {submitting ? 'Submitting...' : 'Submit Verification Request'}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+};
+
+// ✅ Main Dashboard Component
 const Dashboard = () => {
   const { user, login } = useAuth();
   
@@ -776,7 +1310,6 @@ const Dashboard = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
   
-  // Form state for user info
   const [userFormData, setUserFormData] = useState({
     username: '',
     phone: ''
@@ -849,7 +1382,6 @@ const Dashboard = () => {
     setTimeout(() => setLogoShake(false), 500);
   };
 
-  // Handle form input changes
   const handleUserFormChange = (e) => {
     const { name, value } = e.target;
     setUserFormData(prev => ({
@@ -858,7 +1390,6 @@ const Dashboard = () => {
     }));
   };
 
-  // Handle update user info
   const handleUpdateUserInfo = async () => {
     setIsUpdating(true);
     setUpdateMessage('');
@@ -869,7 +1400,6 @@ const Dashboard = () => {
         phone: userFormData.phone
       });
 
-      // Update the user context with new data
       const token = localStorage.getItem('token');
       login(response.user, token);
 
@@ -1125,33 +1655,7 @@ const Dashboard = () => {
         return <UploadProfilePage />;
 
       case 'verify-yourself':
-        return (
-          <div className="verify-page">
-            <div className="page-header">
-              <h1>Verify Yourself</h1>
-              <p>Upload your identity documents</p>
-            </div>
-            <div className="form-container">
-              <div className="form-group">
-                <label>Document Type</label>
-                <select className="form-input">
-                  <option>Citizenship</option>
-                  <option>Driving License</option>
-                  <option>Passport</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Document Number</label>
-                <input type="text" className="form-input" />
-              </div>
-              <div className="form-group">
-                <label>Upload Document</label>
-                <input type="file" className="form-input" accept="image/*" />
-              </div>
-              <button className="btn-submit">Submit</button>
-            </div>
-          </div>
-        );
+        return <VerifyYourselfPage />;
 
       case 'payment-info':
         return (

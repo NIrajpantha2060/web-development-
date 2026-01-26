@@ -1,6 +1,7 @@
 
 
 
+
 // import axios from 'axios';
 
 // const API_BASE_URL = 'http://localhost:5000/api';
@@ -54,7 +55,7 @@
 //   },
 // };
 
-// // user API calls
+// // User API calls
 // export const userAPI = {
 //   // Get user info
 //   getInfo: async () => {
@@ -67,6 +68,7 @@
 //     return response.data;
 //   },
 
+//   // Update user info
 //   updateInfo: async (userData) => {
 //     const token = localStorage.getItem('token');
 //     const response = await axios.put(`${API_BASE_URL}/user/update`, userData, {
@@ -75,8 +77,34 @@
 //       }
 //     });
 //     return response.data;
+//   },
+
+//   // ✅ Upload profile picture
+//   uploadProfilePicture: async (file) => {
+//     const token = localStorage.getItem('token');
+//     const formData = new FormData();
+//     formData.append('profilePicture', file);
+
+//     const response = await axios.post(`${API_BASE_URL}/user/upload-profile`, formData, {
+//       headers: {
+//         'Authorization': `Bearer ${token}`,
+//         'Content-Type': 'multipart/form-data'
+//       }
+//     });
+//     return response.data;
+//   },
+
+//   // ✅ Delete profile picture
+//   deleteProfilePicture: async () => {
+//     const token = localStorage.getItem('token');
+//     const response = await axios.delete(`${API_BASE_URL}/user/delete-profile`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`
+//       }
+//     });
+//     return response.data;
 //   }
-// }
+// };
 
 // // Password API calls
 // export const passwordAPI = {
@@ -92,7 +120,6 @@
 // };
 
 // export default api;
-
 
 import axios from 'axios';
 
@@ -125,7 +152,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - logout user
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -149,34 +175,26 @@ export const authAPI = {
 
 // User API calls
 export const userAPI = {
-  // Get user info
   getInfo: async () => {
     const token = localStorage.getItem('token');
     const response = await axios.get(`${API_BASE_URL}/user/info`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
   },
 
-  // Update user info
   updateInfo: async (userData) => {
     const token = localStorage.getItem('token');
     const response = await axios.put(`${API_BASE_URL}/user/update`, userData, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
   },
 
-  // ✅ Upload profile picture
   uploadProfilePicture: async (file) => {
     const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('profilePicture', file);
-
     const response = await axios.post(`${API_BASE_URL}/user/upload-profile`, formData, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -186,13 +204,10 @@ export const userAPI = {
     return response.data;
   },
 
-  // ✅ Delete profile picture
   deleteProfilePicture: async () => {
     const token = localStorage.getItem('token');
     const response = await axios.delete(`${API_BASE_URL}/user/delete-profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
   }
@@ -209,6 +224,133 @@ export const passwordAPI = {
     const response = await api.post('/password/reset', data);
     return response.data;
   },
+};
+
+// ✅ NEW: Verification API calls
+export const verificationAPI = {
+  // Submit verification request
+  submitVerification: async (formData) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/verification/submit`, formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  // Get verification status
+  getStatus: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/verification/status`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get verification details
+  getDetails: async (id) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/verification/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  }
+};
+
+// ✅ NEW: Notification API calls
+export const notificationAPI = {
+  // Get all notifications
+  getAll: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/notifications`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get unread count
+  getUnreadCount: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/notifications/unread-count`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Mark as read
+  markAsRead: async (id) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(`${API_BASE_URL}/notifications/${id}/read`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Mark all as read
+  markAllAsRead: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(`${API_BASE_URL}/notifications/read-all`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Delete notification
+  delete: async (id) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(`${API_BASE_URL}/notifications/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  }
+};
+
+// ✅ NEW: Admin API calls
+export const adminAPI = {
+  // Get pending verifications
+  getPendingVerifications: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/admin/verifications/pending`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get all verifications
+  getAllVerifications: async (status = null) => {
+    const token = localStorage.getItem('token');
+    const url = status 
+      ? `${API_BASE_URL}/admin/verifications?status=${status}`
+      : `${API_BASE_URL}/admin/verifications`;
+    const response = await axios.get(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Approve verification
+  approveVerification: async (id, approvalType, remarks = '') => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      `${API_BASE_URL}/admin/verifications/${id}/approve`,
+      { approvalType, remarks },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // Reject verification
+  rejectVerification: async (id, remarks) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      `${API_BASE_URL}/admin/verifications/${id}/reject`,
+      { remarks },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  }
 };
 
 export default api;
