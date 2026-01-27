@@ -511,8 +511,14 @@ import { adminAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 import '../../css/AdminDashboard.css';
 
+// ✅ FIX: Define BASE_URL as a module-level constant
+const BASE_URL = 'http://localhost:5000';
+console.log('Module loaded, BASE_URL:', BASE_URL);
+
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
+  console.log('BASE_URL:', BASE_URL);
+  console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+  const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [activePage, setActivePage] = useState('pending-verifications');
   const [verifications, setVerifications] = useState([]);
@@ -524,13 +530,16 @@ const AdminDashboard = () => {
   const [approvalType, setApprovalType] = useState('user');
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  // ✅ FIX: Only fetch data after auth is loaded
   useEffect(() => {
-    if (activePage === 'pending-verifications') {
-      fetchPendingVerifications();
-    } else if (activePage === 'all-verifications') {
-      fetchAllVerifications();
+    if (!authLoading && user) {
+      if (activePage === 'pending-verifications') {
+        fetchPendingVerifications();
+      } else if (activePage === 'all-verifications') {
+        fetchAllVerifications();
+      }
     }
-  }, [activePage]);
+  }, [activePage, authLoading, user]);
 
   const fetchPendingVerifications = async () => {
     setLoading(true);
@@ -689,6 +698,52 @@ const AdminDashboard = () => {
     return badges[status] || status;
   };
 
+  // ✅ FIX: Helper function to safely render document images
+  const renderDocumentImage = (path, alt, label) => {
+    if (!path) {
+      return (
+        <div className="document-placeholder">
+          <div className="placeholder-content">📄</div>
+          <p>{label} (Not Available)</p>
+        </div>
+      );
+    }
+
+    // Construct URLs explicitly
+    const imageUrl = BASE_URL + path;
+    const linkUrl = BASE_URL + path;
+
+    console.log('Rendering document image:', { path, imageUrl, linkUrl });
+
+    return (
+      <div 
+        className="document-image-container"
+        onClick={() => {
+          console.log('Opening URL:', linkUrl);
+          window.open(linkUrl, '_blank');
+        }}
+        style={{ cursor: 'pointer', display: 'inline-block' }}
+      >
+        <img 
+          src={imageUrl}
+          alt={alt}
+          className="document-thumbnail"
+          onError={(e) => {
+            console.error('Image failed to load:', imageUrl);
+            console.error('Actual src:', e.target.src);
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'block';
+          }}
+        />
+        <div className="image-error" style={{ display: 'none', textAlign: 'center', padding: '10px', background: '#f5f5f5', border: '1px solid #ddd' }}>
+          📄 {label}<br/>
+          <small>Failed to load image</small>
+        </div>
+        <p>{label}</p>
+      </div>
+    );
+  };
+
   const renderVerificationCard = (verification) => {
     const hasLicense = verification.drivingLicenseFront && verification.drivingLicenseBack;
     
@@ -698,7 +753,7 @@ const AdminDashboard = () => {
           <div className="user-info-section">
             {verification.user?.profilePicture ? (
               <img 
-                src={`http://localhost:5000${verification.user.profilePicture}`}
+                src={`${BASE_URL}${verification.user.profilePicture}`}
                 alt={verification.user.username}
                 className="user-avatar-small"
               />
@@ -746,60 +801,16 @@ const AdminDashboard = () => {
         <div className="document-previews">
           <h4>Citizenship Documents:</h4>
           <div className="document-images">
-            <a 
-              href={`http://localhost:5000${verification.citizenshipFront}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img 
-                src={`http://localhost:5000${verification.citizenshipFront}`}
-                alt="Citizenship Front"
-                className="document-thumbnail"
-              />
-              <p>Front</p>
-            </a>
-            <a 
-              href={`http://localhost:5000${verification.citizenshipBack}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img 
-                src={`http://localhost:5000${verification.citizenshipBack}`}
-                alt="Citizenship Back"
-                className="document-thumbnail"
-              />
-              <p>Back</p>
-            </a>
+            {renderDocumentImage(verification.citizenshipFront, "Citizenship Front", "Front")}
+            {renderDocumentImage(verification.citizenshipBack, "Citizenship Back", "Back")}
           </div>
 
           {hasLicense && (
             <>
               <h4 style={{ marginTop: '1rem' }}>Driving License Documents:</h4>
               <div className="document-images">
-                <a 
-                  href={`http://localhost:5000${verification.drivingLicenseFront}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img 
-                    src={`http://localhost:5000${verification.drivingLicenseFront}`}
-                    alt="License Front"
-                    className="document-thumbnail"
-                  />
-                  <p>Front</p>
-                </a>
-                <a 
-                  href={`http://localhost:5000${verification.drivingLicenseBack}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img 
-                    src={`http://localhost:5000${verification.drivingLicenseBack}`}
-                    alt="License Back"
-                    className="document-thumbnail"
-                  />
-                  <p>Back</p>
-                </a>
+                {renderDocumentImage(verification.drivingLicenseFront, "License Front", "Front")}
+                {renderDocumentImage(verification.drivingLicenseBack, "License Back", "Back")}
               </div>
             </>
           )}
@@ -856,6 +867,22 @@ const AdminDashboard = () => {
       </div>
     );
   };
+
+  // ✅ FIX: Show loading while auth is being verified
+  if (authLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '1.5rem',
+        color: '#667eea'
+      }}>
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="admin-container">
