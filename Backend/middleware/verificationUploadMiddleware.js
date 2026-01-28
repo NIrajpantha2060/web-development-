@@ -2,46 +2,77 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Create uploads/documents directory if it doesn't exist
-const uploadDir = path.join(__dirname, '..', 'uploads', 'documents');
+// ✅ Use ABSOLUTE path resolution
+const uploadDir = path.resolve(__dirname, '..', 'uploads', 'documents');
+
+console.log('=== VERIFICATION UPLOAD MIDDLEWARE INIT ===');
+console.log('📁 Upload directory:', uploadDir);
+
+// ✅ Ensure directory exists
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('✅ Directory created');
+} else {
+  console.log('✅ Directory already exists');
 }
 
-// Configure storage for verification documents
+// ✅ Test write permissions
+try {
+  const testFile = path.join(uploadDir, '.test-write');
+  fs.writeFileSync(testFile, 'test');
+  fs.unlinkSync(testFile);
+  console.log('✅ Write permissions: OK');
+} catch (error) {
+  console.error('❌ Write permissions FAILED:', error.message);
+}
+console.log('===========================================\n');
+
+// ✅ Configure storage with ABSOLUTE path
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    console.log(`📤 [${file.fieldname}] Saving to: ${uploadDir}`);
+    cb(null, uploadDir);  // ✅ CRITICAL: Pass the absolute path directly
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    // Format: citizenship-front-userId-timestamp.jpg or license-back-userId-timestamp.jpg
-    const docType = file.fieldname; // citizenshipFront, citizenshipBack, etc.
-    const filename = `${docType}-${req.user.id}-${uniqueSuffix}${path.extname(file.originalname)}`;
+    const filename = `${file.fieldname}-${req.user.id}-${uniqueSuffix}${path.extname(file.originalname)}`;
+    console.log(`📝 [${file.fieldname}] Filename: ${filename}`);
     cb(null, filename);
   }
 });
 
-// File filter - images and PDFs
+// ✅ File filter
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|webp|pdf/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype) || file.mimetype === 'application/pdf';
+  console.log(`🔍 [${file.fieldname}] Validating: ${file.originalname} (${file.mimetype})`);
+  
+  const allowedExtensions = /jpeg|jpg|png|gif|webp|pdf/;
+  const allowedMimes = /image\/(jpeg|jpg|png|gif|webp)|application\/pdf/;
+  
+  const extname = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedMimes.test(file.mimetype);
 
   if (mimetype && extname) {
+    console.log(`✅ [${file.fieldname}] ACCEPTED`);
     return cb(null, true);
   } else {
-    cb(new Error('Only image files (JPEG, PNG, GIF, WEBP) or PDF are allowed!'));
+    console.error(`❌ [${file.fieldname}] REJECTED - Invalid file type`);
+    cb(new Error(`Invalid file type for ${file.fieldname}. Only JPEG, PNG, GIF, WEBP, or PDF allowed.`));
   }
 };
 
-// Configure multer for verification documents
-const uploadDocuments = multer({
+// ✅ Configure multer
+const uploader = multer({
   storage: storage,
   limits: { 
-    fileSize: 10 * 1024 * 1024  // 10MB limit for documents
+    fileSize: 10 * 1024 * 1024  // 10MB
   },
   fileFilter: fileFilter
 });
 
-module.exports = uploadDocuments;
+// ✅ Export ONLY the fields middleware - multer will handle it directly
+module.exports = uploader.fields([
+  { name: 'citizenshipFront', maxCount: 1 },
+  { name: 'citizenshipBack', maxCount: 1 },
+  { name: 'drivingLicenseFront', maxCount: 1 },
+  { name: 'drivingLicenseBack', maxCount: 1 }
+]);

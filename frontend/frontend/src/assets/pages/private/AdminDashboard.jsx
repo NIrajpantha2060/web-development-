@@ -502,8 +502,6 @@
 
 // export default AdminDashboard;
 
-
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from 'react-router-dom';
@@ -698,7 +696,7 @@ const AdminDashboard = () => {
     return badges[status] || status;
   };
 
-  // ✅ FIX: Helper function to safely render document images
+  // ✅ CRITICAL FIX: Helper function to safely construct image URLs
   const renderDocumentImage = (path, alt, label) => {
     if (!path) {
       return (
@@ -709,11 +707,20 @@ const AdminDashboard = () => {
       );
     }
 
-    // Construct URLs explicitly
-    const imageUrl = BASE_URL + path;
-    const linkUrl = BASE_URL + path;
+    // ✅ CRITICAL FIX: Normalize path to ensure it starts with /
+    // This handles both "uploads/..." and "/uploads/..." formats
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    
+    // Construct URLs with normalized path
+    const imageUrl = `${BASE_URL}${normalizedPath}`;
+    const linkUrl = `${BASE_URL}${normalizedPath}`;
 
-    console.log('Rendering document image:', { path, imageUrl, linkUrl });
+    console.log('Rendering document image:', { 
+      originalPath: path, 
+      normalizedPath, 
+      imageUrl, 
+      linkUrl 
+    });
 
     return (
       <div 
@@ -747,13 +754,19 @@ const AdminDashboard = () => {
   const renderVerificationCard = (verification) => {
     const hasLicense = verification.drivingLicenseFront && verification.drivingLicenseBack;
     
+    // ✅ FIX: Normalize profile picture path too
+    const profilePicPath = verification.user?.profilePicture;
+    const normalizedProfilePath = profilePicPath 
+      ? (profilePicPath.startsWith('/') ? profilePicPath : `/${profilePicPath}`)
+      : null;
+    
     return (
       <div key={verification.id} className="verification-card">
         <div className="verification-header">
           <div className="user-info-section">
-            {verification.user?.profilePicture ? (
+            {normalizedProfilePath ? (
               <img 
-                src={`${BASE_URL}${verification.user.profilePicture}`}
+                src={`${BASE_URL}${normalizedProfilePath}`}
                 alt={verification.user.username}
                 className="user-avatar-small"
               />

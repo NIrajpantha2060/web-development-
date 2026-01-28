@@ -173,6 +173,33 @@ app.get("/uploads/test", (req, res) => {
   });
 });
 
+// ✅ DEBUG: Test upload endpoint without auth to isolate issues
+app.post("/api/test-upload", (req, res, next) => {
+  console.log('\n=== TEST UPLOAD ENDPOINT ===');
+  console.log('Request headers:', req.headers);
+  console.log('Request body:', req.body);
+  console.log('Request files before middleware:', req.files);
+  next();
+}, require('./middleware/verificationUploadMiddleware'), (req, res) => {
+  console.log('Request files after middleware:', req.files ? Object.keys(req.files) : 'None');
+  if (req.files) {
+    Object.entries(req.files).forEach(([key, fileArray]) => {
+      fileArray.forEach(file => {
+        console.log(`  ${key}: ${file.filename}`);
+        const fs = require('fs');
+        const exists = fs.existsSync(file.path);
+        console.log(`    Path: ${file.path}`);
+        console.log(`    File exists on disk: ${exists ? '✅' : '❌'}`);
+      });
+    });
+  }
+  res.json({
+    message: 'Test upload received',
+    filesCount: req.files ? Object.keys(req.files).length : 0,
+    files: req.files
+  });
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/password", passwordRoutes);

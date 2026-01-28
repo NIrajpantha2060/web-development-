@@ -744,7 +744,6 @@
 // export default Dashboard;
 
 
-
 import { useState, useRef, useEffect } from 'react';
 import RideCard from '../../components/RideCard';
 import ProfileDropdown from '../../components/ProfileDropdown';
@@ -760,9 +759,10 @@ const UploadProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  // ✅ FIXED: Add cache busting to prevent browser caching
   const getProfilePictureUrl = () => {
     if (user?.profilePicture) {
-      return `http://localhost:5000${user.profilePicture}`;
+      return `http://localhost:5000${user.profilePicture}?t=${Date.now()}`;
     }
     return null;
   };
@@ -787,132 +787,85 @@ const UploadProfilePage = () => {
     }
   };
 
-  // const handleUpload = async () => {
-  //   if (!selectedFile) {
-  //     setMessage({ type: 'error', text: 'Please select a file first' });
-  //     return;
-  //   }
-
-  //   setUploading(true);
-  //   setMessage({ type: '', text: '' });
-
-  //   try {
-  //     await userAPI.uploadProfilePicture(selectedFile);
-      
-  //     const updatedUserData = await userAPI.getInfo();
-  //     setUser(updatedUserData.user);
-
-  //     setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
-  //     setSelectedFile(null);
-  //     setPreviewUrl(null);
-      
-  //     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  //   } catch (error) {
-  //     console.error('Upload error:', error);
-  //     setMessage({
-  //       type: 'error',
-  //       text: error.response?.data?.message || 'Failed to upload profile picture'
-  //     });
-  //   } finally {
-  //     setUploading(false);
-  //   }
-  // };
-
+  // ✅ FIXED: Better async handling and refresh prevention
   const handleUpload = async () => {
-  if (!selectedFile) {
-    setMessage({ type: 'error', text: 'Please select a file first' });
-    return;
-  }
+    if (!selectedFile) {
+      setMessage({ type: 'error', text: 'Please select a file first' });
+      return;
+    }
 
-  setUploading(true);
-  setMessage({ type: '', text: '' });
+    setUploading(true);
+    setMessage({ type: '', text: '' });
 
-  try {
-    await userAPI.uploadProfilePicture(selectedFile);
-    
-    // ✅ FIX: Fetch fresh user data from server
-    const updatedUserData = await userAPI.getInfo();
-    
-    // ✅ FIX: Update both state and localStorage
-    setUser(updatedUserData.user);
-
-    setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  } catch (error) {
-    console.error('Upload error:', error);
-    setMessage({
-      type: 'error',
-      text: error.response?.data?.message || 'Failed to upload profile picture'
-    });
-  } finally {
-    setUploading(false);
-  }
-};
-
-  // const handleDelete = async () => {
-  //   if (!user?.profilePicture) return;
-
-  //   if (!window.confirm('Are you sure you want to delete your profile picture?')) {
-  //     return;
-  //   }
-
-  //   setUploading(true);
-  //   setMessage({ type: '', text: '' });
-
-  //   try {
-  //     await userAPI.deleteProfilePicture();
+    try {
+      await userAPI.uploadProfilePicture(selectedFile);
       
-  //     const updatedUserData = await userAPI.getInfo();
-  //     setUser(updatedUserData.user);
+      // ✅ FIX: Add delay to ensure server processed the upload
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // ✅ FIX: Fetch fresh user data from server
+      const updatedUserData = await userAPI.getInfo();
+      console.log('📸 Profile picture updated:', updatedUserData.user.profilePicture);
+      
+      // ✅ FIX: Update user context (updates both state and localStorage)
+      setUser(updatedUserData.user);
 
-  //     setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
-  //     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  //   } catch (error) {
-  //     console.error('Delete error:', error);
-  //     setMessage({
-  //       type: 'error',
-  //       text: error.response?.data?.message || 'Failed to delete profile picture'
-  //     });
-  //   } finally {
-  //     setUploading(false);
-  //   }
-  // };
+      setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      
+      // ✅ FIX: Clear file input
+      const fileInputs = document.querySelectorAll('input[type="file"]');
+      fileInputs.forEach(input => input.value = '');
+      
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to upload profile picture'
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
-
+  // ✅ FIXED: Same improvements for delete
   const handleDelete = async () => {
-  if (!user?.profilePicture) return;
+    if (!user?.profilePicture) return;
 
-  if (!window.confirm('Are you sure you want to delete your profile picture?')) {
-    return;
-  }
+    if (!window.confirm('Are you sure you want to delete your profile picture?')) {
+      return;
+    }
 
-  setUploading(true);
-  setMessage({ type: '', text: '' });
+    setUploading(true);
+    setMessage({ type: '', text: '' });
 
-  try {
-    await userAPI.deleteProfilePicture();
-    
-    // ✅ FIX: Fetch fresh user data from server
-    const updatedUserData = await userAPI.getInfo();
-    
-    // ✅ FIX: Update both state and localStorage
-    setUser(updatedUserData.user);
+    try {
+      await userAPI.deleteProfilePicture();
+      
+      // ✅ FIX: Add delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // ✅ FIX: Fetch fresh user data
+      const updatedUserData = await userAPI.getInfo();
+      console.log('🗑️ Profile picture deleted');
+      
+      // ✅ FIX: Update user context
+      setUser(updatedUserData.user);
 
-    setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  } catch (error) {
-    console.error('Delete error:', error);
-    setMessage({
-      type: 'error',
-      text: error.response?.data?.message || 'Failed to delete profile picture'
-    });
-  } finally {
-    setUploading(false);
-  }
-};
+      setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Delete error:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete profile picture'
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const getInitials = (name) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
@@ -1067,6 +1020,7 @@ const VerifyYourselfPage = () => {
     }
   };
 
+  // ✅ FIXED: Better form submission handling
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -1085,32 +1039,68 @@ const VerifyYourselfPage = () => {
     setMessage({ type: '', text: '' });
 
     try {
+      // ✅ FIX: Create FormData properly
       const submitFormData = new FormData();
       submitFormData.append('citizenshipNumber', formData.citizenshipNumber);
       submitFormData.append('verificationType', formData.verificationType);
       
-      if (files.citizenshipFront) submitFormData.append('citizenshipFront', files.citizenshipFront);
-      if (files.citizenshipBack) submitFormData.append('citizenshipBack', files.citizenshipBack);
+      // ✅ FIX: Always append citizenship files
+      submitFormData.append('citizenshipFront', files.citizenshipFront);
+      submitFormData.append('citizenshipBack', files.citizenshipBack);
       
-      if (formData.drivingLicenseNumber) {
+      // ✅ FIX: Only append license fields if provided
+      if (formData.verificationType === 'rider' || formData.verificationType === 'both') {
         submitFormData.append('drivingLicenseNumber', formData.drivingLicenseNumber);
+        submitFormData.append('drivingLicenseFront', files.drivingLicenseFront);
+        submitFormData.append('drivingLicenseBack', files.drivingLicenseBack);
       }
-      
-      if (files.drivingLicenseFront) submitFormData.append('drivingLicenseFront', files.drivingLicenseFront);
-      if (files.drivingLicenseBack) submitFormData.append('drivingLicenseBack', files.drivingLicenseBack);
 
-      await verificationAPI.submitVerification(submitFormData);
+      // ✅ FIX: Debug logging
+      console.log('📤 Submitting verification...');
+      console.log('Form data keys:', Array.from(submitFormData.keys()));
       
+      // ✅ FIX: Wait for API response
+      const response = await verificationAPI.submitVerification(submitFormData);
+      
+      console.log('✅ Verification submitted:', response);
+      
+      // ✅ FIX: Show success message immediately
       setMessage({ type: 'success', text: 'Verification request submitted successfully! ✅' });
       
-      setTimeout(() => {
-        fetchVerificationStatus();
-      }, 2000);
+      // ✅ FIX: Clear form immediately
+      setFormData({
+        citizenshipNumber: '',
+        drivingLicenseNumber: '',
+        verificationType: 'user_only'
+      });
+      setFiles({
+        citizenshipFront: null,
+        citizenshipBack: null,
+        drivingLicenseFront: null,
+        drivingLicenseBack: null
+      });
+      setPreviews({
+        citizenshipFront: null,
+        citizenshipBack: null,
+        drivingLicenseFront: null,
+        drivingLicenseBack: null
+      });
+      
+      // ✅ FIX: Clear file inputs
+      const fileInputs = document.querySelectorAll('input[type="file"]');
+      fileInputs.forEach(input => input.value = '');
+      
+      // ✅ FIX: Fetch updated status after delay
+      setTimeout(async () => {
+        await fetchVerificationStatus();
+      }, 1000);
+      
     } catch (error) {
-      console.error('Verification submit error:', error);
+      console.error('❌ Verification submit error:', error);
+      console.error('Error response:', error.response?.data);
       setMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Failed to submit verification request'
+        text: error.response?.data?.message || 'Failed to submit verification request. Please try again.'
       });
     } finally {
       setSubmitting(false);
@@ -1298,7 +1288,7 @@ const VerifyYourselfPage = () => {
   );
 };
 
-// ✅ Main Dashboard Component
+// ✅ Main Dashboard Component (NO CHANGES NEEDED - keeping your original code)
 const Dashboard = () => {
   const { user, login } = useAuth();
   
