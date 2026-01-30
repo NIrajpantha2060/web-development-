@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// ✅ Use ABSOLUTE path resolution
+// ✅ CRITICAL: Use ABSOLUTE path resolution
 const uploadDir = path.resolve(__dirname, '..', 'uploads', 'documents');
 
 console.log('=== VERIFICATION UPLOAD MIDDLEWARE INIT ===');
@@ -27,11 +27,11 @@ try {
 }
 console.log('===========================================\n');
 
-// ✅ Configure storage with ABSOLUTE path
+// ✅ Configure storage with ABSOLUTE path + fsync for Windows
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     console.log(`📤 [${file.fieldname}] Saving to: ${uploadDir}`);
-    cb(null, uploadDir);  // ✅ CRITICAL: Pass the absolute path directly
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -40,6 +40,27 @@ const storage = multer.diskStorage({
     cb(null, filename);
   }
 });
+
+// ✅ CRITICAL FIX: Override _handleFile to force fsync on Windows
+const originalHandleFile = storage._handleFile.bind(storage);
+storage._handleFile = function(req, file, cb) {
+  originalHandleFile(req, file, (err, info) => {
+    if (!err && info && info.path) {
+      try {
+        // ✅ CRITICAL: Force file system to flush write buffer
+        // This is essential on Windows to ensure file is written before continuing
+        const fd = fs.openSync(info.path, 'r+');
+        fs.fsyncSync(fd);
+        fs.closeSync(fd);
+        console.log(`✅ [${file.fieldname}] fsync completed for: ${info.filename}`);
+      } catch (syncError) {
+        console.error(`⚠️  [${file.fieldname}] fsync warning:`, syncError.message);
+        // Don't fail the upload, but log the warning
+      }
+    }
+    cb(err, info);
+  });
+};
 
 // ✅ File filter
 const fileFilter = (req, file, cb) => {
@@ -69,7 +90,7 @@ const uploader = multer({
   fileFilter: fileFilter
 });
 
-// ✅ Export ONLY the fields middleware - multer will handle it directly
+// ✅ Export ONLY the fields middleware
 module.exports = uploader.fields([
   { name: 'citizenshipFront', maxCount: 1 },
   { name: 'citizenshipBack', maxCount: 1 },

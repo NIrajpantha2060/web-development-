@@ -44,9 +44,13 @@
 //       password: hashedPassword,
 //     });
 
-//     // Generate token
+//     // ✅ Generate token WITH ROLE
 //     const token = jwt.sign(
-//       { id: user.id, email: user.email },
+//       { 
+//         id: user.id, 
+//         email: user.email,
+//         role: user.role // ✅ ADDED ROLE
+//       },
 //       process.env.JWT_SECRET,
 //       { expiresIn: "7d" }
 //     );
@@ -59,7 +63,7 @@
 //         phone: user.phone,
 //         email: user.email,
 //         role: user.role,
-//         createdAt: user.createdAt, // ✅ ADDED
+//         createdAt: user.createdAt,
 //       },
 //       token,
 //     });
@@ -92,9 +96,13 @@
 //       return res.status(401).json({ message: "Invalid email or password" });
 //     }
 
-//     // Generate JWT token
+//     // ✅ Generate JWT token WITH ROLE
 //     const token = jwt.sign(
-//       { id: user.id, email: user.email },
+//       { 
+//         id: user.id, 
+//         email: user.email,
+//         role: user.role // ✅ ADDED ROLE
+//       },
 //       process.env.JWT_SECRET,
 //       { expiresIn: "7d" }
 //     );
@@ -107,7 +115,7 @@
 //         phone: user.phone,
 //         email: user.email,
 //         role: user.role,
-//         createdAt: user.createdAt, // ✅ ADDED
+//         createdAt: user.createdAt,
 //       },
 //       token,
 //     });
@@ -183,6 +191,7 @@ const signup = async (req, res) => {
         phone: user.phone,
         email: user.email,
         role: user.role,
+        profilePicture: user.profilePicture, // ✅ FIX: Include profile picture in signup response too
         createdAt: user.createdAt,
       },
       token,
@@ -235,6 +244,7 @@ const login = async (req, res) => {
         phone: user.phone,
         email: user.email,
         role: user.role,
+        profilePicture: user.profilePicture, // ✅ FIX: Include profile picture in login response
         createdAt: user.createdAt,
       },
       token,
