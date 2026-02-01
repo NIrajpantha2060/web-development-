@@ -192,6 +192,8 @@ const signup = async (req, res) => {
         email: user.email,
         role: user.role,
         profilePicture: user.profilePicture, // ✅ FIX: Include profile picture in signup response too
+        isVerifiedUser: user.isVerifiedUser,
+        isVerifiedRider: user.isVerifiedRider,
         createdAt: user.createdAt,
       },
       token,
@@ -245,6 +247,8 @@ const login = async (req, res) => {
         email: user.email,
         role: user.role,
         profilePicture: user.profilePicture, // ✅ FIX: Include profile picture in login response
+        isVerifiedUser: user.isVerifiedUser,
+        isVerifiedRider: user.isVerifiedRider,
         createdAt: user.createdAt,
       },
       token,

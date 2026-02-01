@@ -280,8 +280,10 @@ const ResetPassword = () => {
 
     if (!formData.newPassword) {
       newErrors.newPassword = 'Password is required';
-    } else if (formData.newPassword.length < 6) {
-      newErrors.newPassword = 'Password must be at least 6 characters';
+    } else if (formData.newPassword.length < 8) {
+      newErrors.newPassword = 'Password must be at least 8 characters';
+    } else if (!/[A-Z]/.test(formData.newPassword)) {
+      newErrors.newPassword = 'Password must contain at least one capital letter';
     }
 
     if (!formData.confirmPassword) {

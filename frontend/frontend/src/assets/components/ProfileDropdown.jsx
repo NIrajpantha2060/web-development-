@@ -200,22 +200,35 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
 
   return (
     <div className="profile-dropdown-container">
-      <button 
+      <button
         className="profile-btn"
         onClick={() => setIsOpen(!isOpen)}
       >
         {/* ✅ FIXED: Changed className from profile-avatar-img to profile-avatar */}
-        {getProfilePictureUrl() ? (
-          <img 
-            src={getProfilePictureUrl()} 
-            alt="Profile" 
-            className="profile-avatar"
-          />
-        ) : (
-          <div className="profile-avatar-placeholder">
-            {getInitials(currentUser.username)}
-          </div>
-        )}
+        <div className="profile-avatar-container">
+          {getProfilePictureUrl() ? (
+            <img
+              src={getProfilePictureUrl()}
+              alt="Profile"
+              className="profile-avatar"
+            />
+          ) : (
+            <div className="profile-avatar-placeholder">
+              {getInitials(currentUser.username)}
+            </div>
+          )}
+          {/* Verification ticks */}
+          {user?.isVerifiedUser && (
+            <div className="verification-tick user-tick" title="Verified User">
+              ✓
+            </div>
+          )}
+          {user?.isVerifiedRider && (
+            <div className="verification-tick rider-tick" title="Verified Rider">
+              ✓
+            </div>
+          )}
+        </div>
       </button>
 
       {isOpen && (
@@ -266,7 +279,7 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
                 <span>Upload Profile</span>
               </button>
 
-              <button 
+              <button
                 className="dropdown-item"
                 onClick={() => handleNavigation('verify-yourself')}
               >
@@ -274,6 +287,16 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <span>Verify Yourself</span>
+              </button>
+
+              <button
+                className="dropdown-item"
+                onClick={() => handleNavigation('change-password')}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                <span>Change Password</span>
               </button>
 
               <button 

@@ -745,10 +745,11 @@
 
 
 import { useState, useRef, useEffect } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import RideCard from '../../components/RideCard';
 import ProfileDropdown from '../../components/ProfileDropdown';
 import { useAuth } from '../../../context/AuthContext';
-import { userAPI, verificationAPI } from '../../../services/api';
+import { userAPI, verificationAPI, passwordAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 
 // ✅ Upload Profile Page Component
@@ -942,6 +943,202 @@ const UploadProfilePage = () => {
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+// ✅ Change Password Page Component
+const ChangePasswordPage = () => {
+  const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+
+    if (message.text) {
+      setMessage({ type: '', text: '' });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.currentPassword) {
+      newErrors.currentPassword = 'Current password is required';
+    }
+
+    if (!formData.newPassword) {
+      newErrors.newPassword = 'New password is required';
+    } else if (formData.newPassword.length < 8) {
+      newErrors.newPassword = 'Password must be at least 8 characters long';
+    } else if (!/[A-Z]/.test(formData.newPassword)) {
+      newErrors.newPassword = 'Password must contain at least one capital letter';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your new password';
+    } else if (formData.newPassword !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const response = await passwordAPI.changePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword
+      });
+
+      setMessage({ type: 'success', text: response.message });
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Change password error:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to change password. Please try again.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="change-password-page">
+      <div className="page-header">
+        <h1>Change Password</h1>
+        <p>Update your account password</p>
+      </div>
+
+      {message.text && (
+        <div className={`update-message ${message.type}`}>
+          {message.text}
+        </div>
+      )}
+
+      <form className="form-container" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Current Password *</label>
+          <div className="password-input-wrapper">
+            <input
+              type={showPassword.current ? "text" : "password"}
+              name="currentPassword"
+              className={`form-input ${errors.currentPassword ? 'input-error' : ''}`}
+              value={formData.currentPassword}
+              onChange={handleChange}
+              placeholder="Enter your current password"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              className="password-toggle-icon"
+              onClick={() => setShowPassword(prev => ({ ...prev, current: !prev.current }))}
+              disabled={loading}
+              aria-label={showPassword.current ? "Hide password" : "Show password"}
+            >
+              {showPassword.current ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </button>
+          </div>
+          {errors.currentPassword && (
+            <span className="error-text">{errors.currentPassword}</span>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label>New Password *</label>
+          <div className="password-input-wrapper">
+            <input
+              type={showPassword.new ? "text" : "password"}
+              name="newPassword"
+              className={`form-input ${errors.newPassword ? 'input-error' : ''}`}
+              value={formData.newPassword}
+              onChange={handleChange}
+              placeholder="Enter new password (min 8 characters, 1 capital letter)"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              className="password-toggle-icon"
+              onClick={() => setShowPassword(prev => ({ ...prev, new: !prev.new }))}
+              disabled={loading}
+              aria-label={showPassword.new ? "Hide password" : "Show password"}
+            >
+              {showPassword.new ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </button>
+          </div>
+          {errors.newPassword && (
+            <span className="error-text">{errors.newPassword}</span>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label>Confirm New Password *</label>
+          <div className="password-input-wrapper">
+            <input
+              type={showPassword.confirm ? "text" : "password"}
+              name="confirmPassword"
+              className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Re-enter your new password"
+              disabled={loading}
+            />
+            <button
+              type="button"
+              className="password-toggle-icon"
+              onClick={() => setShowPassword(prev => ({ ...prev, confirm: !prev.confirm }))}
+              disabled={loading}
+              aria-label={showPassword.confirm ? "Hide password" : "Show password"}
+            >
+              {showPassword.confirm ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <span className="error-text">{errors.confirmPassword}</span>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          className="btn-submit"
+          disabled={loading}
+        >
+          {loading ? 'Changing Password...' : 'Change Password'}
+        </button>
+      </form>
     </div>
   );
 };
@@ -1361,6 +1558,13 @@ const Dashboard = () => {
   };
 
   const switchMode = () => {
+    // Check if user is trying to switch to rider mode and is not verified
+    if (!isRiderMode && !user?.isVerifiedRider) {
+      alert('You need to be verified as a rider to access rider mode. Please complete your verification process.');
+      setIsModeDropdownOpen(false);
+      return;
+    }
+
     setIsRiderMode(!isRiderMode);
     setIsModeDropdownOpen(false);
     setActivePage('rides');
@@ -1643,6 +1847,9 @@ const Dashboard = () => {
 
       case 'upload-profile':
         return <UploadProfilePage />;
+
+      case 'change-password':
+        return <ChangePasswordPage />;
 
       case 'verify-yourself':
         return <VerifyYourselfPage />;

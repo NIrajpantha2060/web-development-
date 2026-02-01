@@ -360,6 +360,115 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// CHANGE PASSWORD - Change password for authenticated user
+const changePassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+  const userId = req.user.id;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).json({ message: "All password fields are required" });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ message: "New password and confirmation do not match" });
+  }
+
+  // Validate new password: minimum 8 characters, at least one capital letter
+  if (newPassword.length < 8) {
+    return res.status(400).json({ message: "Password must be at least 8 characters long" });
+  }
+
+  if (!/[A-Z]/.test(newPassword)) {
+    return res.status(400).json({ message: "Password must contain at least one capital letter" });
+  }
+
+  try {
+    // Find user
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await user.update({ password: hashedNewPassword });
+
+    // Send confirmation email
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: user.email,
+      subject: "Password Changed Successfully - Lift Nepal 🚗",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #f9f9f9;
+            }
+            .header {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              padding: 30px;
+              text-align: center;
+              border-radius: 10px 10px 0 0;
+            }
+            .content {
+              background: white;
+              padding: 30px;
+              border-radius: 0 0 10px 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🚗 Lift Nepal</h1>
+              <p>Password Changed Successfully</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${user.username},</h2>
+              <p>Your password has been successfully changed.</p>
+              <p>If you did not make this change, please contact our support team immediately.</p>
+              <p>You can now log in with your new password.</p>
+            </div>
+            <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+              <p>© 2025 Lift Nepal. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "Password changed successfully" });
+
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({ message: "Error changing password. Please try again later." });
+  }
+};
+
 // RESET PASSWORD - Update password with token
 const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
@@ -368,8 +477,13 @@ const resetPassword = async (req, res) => {
     return res.status(400).json({ message: "Token and new password are required" });
   }
 
-  if (newPassword.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters long" });
+  // Update validation: minimum 8 characters, at least one capital letter
+  if (newPassword.length < 8) {
+    return res.status(400).json({ message: "Password must be at least 8 characters long" });
+  }
+
+  if (!/[A-Z]/.test(newPassword)) {
+    return res.status(400).json({ message: "Password must contain at least one capital letter" });
   }
 
   try {
@@ -462,4 +576,4 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { forgotPassword, resetPassword };
+module.exports = { forgotPassword, resetPassword, changePassword };

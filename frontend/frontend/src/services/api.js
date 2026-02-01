@@ -221,9 +221,14 @@ export const passwordAPI = {
     const response = await api.post('/password/forgot', data);
     return response.data;
   },
-  
+
   resetPassword: async (data) => {
     const response = await api.post('/password/reset', data);
+    return response.data;
+  },
+
+  changePassword: async (data) => {
+    const response = await api.put('/password/change', data);
     return response.data;
   },
 };
