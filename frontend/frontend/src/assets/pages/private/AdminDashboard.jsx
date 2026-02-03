@@ -1,38 +1,5 @@
-// import React from "react";
-// import { useAuth } from "../../../context/AuthContext";
-// import { useNavigate } from 'react-router-dom';
-// import '../../css/Dashboard.css';
-// import '../../css/AdminDashboard.css';
 
-// const AdminDashboard = () => {
-//   const { user, logout } = useAuth();
-//   const navigate = useNavigate();
 
-//   return (
-//     <div className="admin-container">
-//       <header className="admin-header">
-//         <h1>Lift Nepal – Admin Panel</h1>
-//         <button onClick={() => { logout(); navigate('/login'); }} className="logout-btn">
-//           Logout
-//         </button>
-//       </header>
-
-//       <div className="admin-info">
-//         <h2>Welcome, {user?.username}</h2>
-//         <p>Role: {user?.role}</p>
-//       </div>
-
-//       <div className="admin-cards">
-//         <div className="admin-card">👤 Manage Users</div>
-//         <div className="admin-card">🚗 Manage Rides</div>
-//         <div className="admin-card">📄 Reports</div>
-//         <div className="admin-card">⚙️ Settings</div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AdminDashboard;
 
 
 
@@ -43,26 +10,35 @@
 // import '../../css/Dashboard.css';
 // import '../../css/AdminDashboard.css';
 
+// // ✅ FIX: Define BASE_URL as a module-level constant
+// const BASE_URL = 'http://localhost:5000';
+// console.log('Module loaded, BASE_URL:', BASE_URL);
+
 // const AdminDashboard = () => {
-//   const { user, logout } = useAuth();
+//   console.log('BASE_URL:', BASE_URL);
+//   console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+//   const { user, logout, loading: authLoading } = useAuth();
 //   const navigate = useNavigate();
 //   const [activePage, setActivePage] = useState('pending-verifications');
 //   const [verifications, setVerifications] = useState([]);
 //   const [loading, setLoading] = useState(true);
 //   const [selectedVerification, setSelectedVerification] = useState(null);
 //   const [showModal, setShowModal] = useState(false);
-//   const [actionType, setActionType] = useState(''); // 'approve' or 'reject'
+//   const [actionType, setActionType] = useState('');
 //   const [remarks, setRemarks] = useState('');
-//   const [approvalType, setApprovalType] = useState('user'); // 'user', 'rider', 'both'
+//   const [approvalType, setApprovalType] = useState('user');
 //   const [message, setMessage] = useState({ type: '', text: '' });
 
+//   // ✅ FIX: Only fetch data after auth is loaded
 //   useEffect(() => {
-//     if (activePage === 'pending-verifications') {
-//       fetchPendingVerifications();
-//     } else if (activePage === 'all-verifications') {
-//       fetchAllVerifications();
+//     if (!authLoading && user) {
+//       if (activePage === 'pending-verifications') {
+//         fetchPendingVerifications();
+//       } else if (activePage === 'all-verifications') {
+//         fetchAllVerifications();
+//       }
 //     }
-//   }, [activePage]);
+//   }, [activePage, authLoading, user]);
 
 //   const fetchPendingVerifications = async () => {
 //     setLoading(true);
@@ -94,7 +70,25 @@
 //     setSelectedVerification(verification);
 //     setActionType('approve');
 //     setRemarks('');
-//     setApprovalType('user');
+    
+//     // ✅ FIX: Set default approvalType based on what user submitted
+//     const hasLicense = verification.drivingLicenseFront;
+//     const hasCitizenship = verification.citizenshipFront;
+    
+//     if (verification.verificationType === 'rider') {
+//       setApprovalType('rider');
+//     } else if (verification.verificationType === 'user_only') {
+//       setApprovalType('user');
+//     } else if (verification.verificationType === 'both') {
+//       setApprovalType('both');
+//     } else if (hasLicense && !hasCitizenship) {
+//       setApprovalType('rider');
+//     } else if (hasCitizenship && !hasLicense) {
+//       setApprovalType('user');
+//     } else {
+//       setApprovalType('both');
+//     }
+    
 //     setShowModal(true);
 //   };
 
@@ -112,16 +106,41 @@
 //     setApprovalType('user');
 //   };
 
+//   // ✅ FIXED: Better error handling and logging
 //   const handleApprove = async () => {
-//     if (!selectedVerification) return;
+//     if (!selectedVerification) {
+//       console.error('No verification selected');
+//       return;
+//     }
+
+//     // ✅ FIX: Validate approvalType
+//     if (!['user', 'rider', 'both'].includes(approvalType)) {
+//       setMessage({ type: 'error', text: 'Invalid approval type selected' });
+//       return;
+//     }
+
+//     // ✅ FIX: Check if trying to approve rider without license
+//     const hasLicense = selectedVerification.drivingLicenseFront;
+//     if ((approvalType === 'rider' || approvalType === 'both') && !hasLicense) {
+//       setMessage({ type: 'error', text: 'Cannot approve as rider without driving license documents' });
+//       return;
+//     }
+
+//     console.log('Approving verification:', {
+//       id: selectedVerification.id,
+//       approvalType,
+//       remarks,
+//       hasLicense
+//     });
 
 //     try {
-//       await adminAPI.approveVerification(
+//       const response = await adminAPI.approveVerification(
 //         selectedVerification.id,
 //         approvalType,
 //         remarks
 //       );
 
+//       console.log('Approval response:', response);
 //       setMessage({ type: 'success', text: `Verification approved as ${approvalType}!` });
 //       closeModal();
       
@@ -135,9 +154,11 @@
 //       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
 //     } catch (error) {
 //       console.error('Error approving verification:', error);
+//       console.error('Error response:', error.response?.data);
+      
 //       setMessage({
 //         type: 'error',
-//         text: error.response?.data?.message || 'Failed to approve verification'
+//         text: error.response?.data?.message || 'Failed to approve verification. Check console for details.'
 //       });
 //     }
 //   };
@@ -184,16 +205,78 @@
 //     return badges[status] || status;
 //   };
 
+//   // ✅ CRITICAL FIX: Helper function to safely construct image URLs
+//   const renderDocumentImage = (path, alt, label) => {
+//     if (!path) {
+//       return (
+//         <div className="document-placeholder">
+//           <div className="placeholder-content">📄</div>
+//           <p>{label} (Not Available)</p>
+//         </div>
+//       );
+//     }
+
+//     // ✅ CRITICAL FIX: Normalize path to ensure it starts with /
+//     // This handles both "uploads/..." and "/uploads/..." formats
+//     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    
+//     // Construct URLs with normalized path
+//     const imageUrl = `${BASE_URL}${normalizedPath}`;
+//     const linkUrl = `${BASE_URL}${normalizedPath}`;
+
+//     console.log('Rendering document image:', { 
+//       originalPath: path, 
+//       normalizedPath, 
+//       imageUrl, 
+//       linkUrl 
+//     });
+
+//     return (
+//       <div 
+//         className="document-image-container"
+//         onClick={() => {
+//           console.log('Opening URL:', linkUrl);
+//           window.open(linkUrl, '_blank');
+//         }}
+//         style={{ cursor: 'pointer', display: 'inline-block' }}
+//       >
+//         <img 
+//           src={imageUrl}
+//           alt={alt}
+//           className="document-thumbnail"
+//           onError={(e) => {
+//             console.error('Image failed to load:', imageUrl);
+//             console.error('Actual src:', e.target.src);
+//             e.target.style.display = 'none';
+//             e.target.nextSibling.style.display = 'block';
+//           }}
+//         />
+//         <div className="image-error" style={{ display: 'none', textAlign: 'center', padding: '10px', background: '#f5f5f5', border: '1px solid #ddd' }}>
+//           📄 {label}<br/>
+//           <small>Failed to load image</small>
+//         </div>
+//         <p>{label}</p>
+//       </div>
+//     );
+//   };
+
 //   const renderVerificationCard = (verification) => {
-//     const hasLicense = verification.drivingLicenseFront && verification.drivingLicenseBack;
+//     const hasLicense = verification.drivingLicenseFront;
+//     const hasCitizenship = verification.citizenshipFront;
+    
+//     // ✅ FIX: Normalize profile picture path too
+//     const profilePicPath = verification.user?.profilePicture;
+//     const normalizedProfilePath = profilePicPath 
+//       ? (profilePicPath.startsWith('/') ? profilePicPath : `/${profilePicPath}`)
+//       : null;
     
 //     return (
 //       <div key={verification.id} className="verification-card">
 //         <div className="verification-header">
 //           <div className="user-info-section">
-//             {verification.user?.profilePicture ? (
+//             {normalizedProfilePath ? (
 //               <img 
-//                 src={`http://localhost:5000${verification.user.profilePicture}`}
+//                 src={`${BASE_URL}${normalizedProfilePath}`}
 //                 alt={verification.user.username}
 //                 className="user-avatar-small"
 //               />
@@ -222,81 +305,66 @@
 //               {verification.verificationType.replace('_', ' ')}
 //             </span>
 //           </div>
-//           <div className="detail-row">
-//             <strong>Citizenship Number:</strong>
-//             <span>{verification.citizenshipNumber}</span>
-//           </div>
-//           {hasLicense && (
+          
+//           {/* ✅ Show citizenship number only if it exists */}
+//           {verification.citizenshipNumber && (
+//             <div className="detail-row">
+//               <strong>Citizenship Number:</strong>
+//               <span>{verification.citizenshipNumber}</span>
+//             </div>
+//           )}
+          
+//           {/* ✅ Show license number only if it exists */}
+//           {verification.drivingLicenseNumber && (
 //             <div className="detail-row">
 //               <strong>License Number:</strong>
 //               <span>{verification.drivingLicenseNumber}</span>
 //             </div>
 //           )}
+          
+//           {/* ✅ Show license expiry date if it exists */}
+//           {verification.licenseExpiryDate && (
+//             <div className="detail-row">
+//               <strong>License Expiry:</strong>
+//               <span>{new Date(verification.licenseExpiryDate).toLocaleDateString()}</span>
+//             </div>
+//           )}
+          
 //           <div className="detail-row">
 //             <strong>Submitted:</strong>
 //             <span>{new Date(verification.submittedAt).toLocaleString()}</span>
 //           </div>
 //         </div>
 
+//         {/* ✅ CRITICAL FIX: Show documents based on what exists, not verificationType */}
 //         <div className="document-previews">
-//           <h4>Citizenship Documents:</h4>
-//           <div className="document-images">
-//             <a 
-//               href={`http://localhost:5000${verification.citizenshipFront}`}
-//               target="_blank"
-//               rel="noopener noreferrer"
-//             >
-//               <img 
-//                 src={`http://localhost:5000${verification.citizenshipFront}`}
-//                 alt="Citizenship Front"
-//                 className="document-thumbnail"
-//               />
-//               <p>Front</p>
-//             </a>
-//             <a 
-//               href={`http://localhost:5000${verification.citizenshipBack}`}
-//               target="_blank"
-//               rel="noopener noreferrer"
-//             >
-//               <img 
-//                 src={`http://localhost:5000${verification.citizenshipBack}`}
-//                 alt="Citizenship Back"
-//                 className="document-thumbnail"
-//               />
-//               <p>Back</p>
-//             </a>
-//           </div>
-
-//           {hasLicense && (
+//           {/* ✅ Show citizenship documents only if they exist */}
+//           {hasCitizenship && (
 //             <>
-//               <h4 style={{ marginTop: '1rem' }}>Driving License Documents:</h4>
+//               <h4>Citizenship Documents:</h4>
 //               <div className="document-images">
-//                 <a 
-//                   href={`http://localhost:5000${verification.drivingLicenseFront}`}
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                 >
-//                   <img 
-//                     src={`http://localhost:5000${verification.drivingLicenseFront}`}
-//                     alt="License Front"
-//                     className="document-thumbnail"
-//                   />
-//                   <p>Front</p>
-//                 </a>
-//                 <a 
-//                   href={`http://localhost:5000${verification.drivingLicenseBack}`}
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                 >
-//                   <img 
-//                     src={`http://localhost:5000${verification.drivingLicenseBack}`}
-//                     alt="License Back"
-//                     className="document-thumbnail"
-//                   />
-//                   <p>Back</p>
-//                 </a>
+//                 {renderDocumentImage(verification.citizenshipFront, "Citizenship Front", "Front")}
+//                 {renderDocumentImage(verification.citizenshipBack, "Citizenship Back", "Back")}
 //               </div>
 //             </>
+//           )}
+
+//           {/* ✅ Show driving license documents if they exist */}
+//           {hasLicense && (
+//             <>
+//               <h4 style={{ marginTop: hasCitizenship ? '1rem' : '0' }}>Driving License Documents:</h4>
+//               <div className="document-images">
+//                 {renderDocumentImage(verification.drivingLicenseFront, "License Front", "Front")}
+//                 {verification.drivingLicenseBack && renderDocumentImage(verification.drivingLicenseBack, "License Back", "Back")}
+//               </div>
+//             </>
+//           )}
+          
+//           {/* ✅ Show message if no documents */}
+//           {!hasCitizenship && !hasLicense && (
+//             <div className="empty-state" style={{ padding: '1rem', background: '#f5f5f5' }}>
+//               <p>No documents uploaded</p>
+//             </div>
 //           )}
 //         </div>
 
@@ -351,6 +419,22 @@
 //       </div>
 //     );
 //   };
+
+//   // ✅ FIX: Show loading while auth is being verified
+//   if (authLoading) {
+//     return (
+//       <div style={{
+//         display: 'flex',
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//         height: '100vh',
+//         fontSize: '1.5rem',
+//         color: '#667eea'
+//       }}>
+//         Loading...
+//       </div>
+//     );
+//   }
 
 //   return (
 //     <div className="admin-container">
@@ -443,15 +527,15 @@
 //                         value="rider"
 //                         disabled={!selectedVerification?.drivingLicenseFront}
 //                       >
-//                         Rider Only (Purple Tick)
+//                         Rider Only (Blue Tick)
 //                         {!selectedVerification?.drivingLicenseFront && ' - No License Uploaded'}
 //                       </option>
 //                       <option 
 //                         value="both"
-//                         disabled={!selectedVerification?.drivingLicenseFront}
+//                         disabled={!selectedVerification?.drivingLicenseFront || !selectedVerification?.citizenshipFront}
 //                       >
 //                         Both User & Rider
-//                         {!selectedVerification?.drivingLicenseFront && ' - No License Uploaded'}
+//                         {(!selectedVerification?.drivingLicenseFront || !selectedVerification?.citizenshipFront) && ' - Missing Documents'}
 //                       </option>
 //                     </select>
 //                   </div>
@@ -501,6 +585,7 @@
 // };
 
 // export default AdminDashboard;
+
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
@@ -565,18 +650,27 @@ const AdminDashboard = () => {
     }
   };
 
+  // ✅ UPDATED: Automatically set approval type based on submitted documents
   const openApprovalModal = (verification) => {
     setSelectedVerification(verification);
     setActionType('approve');
     setRemarks('');
     
-    // ✅ FIX: Set default approvalType based on what user submitted
-    const hasLicense = verification.drivingLicenseFront && verification.drivingLicenseBack;
-    if (hasLicense && verification.verificationType === 'both') {
-      setApprovalType('both');
-    } else if (hasLicense && verification.verificationType === 'rider') {
+    // ✅ Set approval type based on what was submitted
+    const hasLicense = verification.drivingLicenseFront;
+    const hasCitizenship = verification.citizenshipFront;
+    
+    if (hasLicense && !hasCitizenship) {
+      // Only license submitted = rider verification
       setApprovalType('rider');
+    } else if (hasCitizenship && !hasLicense) {
+      // Only citizenship submitted = user verification
+      setApprovalType('user');
+    } else if (hasLicense && hasCitizenship) {
+      // Both submitted (legacy case) - default to user, admin can choose
+      setApprovalType('user');
     } else {
+      // Fallback
       setApprovalType('user');
     }
     
@@ -605,15 +699,22 @@ const AdminDashboard = () => {
     }
 
     // ✅ FIX: Validate approvalType
-    if (!['user', 'rider', 'both'].includes(approvalType)) {
+    if (!['user', 'rider'].includes(approvalType)) {
       setMessage({ type: 'error', text: 'Invalid approval type selected' });
       return;
     }
 
     // ✅ FIX: Check if trying to approve rider without license
-    const hasLicense = selectedVerification.drivingLicenseFront && selectedVerification.drivingLicenseBack;
-    if ((approvalType === 'rider' || approvalType === 'both') && !hasLicense) {
+    const hasLicense = selectedVerification.drivingLicenseFront;
+    const hasCitizenship = selectedVerification.citizenshipFront;
+    
+    if (approvalType === 'rider' && !hasLicense) {
       setMessage({ type: 'error', text: 'Cannot approve as rider without driving license documents' });
+      return;
+    }
+    
+    if (approvalType === 'user' && !hasCitizenship) {
+      setMessage({ type: 'error', text: 'Cannot approve as user without citizenship documents' });
       return;
     }
 
@@ -621,7 +722,8 @@ const AdminDashboard = () => {
       id: selectedVerification.id,
       approvalType,
       remarks,
-      hasLicense
+      hasLicense,
+      hasCitizenship
     });
 
     try {
@@ -752,7 +854,8 @@ const AdminDashboard = () => {
   };
 
   const renderVerificationCard = (verification) => {
-    const hasLicense = verification.drivingLicenseFront && verification.drivingLicenseBack;
+    const hasLicense = verification.drivingLicenseFront;
+    const hasCitizenship = verification.citizenshipFront;
     
     // ✅ FIX: Normalize profile picture path too
     const profilePicPath = verification.user?.profilePicture;
@@ -795,37 +898,66 @@ const AdminDashboard = () => {
               {verification.verificationType.replace('_', ' ')}
             </span>
           </div>
-          <div className="detail-row">
-            <strong>Citizenship Number:</strong>
-            <span>{verification.citizenshipNumber}</span>
-          </div>
-          {hasLicense && (
+          
+          {/* ✅ Show citizenship number only if it exists */}
+          {verification.citizenshipNumber && (
+            <div className="detail-row">
+              <strong>Citizenship Number:</strong>
+              <span>{verification.citizenshipNumber}</span>
+            </div>
+          )}
+          
+          {/* ✅ Show license number only if it exists */}
+          {verification.drivingLicenseNumber && (
             <div className="detail-row">
               <strong>License Number:</strong>
               <span>{verification.drivingLicenseNumber}</span>
             </div>
           )}
+          
+          {/* ✅ Show license expiry date if it exists */}
+          {verification.licenseExpiryDate && (
+            <div className="detail-row">
+              <strong>License Expiry:</strong>
+              <span>{new Date(verification.licenseExpiryDate).toLocaleDateString()}</span>
+            </div>
+          )}
+          
           <div className="detail-row">
             <strong>Submitted:</strong>
             <span>{new Date(verification.submittedAt).toLocaleString()}</span>
           </div>
         </div>
 
+        {/* ✅ CRITICAL FIX: Show documents based on what exists, not verificationType */}
         <div className="document-previews">
-          <h4>Citizenship Documents:</h4>
-          <div className="document-images">
-            {renderDocumentImage(verification.citizenshipFront, "Citizenship Front", "Front")}
-            {renderDocumentImage(verification.citizenshipBack, "Citizenship Back", "Back")}
-          </div>
-
-          {hasLicense && (
+          {/* ✅ Show citizenship documents only if they exist */}
+          {hasCitizenship && (
             <>
-              <h4 style={{ marginTop: '1rem' }}>Driving License Documents:</h4>
+              <h4>Citizenship Documents:</h4>
               <div className="document-images">
-                {renderDocumentImage(verification.drivingLicenseFront, "License Front", "Front")}
-                {renderDocumentImage(verification.drivingLicenseBack, "License Back", "Back")}
+                {renderDocumentImage(verification.citizenshipFront, "Citizenship Front", "Front")}
+                {renderDocumentImage(verification.citizenshipBack, "Citizenship Back", "Back")}
               </div>
             </>
+          )}
+
+          {/* ✅ Show driving license documents if they exist */}
+          {hasLicense && (
+            <>
+              <h4 style={{ marginTop: hasCitizenship ? '1rem' : '0' }}>Driving License Documents:</h4>
+              <div className="document-images">
+                {renderDocumentImage(verification.drivingLicenseFront, "License Front", "Front")}
+                {verification.drivingLicenseBack && renderDocumentImage(verification.drivingLicenseBack, "License Back", "Back")}
+              </div>
+            </>
+          )}
+          
+          {/* ✅ Show message if no documents */}
+          {!hasCitizenship && !hasLicense && (
+            <div className="empty-state" style={{ padding: '1rem', background: '#f5f5f5' }}>
+              <p>No documents uploaded</p>
+            </div>
           )}
         </div>
 
@@ -953,7 +1085,7 @@ const AdminDashboard = () => {
           )}
       </main>
 
-      {/* Approval/Rejection Modal */}
+      {/* ✅✅✅ UPDATED APPROVAL/REJECTION MODAL - "BOTH" OPTION REMOVED ✅✅✅ */}
       {showModal && (
         <>
           <div className="modal-overlay" onClick={closeModal}></div>
@@ -983,22 +1115,26 @@ const AdminDashboard = () => {
                       value={approvalType}
                       onChange={(e) => setApprovalType(e.target.value)}
                     >
-                      <option value="user">User Only (Green Tick)</option>
-                      <option 
-                        value="rider"
-                        disabled={!selectedVerification?.drivingLicenseFront}
-                      >
-                        Rider Only (Purple Tick)
-                        {!selectedVerification?.drivingLicenseFront && ' - No License Uploaded'}
-                      </option>
-                      <option 
-                        value="both"
-                        disabled={!selectedVerification?.drivingLicenseFront}
-                      >
-                        Both User & Rider
-                        {!selectedVerification?.drivingLicenseFront && ' - No License Uploaded'}
-                      </option>
+                      {/* ✅ UPDATED: Only show relevant options based on submitted documents */}
+                      {selectedVerification?.citizenshipFront && (
+                        <option value="user">User Only (Green Tick ✓)</option>
+                      )}
+                      {selectedVerification?.drivingLicenseFront && (
+                        <option value="rider">Rider Only (Blue Tick 🔵)</option>
+                      )}
+                      
+                      {/* ❌ REMOVED: "Both" option - users verify separately now */}
                     </select>
+                    
+                    {/* ✅ Show helpful message */}
+                    <small style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                      {selectedVerification?.citizenshipFront && !selectedVerification?.drivingLicenseFront && 
+                        '✓ Citizenship verification - User can upgrade to Rider later'}
+                      {selectedVerification?.drivingLicenseFront && !selectedVerification?.citizenshipFront && 
+                        '🔵 Rider verification/upgrade - User already verified or verifying license only'}
+                      {selectedVerification?.citizenshipFront && selectedVerification?.drivingLicenseFront && 
+                        '⚠️ Both documents submitted - Choose which to approve'}
+                    </small>
                   </div>
 
                   <div className="form-group">

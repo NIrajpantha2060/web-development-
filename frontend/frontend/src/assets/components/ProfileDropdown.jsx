@@ -1,6 +1,5 @@
 
 
-
 // import { useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
 // import { useAuth } from '../../context/AuthContext';
@@ -37,22 +36,35 @@
 
 //   return (
 //     <div className="profile-dropdown-container">
-//       <button 
+//       <button
 //         className="profile-btn"
 //         onClick={() => setIsOpen(!isOpen)}
 //       >
-//         {/* ✅ Show profile picture or initials */}
-//         {getProfilePictureUrl() ? (
-//           <img 
-//             src={getProfilePictureUrl()} 
-//             alt="Profile" 
-//             className="profile-avatar-img"
-//           />
-//         ) : (
-//           <div className="profile-avatar-placeholder">
-//             {getInitials(currentUser.username)}
-//           </div>
-//         )}
+//         {/* ✅ FIXED: Changed className from profile-avatar-img to profile-avatar */}
+//         <div className="profile-avatar-container">
+//           {getProfilePictureUrl() ? (
+//             <img
+//               src={getProfilePictureUrl()}
+//               alt="Profile"
+//               className="profile-avatar"
+//             />
+//           ) : (
+//             <div className="profile-avatar-placeholder">
+//               {getInitials(currentUser.username)}
+//             </div>
+//           )}
+//           {/* Verification ticks */}
+//           {user?.isVerifiedUser && (
+//             <div className="verification-tick user-tick" title="Verified User">
+//               ✓
+//             </div>
+//           )}
+//           {user?.isVerifiedRider && (
+//             <div className="verification-tick rider-tick" title="Verified Rider">
+//               ✓
+//             </div>
+//           )}
+//         </div>
 //       </button>
 
 //       {isOpen && (
@@ -61,12 +73,12 @@
 //           <div className="dropdown-menu">
 //             <div className="dropdown-header">
 //               <div className="user-info">
-//                 {/* ✅ Show profile picture or initials in dropdown */}
+//                 {/* ✅ FIXED: Changed className from user-avatar-img to user-avatar */}
 //                 {getProfilePictureUrl() ? (
 //                   <img 
 //                     src={getProfilePictureUrl()} 
 //                     alt="Profile" 
-//                     className="user-avatar-img"
+//                     className="user-avatar"
 //                   />
 //                 ) : (
 //                   <div className="user-avatar-placeholder">
@@ -103,7 +115,7 @@
 //                 <span>Upload Profile</span>
 //               </button>
 
-//               <button 
+//               <button
 //                 className="dropdown-item"
 //                 onClick={() => handleNavigation('verify-yourself')}
 //               >
@@ -111,6 +123,16 @@
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
 //                 </svg>
 //                 <span>Verify Yourself</span>
+//               </button>
+
+//               <button
+//                 className="dropdown-item"
+//                 onClick={() => handleNavigation('change-password')}
+//               >
+//                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+//                 </svg>
+//                 <span>Change Password</span>
 //               </button>
 
 //               <button 
@@ -190,7 +212,6 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  // ✅ Get profile picture URL
   const getProfilePictureUrl = () => {
     if (user?.profilePicture) {
       return `http://localhost:5000${user.profilePicture}`;
@@ -198,13 +219,15 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
     return null;
   };
 
+  // ✅ NEW: Check if user is verified
+  const isVerified = user?.isVerifiedUser || user?.isVerifiedRider;
+
   return (
     <div className="profile-dropdown-container">
       <button
         className="profile-btn"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {/* ✅ FIXED: Changed className from profile-avatar-img to profile-avatar */}
         <div className="profile-avatar-container">
           {getProfilePictureUrl() ? (
             <img
@@ -237,7 +260,6 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
           <div className="dropdown-menu">
             <div className="dropdown-header">
               <div className="user-info">
-                {/* ✅ FIXED: Changed className from user-avatar-img to user-avatar */}
                 {getProfilePictureUrl() ? (
                   <img 
                     src={getProfilePictureUrl()} 
@@ -279,6 +301,7 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
                 <span>Upload Profile</span>
               </button>
 
+              {/* ✅ UPDATED: Conditional verification button */}
               <button
                 className="dropdown-item"
                 onClick={() => handleNavigation('verify-yourself')}
@@ -286,7 +309,7 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                <span>Verify Yourself</span>
+                <span>{isVerified ? 'Update Verification' : 'Verify Yourself'}</span>
               </button>
 
               <button

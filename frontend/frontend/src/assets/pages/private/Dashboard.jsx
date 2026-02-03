@@ -1,12 +1,10 @@
 
-
-
-
-// import { useState, useRef } from 'react';
+// import { useState, useRef, useEffect } from 'react';
+// import { FiEye, FiEyeOff } from 'react-icons/fi';
 // import RideCard from '../../components/RideCard';
 // import ProfileDropdown from '../../components/ProfileDropdown';
 // import { useAuth } from '../../../context/AuthContext';
-// import { userAPI } from '../../../services/api';
+// import { userAPI, verificationAPI, passwordAPI } from '../../../services/api';
 // import '../../css/Dashboard.css';
 
 // // ✅ Upload Profile Page Component
@@ -17,9 +15,10 @@
 //   const [uploading, setUploading] = useState(false);
 //   const [message, setMessage] = useState({ type: '', text: '' });
 
+//   // ✅ FIXED: Add cache busting to prevent browser caching
 //   const getProfilePictureUrl = () => {
 //     if (user?.profilePicture) {
-//       return `http://localhost:5000${user.profilePicture}`;
+//       return `http://localhost:5000${user.profilePicture}?t=${Date.now()}`;
 //     }
 //     return null;
 //   };
@@ -44,6 +43,7 @@
 //     }
 //   };
 
+//   // ✅ FIXED: Better async handling and refresh prevention
 //   const handleUpload = async () => {
 //     if (!selectedFile) {
 //       setMessage({ type: 'error', text: 'Please select a file first' });
@@ -56,12 +56,23 @@
 //     try {
 //       await userAPI.uploadProfilePicture(selectedFile);
       
+//       // ✅ FIX: Add delay to ensure server processed the upload
+//       await new Promise(resolve => setTimeout(resolve, 500));
+      
+//       // ✅ FIX: Fetch fresh user data from server
 //       const updatedUserData = await userAPI.getInfo();
+//       console.log('📸 Profile picture updated:', updatedUserData.user.profilePicture);
+      
+//       // ✅ FIX: Update user context (updates both state and localStorage)
 //       setUser(updatedUserData.user);
 
 //       setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
 //       setSelectedFile(null);
 //       setPreviewUrl(null);
+      
+//       // ✅ FIX: Clear file input
+//       const fileInputs = document.querySelectorAll('input[type="file"]');
+//       fileInputs.forEach(input => input.value = '');
       
 //       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
 //     } catch (error) {
@@ -75,6 +86,7 @@
 //     }
 //   };
 
+//   // ✅ FIXED: Same improvements for delete
 //   const handleDelete = async () => {
 //     if (!user?.profilePicture) return;
 
@@ -88,7 +100,14 @@
 //     try {
 //       await userAPI.deleteProfilePicture();
       
+//       // ✅ FIX: Add delay
+//       await new Promise(resolve => setTimeout(resolve, 500));
+      
+//       // ✅ FIX: Fetch fresh user data
 //       const updatedUserData = await userAPI.getInfo();
+//       console.log('🗑️ Profile picture deleted');
+      
+//       // ✅ FIX: Update user context
 //       setUser(updatedUserData.user);
 
 //       setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
@@ -183,6 +202,545 @@
 //   );
 // };
 
+// // ✅ Change Password Page Component
+// const ChangePasswordPage = () => {
+//   const { user } = useAuth();
+//   const [formData, setFormData] = useState({
+//     currentPassword: '',
+//     newPassword: '',
+//     confirmPassword: ''
+//   });
+//   const [showPassword, setShowPassword] = useState({
+//     current: false,
+//     new: false,
+//     confirm: false
+//   });
+//   const [errors, setErrors] = useState({});
+//   const [loading, setLoading] = useState(false);
+//   const [message, setMessage] = useState({ type: '', text: '' });
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData(prev => ({ ...prev, [name]: value }));
+
+//     if (errors[name]) {
+//       setErrors(prev => ({ ...prev, [name]: '' }));
+//     }
+
+//     if (message.text) {
+//       setMessage({ type: '', text: '' });
+//     }
+//   };
+
+//   const validateForm = () => {
+//     const newErrors = {};
+
+//     if (!formData.currentPassword) {
+//       newErrors.currentPassword = 'Current password is required';
+//     }
+
+//     if (!formData.newPassword) {
+//       newErrors.newPassword = 'New password is required';
+//     } else if (formData.newPassword.length < 8) {
+//       newErrors.newPassword = 'Password must be at least 8 characters long';
+//     } else if (!/[A-Z]/.test(formData.newPassword)) {
+//       newErrors.newPassword = 'Password must contain at least one capital letter';
+//     }
+
+//     if (!formData.confirmPassword) {
+//       newErrors.confirmPassword = 'Please confirm your new password';
+//     } else if (formData.newPassword !== formData.confirmPassword) {
+//       newErrors.confirmPassword = 'Passwords do not match';
+//     }
+
+//     setErrors(newErrors);
+//     return Object.keys(newErrors).length === 0;
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     if (!validateForm()) {
+//       return;
+//     }
+
+//     setLoading(true);
+//     setMessage({ type: '', text: '' });
+
+//     try {
+//       const response = await passwordAPI.changePassword({
+//         currentPassword: formData.currentPassword,
+//         newPassword: formData.newPassword,
+//         confirmPassword: formData.confirmPassword
+//       });
+
+//       setMessage({ type: 'success', text: response.message });
+//       setFormData({
+//         currentPassword: '',
+//         newPassword: '',
+//         confirmPassword: ''
+//       });
+//     } catch (error) {
+//       console.error('Change password error:', error);
+//       setMessage({
+//         type: 'error',
+//         text: error.response?.data?.message || 'Failed to change password. Please try again.'
+//       });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="change-password-page">
+//       <div className="page-header">
+//         <h1>Change Password</h1>
+//         <p>Update your account password</p>
+//       </div>
+
+//       {message.text && (
+//         <div className={`update-message ${message.type}`}>
+//           {message.text}
+//         </div>
+//       )}
+
+//       <form className="form-container" onSubmit={handleSubmit}>
+//         <div className="form-group">
+//           <label>Current Password *</label>
+//           <div className="password-input-wrapper">
+//             <input
+//               type={showPassword.current ? "text" : "password"}
+//               name="currentPassword"
+//               className={`form-input ${errors.currentPassword ? 'input-error' : ''}`}
+//               value={formData.currentPassword}
+//               onChange={handleChange}
+//               placeholder="Enter your current password"
+//               disabled={loading}
+//             />
+//             <button
+//               type="button"
+//               className="password-toggle-icon"
+//               onClick={() => setShowPassword(prev => ({ ...prev, current: !prev.current }))}
+//               disabled={loading}
+//               aria-label={showPassword.current ? "Hide password" : "Show password"}
+//             >
+//               {showPassword.current ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+//             </button>
+//           </div>
+//           {errors.currentPassword && (
+//             <span className="error-text">{errors.currentPassword}</span>
+//           )}
+//         </div>
+
+//         <div className="form-group">
+//           <label>New Password *</label>
+//           <div className="password-input-wrapper">
+//             <input
+//               type={showPassword.new ? "text" : "password"}
+//               name="newPassword"
+//               className={`form-input ${errors.newPassword ? 'input-error' : ''}`}
+//               value={formData.newPassword}
+//               onChange={handleChange}
+//               placeholder="Enter new password (min 8 characters, 1 capital letter)"
+//               disabled={loading}
+//             />
+//             <button
+//               type="button"
+//               className="password-toggle-icon"
+//               onClick={() => setShowPassword(prev => ({ ...prev, new: !prev.new }))}
+//               disabled={loading}
+//               aria-label={showPassword.new ? "Hide password" : "Show password"}
+//             >
+//               {showPassword.new ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+//             </button>
+//           </div>
+//           {errors.newPassword && (
+//             <span className="error-text">{errors.newPassword}</span>
+//           )}
+//         </div>
+
+//         <div className="form-group">
+//           <label>Confirm New Password *</label>
+//           <div className="password-input-wrapper">
+//             <input
+//               type={showPassword.confirm ? "text" : "password"}
+//               name="confirmPassword"
+//               className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
+//               value={formData.confirmPassword}
+//               onChange={handleChange}
+//               placeholder="Re-enter your new password"
+//               disabled={loading}
+//             />
+//             <button
+//               type="button"
+//               className="password-toggle-icon"
+//               onClick={() => setShowPassword(prev => ({ ...prev, confirm: !prev.confirm }))}
+//               disabled={loading}
+//               aria-label={showPassword.confirm ? "Hide password" : "Show password"}
+//             >
+//               {showPassword.confirm ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+//             </button>
+//           </div>
+//           {errors.confirmPassword && (
+//             <span className="error-text">{errors.confirmPassword}</span>
+//           )}
+//         </div>
+
+//         <button
+//           type="submit"
+//           className="btn-submit"
+//           disabled={loading}
+//         >
+//           {loading ? 'Changing Password...' : 'Change Password'}
+//         </button>
+//       </form>
+//     </div>
+//   );
+// };
+
+// // ✅ Verify Yourself Page Component
+// const VerifyYourselfPage = () => {
+//   const { user, setUser } = useAuth();
+//   const [verificationStatus, setVerificationStatus] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [submitting, setSubmitting] = useState(false);
+//   const [message, setMessage] = useState({ type: '', text: '' });
+  
+//   const [formData, setFormData] = useState({
+//     citizenshipNumber: '',
+//     drivingLicenseNumber: '',
+//     verificationType: 'user_only'
+//   });
+
+//   const [files, setFiles] = useState({
+//     citizenshipFront: null,
+//     citizenshipBack: null,
+//     drivingLicenseFront: null,
+//     drivingLicenseBack: null
+//   });
+
+//   const [previews, setPreviews] = useState({
+//     citizenshipFront: null,
+//     citizenshipBack: null,
+//     drivingLicenseFront: null,
+//     drivingLicenseBack: null
+//   });
+
+//   useEffect(() => {
+//     fetchVerificationStatus();
+//   }, []);
+
+//   const fetchVerificationStatus = async () => {
+//     try {
+//       const data = await verificationAPI.getStatus();
+//       setVerificationStatus(data);
+//     } catch (error) {
+//       console.error('Error fetching verification status:', error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleInputChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData(prev => ({ ...prev, [name]: value }));
+//   };
+
+//   const handleFileChange = (e, fieldName) => {
+//     const file = e.target.files[0];
+//     if (file) {
+//       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+//       if (!validTypes.includes(file.type)) {
+//         setMessage({ type: 'error', text: 'Please select a valid file (JPEG, PNG, PDF)' });
+//         return;
+//       }
+
+//       if (file.size > 10 * 1024 * 1024) {
+//         setMessage({ type: 'error', text: 'File size must be less than 10MB' });
+//         return;
+//       }
+
+//       setFiles(prev => ({ ...prev, [fieldName]: file }));
+      
+//       if (file.type.startsWith('image/')) {
+//         setPreviews(prev => ({ ...prev, [fieldName]: URL.createObjectURL(file) }));
+//       } else {
+//         setPreviews(prev => ({ ...prev, [fieldName]: null }));
+//       }
+      
+//       setMessage({ type: '', text: '' });
+//     }
+//   };
+
+//   // ✅ FIXED: Better form submission handling
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+    
+//     if (!files.citizenshipFront || !files.citizenshipBack) {
+//       setMessage({ type: 'error', text: 'Please upload both sides of your citizenship' });
+//       return;
+//     }
+
+//     if ((formData.verificationType === 'rider' || formData.verificationType === 'both') &&
+//         (!files.drivingLicenseFront || !files.drivingLicenseBack)) {
+//       setMessage({ type: 'error', text: 'Please upload both sides of your driving license for rider verification' });
+//       return;
+//     }
+
+//     setSubmitting(true);
+//     setMessage({ type: '', text: '' });
+
+//     try {
+//       // ✅ FIX: Create FormData properly
+//       const submitFormData = new FormData();
+//       submitFormData.append('citizenshipNumber', formData.citizenshipNumber);
+//       submitFormData.append('verificationType', formData.verificationType);
+      
+//       // ✅ FIX: Always append citizenship files
+//       submitFormData.append('citizenshipFront', files.citizenshipFront);
+//       submitFormData.append('citizenshipBack', files.citizenshipBack);
+      
+//       // ✅ FIX: Only append license fields if provided
+//       if (formData.verificationType === 'rider' || formData.verificationType === 'both') {
+//         submitFormData.append('drivingLicenseNumber', formData.drivingLicenseNumber);
+//         submitFormData.append('drivingLicenseFront', files.drivingLicenseFront);
+//         submitFormData.append('drivingLicenseBack', files.drivingLicenseBack);
+//       }
+
+//       // ✅ FIX: Debug logging
+//       console.log('📤 Submitting verification...');
+//       console.log('Form data keys:', Array.from(submitFormData.keys()));
+      
+//       // ✅ FIX: Wait for API response
+//       const response = await verificationAPI.submitVerification(submitFormData);
+      
+//       console.log('✅ Verification submitted:', response);
+      
+//       // ✅ FIX: Show success message immediately
+//       setMessage({ type: 'success', text: 'Verification request submitted successfully! ✅' });
+      
+//       // ✅ FIX: Clear form immediately
+//       setFormData({
+//         citizenshipNumber: '',
+//         drivingLicenseNumber: '',
+//         verificationType: 'user_only'
+//       });
+//       setFiles({
+//         citizenshipFront: null,
+//         citizenshipBack: null,
+//         drivingLicenseFront: null,
+//         drivingLicenseBack: null
+//       });
+//       setPreviews({
+//         citizenshipFront: null,
+//         citizenshipBack: null,
+//         drivingLicenseFront: null,
+//         drivingLicenseBack: null
+//       });
+      
+//       // ✅ FIX: Clear file inputs
+//       const fileInputs = document.querySelectorAll('input[type="file"]');
+//       fileInputs.forEach(input => input.value = '');
+      
+//       // ✅ FIX: Fetch updated status after delay
+//       setTimeout(async () => {
+//         await fetchVerificationStatus();
+//       }, 1000);
+      
+//     } catch (error) {
+//       console.error('❌ Verification submit error:', error);
+//       console.error('Error response:', error.response?.data);
+//       setMessage({
+//         type: 'error',
+//         text: error.response?.data?.message || 'Failed to submit verification request. Please try again.'
+//       });
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="verify-page">
+//         <div className="loading-state">Loading...</div>
+//       </div>
+//     );
+//   }
+
+//   const getVerificationBadge = () => {
+//     if (verificationStatus?.isVerifiedUser && verificationStatus?.isVerifiedRider) {
+//       return <span className="badge badge-purple">✓ Fully Verified (User + Rider)</span>;
+//     } else if (verificationStatus?.isVerifiedRider) {
+//       return <span className="badge badge-purple">✓ Verified Rider</span>;
+//     } else if (verificationStatus?.isVerifiedUser) {
+//       return <span className="badge badge-green">✓ Verified User</span>;
+//     } else {
+//       return <span className="badge badge-gray">⚠ Unverified</span>;
+//     }
+//   };
+
+//   const isPending = verificationStatus?.verification?.status === 'pending';
+//   const isRejected = verificationStatus?.verification?.status === 'rejected';
+
+//   return (
+//     <div className="verify-page">
+//       <div className="page-header">
+//         <h1>Verify Yourself</h1>
+//         <p>Upload your identity documents</p>
+//         {getVerificationBadge()}
+//       </div>
+
+//       {message.text && (
+//         <div className={`update-message ${message.type}`}>
+//           {message.text}
+//         </div>
+//       )}
+
+//       {isPending && (
+//         <div className="info-banner pending">
+//           <strong>⏳ Verification Pending</strong>
+//           <p>Your verification request is under review. You'll be notified once it's processed.</p>
+//         </div>
+//       )}
+
+//       {isRejected && (
+//         <div className="info-banner rejected">
+//           <strong>❌ Verification Rejected</strong>
+//           <p><strong>Reason:</strong> {verificationStatus.verification.adminRemarks}</p>
+//           <p>You can submit a new verification request below.</p>
+//         </div>
+//       )}
+
+//       {!isPending && (
+//         <form className="form-container" onSubmit={handleSubmit}>
+//           <div className="form-group">
+//             <label>Verification Type *</label>
+//             <select 
+//               name="verificationType"
+//               className="form-input"
+//               value={formData.verificationType}
+//               onChange={handleInputChange}
+//               required
+//             >
+//               <option value="user_only">User Only (Citizenship only)</option>
+//               <option value="rider">Rider Only (Citizenship + Driving License)</option>
+//               <option value="both">Both User & Rider</option>
+//             </select>
+//             <small className="form-help">
+//               • User Only: Request rides only (Green tick ✓)<br />
+//               • Rider: Offer rides only (Purple tick ✓)<br />
+//               • Both: Request and offer rides
+//             </small>
+//           </div>
+
+//           <h3 style={{ marginTop: '2rem' }}>Citizenship Documents *</h3>
+          
+//           <div className="form-group">
+//             <label>Citizenship Number *</label>
+//             <input 
+//               type="text"
+//               name="citizenshipNumber"
+//               className="form-input"
+//               value={formData.citizenshipNumber}
+//               onChange={handleInputChange}
+//               placeholder="Enter citizenship number"
+//               required
+//             />
+//           </div>
+
+//           <div className="form-row">
+//             <div className="form-group">
+//               <label>Citizenship Front *</label>
+//               <input 
+//                 type="file"
+//                 className="form-input"
+//                 accept="image/*,application/pdf"
+//                 onChange={(e) => handleFileChange(e, 'citizenshipFront')}
+//                 required
+//               />
+//               {previews.citizenshipFront && (
+//                 <img src={previews.citizenshipFront} alt="Preview" className="file-preview" />
+//               )}
+//             </div>
+
+//             <div className="form-group">
+//               <label>Citizenship Back *</label>
+//               <input 
+//                 type="file"
+//                 className="form-input"
+//                 accept="image/*,application/pdf"
+//                 onChange={(e) => handleFileChange(e, 'citizenshipBack')}
+//                 required
+//               />
+//               {previews.citizenshipBack && (
+//                 <img src={previews.citizenshipBack} alt="Preview" className="file-preview" />
+//               )}
+//             </div>
+//           </div>
+
+//           {(formData.verificationType === 'rider' || formData.verificationType === 'both') && (
+//             <>
+//               <h3 style={{ marginTop: '2rem' }}>Driving License Documents *</h3>
+              
+//               <div className="form-group">
+//                 <label>Driving License Number *</label>
+//                 <input 
+//                   type="text"
+//                   name="drivingLicenseNumber"
+//                   className="form-input"
+//                   value={formData.drivingLicenseNumber}
+//                   onChange={handleInputChange}
+//                   placeholder="Enter driving license number"
+//                   required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+//                 />
+//               </div>
+
+//               <div className="form-row">
+//                 <div className="form-group">
+//                   <label>Driving License Front *</label>
+//                   <input 
+//                     type="file"
+//                     className="form-input"
+//                     accept="image/*,application/pdf"
+//                     onChange={(e) => handleFileChange(e, 'drivingLicenseFront')}
+//                     required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+//                   />
+//                   {previews.drivingLicenseFront && (
+//                     <img src={previews.drivingLicenseFront} alt="Preview" className="file-preview" />
+//                   )}
+//                 </div>
+
+//                 <div className="form-group">
+//                   <label>Driving License Back *</label>
+//                   <input 
+//                     type="file"
+//                     className="form-input"
+//                     accept="image/*,application/pdf"
+//                     onChange={(e) => handleFileChange(e, 'drivingLicenseBack')}
+//                     required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+//                   />
+//                   {previews.drivingLicenseBack && (
+//                     <img src={previews.drivingLicenseBack} alt="Preview" className="file-preview" />
+//                   )}
+//                 </div>
+//               </div>
+//             </>
+//           )}
+
+//           <button 
+//             type="submit"
+//             className="btn-submit"
+//             disabled={submitting}
+//           >
+//             {submitting ? 'Submitting...' : 'Submit Verification Request'}
+//           </button>
+//         </form>
+//       )}
+//     </div>
+//   );
+// };
+
+// // ✅ Main Dashboard Component (NO CHANGES NEEDED - keeping your original code)
 // const Dashboard = () => {
 //   const { user, login } = useAuth();
   
@@ -194,7 +752,6 @@
 //   const [isUpdating, setIsUpdating] = useState(false);
 //   const [updateMessage, setUpdateMessage] = useState('');
   
-//   // Form state for user info
 //   const [userFormData, setUserFormData] = useState({
 //     username: '',
 //     phone: ''
@@ -256,6 +813,13 @@
 //   };
 
 //   const switchMode = () => {
+//     // Check if user is trying to switch to rider mode and is not verified
+//     if (!isRiderMode && !user?.isVerifiedRider) {
+//       alert('You need to be verified as a rider to access rider mode. Please complete your verification process.');
+//       setIsModeDropdownOpen(false);
+//       return;
+//     }
+
 //     setIsRiderMode(!isRiderMode);
 //     setIsModeDropdownOpen(false);
 //     setActivePage('rides');
@@ -267,7 +831,6 @@
 //     setTimeout(() => setLogoShake(false), 500);
 //   };
 
-//   // Handle form input changes
 //   const handleUserFormChange = (e) => {
 //     const { name, value } = e.target;
 //     setUserFormData(prev => ({
@@ -276,7 +839,6 @@
 //     }));
 //   };
 
-//   // Handle update user info
 //   const handleUpdateUserInfo = async () => {
 //     setIsUpdating(true);
 //     setUpdateMessage('');
@@ -287,7 +849,6 @@
 //         phone: userFormData.phone
 //       });
 
-//       // Update the user context with new data
 //       const token = localStorage.getItem('token');
 //       login(response.user, token);
 
@@ -542,34 +1103,11 @@
 //       case 'upload-profile':
 //         return <UploadProfilePage />;
 
+//       case 'change-password':
+//         return <ChangePasswordPage />;
+
 //       case 'verify-yourself':
-//         return (
-//           <div className="verify-page">
-//             <div className="page-header">
-//               <h1>Verify Yourself</h1>
-//               <p>Upload your identity documents</p>
-//             </div>
-//             <div className="form-container">
-//               <div className="form-group">
-//                 <label>Document Type</label>
-//                 <select className="form-input">
-//                   <option>Citizenship</option>
-//                   <option>Driving License</option>
-//                   <option>Passport</option>
-//                 </select>
-//               </div>
-//               <div className="form-group">
-//                 <label>Document Number</label>
-//                 <input type="text" className="form-input" />
-//               </div>
-//               <div className="form-group">
-//                 <label>Upload Document</label>
-//                 <input type="file" className="form-input" accept="image/*" />
-//               </div>
-//               <button className="btn-submit">Submit</button>
-//             </div>
-//           </div>
-//         );
+//         return <VerifyYourselfPage />;
 
 //       case 'payment-info':
 //         return (
@@ -744,6 +1282,9 @@
 // export default Dashboard;
 
 
+
+
+
 import { useState, useRef, useEffect } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import RideCard from '../../components/RideCard';
@@ -752,7 +1293,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { userAPI, verificationAPI, passwordAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 
-// ✅ Upload Profile Page Component
+// ✅ Upload Profile Page Component (NO CHANGES)
 const UploadProfilePage = () => {
   const { user, setUser } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
@@ -760,7 +1301,6 @@ const UploadProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // ✅ FIXED: Add cache busting to prevent browser caching
   const getProfilePictureUrl = () => {
     if (user?.profilePicture) {
       return `http://localhost:5000${user.profilePicture}?t=${Date.now()}`;
@@ -788,7 +1328,6 @@ const UploadProfilePage = () => {
     }
   };
 
-  // ✅ FIXED: Better async handling and refresh prevention
   const handleUpload = async () => {
     if (!selectedFile) {
       setMessage({ type: 'error', text: 'Please select a file first' });
@@ -801,21 +1340,17 @@ const UploadProfilePage = () => {
     try {
       await userAPI.uploadProfilePicture(selectedFile);
       
-      // ✅ FIX: Add delay to ensure server processed the upload
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // ✅ FIX: Fetch fresh user data from server
       const updatedUserData = await userAPI.getInfo();
       console.log('📸 Profile picture updated:', updatedUserData.user.profilePicture);
       
-      // ✅ FIX: Update user context (updates both state and localStorage)
       setUser(updatedUserData.user);
 
       setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
       setSelectedFile(null);
       setPreviewUrl(null);
       
-      // ✅ FIX: Clear file input
       const fileInputs = document.querySelectorAll('input[type="file"]');
       fileInputs.forEach(input => input.value = '');
       
@@ -831,7 +1366,6 @@ const UploadProfilePage = () => {
     }
   };
 
-  // ✅ FIXED: Same improvements for delete
   const handleDelete = async () => {
     if (!user?.profilePicture) return;
 
@@ -845,14 +1379,11 @@ const UploadProfilePage = () => {
     try {
       await userAPI.deleteProfilePicture();
       
-      // ✅ FIX: Add delay
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // ✅ FIX: Fetch fresh user data
       const updatedUserData = await userAPI.getInfo();
       console.log('🗑️ Profile picture deleted');
       
-      // ✅ FIX: Update user context
       setUser(updatedUserData.user);
 
       setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
@@ -947,7 +1478,7 @@ const UploadProfilePage = () => {
   );
 };
 
-// ✅ Change Password Page Component
+// ✅ Change Password Page Component (NO CHANGES)
 const ChangePasswordPage = () => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
@@ -1143,32 +1674,40 @@ const ChangePasswordPage = () => {
   );
 };
 
-// ✅ Verify Yourself Page Component
+// ✅✅✅ UPDATED: Verify Yourself Page Component - THIS IS THE ONLY CHANGE! ✅✅✅
 const VerifyYourselfPage = () => {
   const { user, setUser } = useAuth();
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [activeTab, setActiveTab] = useState('citizenship'); // 'citizenship' or 'rider'
   
-  const [formData, setFormData] = useState({
-    citizenshipNumber: '',
-    drivingLicenseNumber: '',
-    verificationType: 'user_only'
+  // Citizenship form
+  const [citizenshipForm, setCitizenshipForm] = useState({
+    citizenshipNumber: ''
+  });
+  const [citizenshipFiles, setCitizenshipFiles] = useState({
+    front: null,
+    back: null
+  });
+  const [citizenshipPreviews, setCitizenshipPreviews] = useState({
+    front: null,
+    back: null
   });
 
-  const [files, setFiles] = useState({
-    citizenshipFront: null,
-    citizenshipBack: null,
-    drivingLicenseFront: null,
-    drivingLicenseBack: null
+  // Rider form
+  const [riderForm, setRiderForm] = useState({
+    licenseNumber: '',
+    expiryDate: ''
   });
-
-  const [previews, setPreviews] = useState({
-    citizenshipFront: null,
-    citizenshipBack: null,
-    drivingLicenseFront: null,
-    drivingLicenseBack: null
+  const [riderFiles, setRiderFiles] = useState({
+    front: null,
+    back: null
+  });
+  const [riderPreviews, setRiderPreviews] = useState({
+    front: null,
+    back: null
   });
 
   useEffect(() => {
@@ -1179,6 +1718,13 @@ const VerifyYourselfPage = () => {
     try {
       const data = await verificationAPI.getStatus();
       setVerificationStatus(data);
+      
+      // Set default tab based on verification status
+      if (!data.isVerifiedUser) {
+        setActiveTab('citizenship');
+      } else if (!data.isVerifiedRider) {
+        setActiveTab('rider');
+      }
     } catch (error) {
       console.error('Error fetching verification status:', error);
     } finally {
@@ -1186,49 +1732,42 @@ const VerifyYourselfPage = () => {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFileChange = (e, fieldName) => {
+  const handleFileChange = (e, type, side) => {
     const file = e.target.files[0];
-    if (file) {
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-      if (!validTypes.includes(file.type)) {
-        setMessage({ type: 'error', text: 'Please select a valid file (JPEG, PNG, PDF)' });
-        return;
-      }
+    if (!file) return;
 
-      if (file.size > 10 * 1024 * 1024) {
-        setMessage({ type: 'error', text: 'File size must be less than 10MB' });
-        return;
-      }
-
-      setFiles(prev => ({ ...prev, [fieldName]: file }));
-      
-      if (file.type.startsWith('image/')) {
-        setPreviews(prev => ({ ...prev, [fieldName]: URL.createObjectURL(file) }));
-      } else {
-        setPreviews(prev => ({ ...prev, [fieldName]: null }));
-      }
-      
-      setMessage({ type: '', text: '' });
-    }
-  };
-
-  // ✅ FIXED: Better form submission handling
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!files.citizenshipFront || !files.citizenshipBack) {
-      setMessage({ type: 'error', text: 'Please upload both sides of your citizenship' });
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Please select a valid file (JPEG, PNG, PDF)' });
       return;
     }
 
-    if ((formData.verificationType === 'rider' || formData.verificationType === 'both') &&
-        (!files.drivingLicenseFront || !files.drivingLicenseBack)) {
-      setMessage({ type: 'error', text: 'Please upload both sides of your driving license for rider verification' });
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'File size must be less than 10MB' });
+      return;
+    }
+
+    if (type === 'citizenship') {
+      setCitizenshipFiles(prev => ({ ...prev, [side]: file }));
+      if (file.type.startsWith('image/')) {
+        setCitizenshipPreviews(prev => ({ ...prev, [side]: URL.createObjectURL(file) }));
+      }
+    } else {
+      setRiderFiles(prev => ({ ...prev, [side]: file }));
+      if (file.type.startsWith('image/')) {
+        setRiderPreviews(prev => ({ ...prev, [side]: URL.createObjectURL(file) }));
+      }
+    }
+    
+    setMessage({ type: '', text: '' });
+  };
+
+  // ✅ Submit Citizenship Verification
+  const handleSubmitCitizenship = async (e) => {
+    e.preventDefault();
+    
+    if (!citizenshipFiles.front || !citizenshipFiles.back) {
+      setMessage({ type: 'error', text: 'Please upload both sides of your citizenship' });
       return;
     }
 
@@ -1236,68 +1775,98 @@ const VerifyYourselfPage = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      // ✅ FIX: Create FormData properly
-      const submitFormData = new FormData();
-      submitFormData.append('citizenshipNumber', formData.citizenshipNumber);
-      submitFormData.append('verificationType', formData.verificationType);
-      
-      // ✅ FIX: Always append citizenship files
-      submitFormData.append('citizenshipFront', files.citizenshipFront);
-      submitFormData.append('citizenshipBack', files.citizenshipBack);
-      
-      // ✅ FIX: Only append license fields if provided
-      if (formData.verificationType === 'rider' || formData.verificationType === 'both') {
-        submitFormData.append('drivingLicenseNumber', formData.drivingLicenseNumber);
-        submitFormData.append('drivingLicenseFront', files.drivingLicenseFront);
-        submitFormData.append('drivingLicenseBack', files.drivingLicenseBack);
-      }
+      const formData = new FormData();
+      formData.append('citizenshipNumber', citizenshipForm.citizenshipNumber);
+      formData.append('citizenshipFront', citizenshipFiles.front);
+      formData.append('citizenshipBack', citizenshipFiles.back);
 
-      // ✅ FIX: Debug logging
-      console.log('📤 Submitting verification...');
-      console.log('Form data keys:', Array.from(submitFormData.keys()));
+      console.log('📤 Submitting citizenship verification...');
       
-      // ✅ FIX: Wait for API response
-      const response = await verificationAPI.submitVerification(submitFormData);
+      const response = await verificationAPI.submitCitizenshipVerification(formData);
       
-      console.log('✅ Verification submitted:', response);
+      console.log('✅ Citizenship verification submitted:', response);
       
-      // ✅ FIX: Show success message immediately
-      setMessage({ type: 'success', text: 'Verification request submitted successfully! ✅' });
+      setMessage({ type: 'success', text: 'Citizenship verification submitted successfully! ✅' });
       
-      // ✅ FIX: Clear form immediately
-      setFormData({
-        citizenshipNumber: '',
-        drivingLicenseNumber: '',
-        verificationType: 'user_only'
-      });
-      setFiles({
-        citizenshipFront: null,
-        citizenshipBack: null,
-        drivingLicenseFront: null,
-        drivingLicenseBack: null
-      });
-      setPreviews({
-        citizenshipFront: null,
-        citizenshipBack: null,
-        drivingLicenseFront: null,
-        drivingLicenseBack: null
-      });
+      // Clear form
+      setCitizenshipForm({ citizenshipNumber: '' });
+      setCitizenshipFiles({ front: null, back: null });
+      setCitizenshipPreviews({ front: null, back: null });
       
-      // ✅ FIX: Clear file inputs
+      // Clear file inputs
       const fileInputs = document.querySelectorAll('input[type="file"]');
       fileInputs.forEach(input => input.value = '');
       
-      // ✅ FIX: Fetch updated status after delay
+      // Fetch updated status
       setTimeout(async () => {
         await fetchVerificationStatus();
       }, 1000);
       
     } catch (error) {
-      console.error('❌ Verification submit error:', error);
-      console.error('Error response:', error.response?.data);
+      console.error('❌ Citizenship verification error:', error);
       setMessage({
         type: 'error',
-        text: error.response?.data?.message || 'Failed to submit verification request. Please try again.'
+        text: error.response?.data?.message || 'Failed to submit citizenship verification'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ✅ Submit Rider Verification
+  const handleSubmitRider = async (e) => {
+    e.preventDefault();
+    
+    if (!riderFiles.front) {
+      setMessage({ type: 'error', text: 'Please upload at least the front of your driving license' });
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const formData = new FormData();
+      formData.append('drivingLicenseNumber', riderForm.licenseNumber);
+      formData.append('licenseExpiryDate', riderForm.expiryDate);
+      formData.append('drivingLicenseFront', riderFiles.front);
+      if (riderFiles.back) {
+        formData.append('drivingLicenseBack', riderFiles.back);
+      }
+
+      console.log('📤 Submitting rider verification...');
+      
+      // Check if user is verified - use upgrade endpoint
+      let response;
+      if (verificationStatus?.isVerifiedUser) {
+        response = await verificationAPI.upgradeToRider(formData);
+        console.log('✅ Rider upgrade submitted:', response);
+        setMessage({ type: 'success', text: 'Rider upgrade request submitted successfully! ✅' });
+      } else {
+        response = await verificationAPI.submitRiderVerification(formData);
+        console.log('✅ Rider verification submitted:', response);
+        setMessage({ type: 'success', text: 'Rider verification submitted successfully! ✅' });
+      }
+      
+      // Clear form
+      setRiderForm({ licenseNumber: '', expiryDate: '' });
+      setRiderFiles({ front: null, back: null });
+      setRiderPreviews({ front: null, back: null });
+      
+      // Clear file inputs
+      const fileInputs = document.querySelectorAll('input[type="file"]');
+      fileInputs.forEach(input => input.value = '');
+      
+      // Fetch updated status
+      setTimeout(async () => {
+        await fetchVerificationStatus();
+      }, 1000);
+      
+    } catch (error) {
+      console.error('❌ Rider verification error:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to submit rider verification'
       });
     } finally {
       setSubmitting(false);
@@ -1312,27 +1881,29 @@ const VerifyYourselfPage = () => {
     );
   }
 
-  const getVerificationBadge = () => {
-    if (verificationStatus?.isVerifiedUser && verificationStatus?.isVerifiedRider) {
-      return <span className="badge badge-purple">✓ Fully Verified (User + Rider)</span>;
-    } else if (verificationStatus?.isVerifiedRider) {
-      return <span className="badge badge-purple">✓ Verified Rider</span>;
-    } else if (verificationStatus?.isVerifiedUser) {
-      return <span className="badge badge-green">✓ Verified User</span>;
-    } else {
-      return <span className="badge badge-gray">⚠ Unverified</span>;
-    }
-  };
-
   const isPending = verificationStatus?.verification?.status === 'pending';
   const isRejected = verificationStatus?.verification?.status === 'rejected';
+  const isVerifiedUser = verificationStatus?.isVerifiedUser;
+  const isVerifiedRider = verificationStatus?.isVerifiedRider;
 
   return (
     <div className="verify-page">
       <div className="page-header">
-        <h1>Verify Yourself</h1>
-        <p>Upload your identity documents</p>
-        {getVerificationBadge()}
+        <h1>{isVerifiedUser || isVerifiedRider ? 'Update Verification' : 'Verify Yourself'}</h1>
+        <p>Upload your identity documents for verification</p>
+        
+        {/* Verification Status Badges */}
+        <div style={{ marginTop: '10px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          {isVerifiedUser && (
+            <span className="badge badge-green">✓ Verified User (Green Tick)</span>
+          )}
+          {isVerifiedRider && (
+            <span className="badge badge-purple" style={{ backgroundColor: '#3b82f6' }}>✓ Verified Rider (Blue Tick)</span>
+          )}
+          {!isVerifiedUser && !isVerifiedRider && (
+            <span className="badge badge-gray">⚠ Unverified</span>
+          )}
+        </div>
       </div>
 
       {message.text && (
@@ -1357,135 +1928,193 @@ const VerifyYourselfPage = () => {
       )}
 
       {!isPending && (
-        <form className="form-container" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Verification Type *</label>
-            <select 
-              name="verificationType"
-              className="form-input"
-              value={formData.verificationType}
-              onChange={handleInputChange}
-              required
+        <>
+          {/* ✅ Tab Navigation */}
+          <div className="verification-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px', justifyContent: 'center' }}>
+            <button
+              className={`tab-btn ${activeTab === 'citizenship' ? 'active' : ''}`}
+              onClick={() => setActiveTab('citizenship')}
+              disabled={isVerifiedUser}
+              style={{
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '8px',
+                backgroundColor: activeTab === 'citizenship' ? '#667eea' : '#f3f4f6',
+                color: activeTab === 'citizenship' ? 'white' : '#6b7280',
+                cursor: isVerifiedUser ? 'not-allowed' : 'pointer',
+                fontWeight: '600',
+                opacity: isVerifiedUser ? 0.5 : 1
+              }}
             >
-              <option value="user_only">User Only (Citizenship only)</option>
-              <option value="rider">Rider Only (Citizenship + Driving License)</option>
-              <option value="both">Both User & Rider</option>
-            </select>
-            <small className="form-help">
-              • User Only: Request rides only (Green tick ✓)<br />
-              • Rider: Offer rides only (Purple tick ✓)<br />
-              • Both: Request and offer rides
-            </small>
+              {isVerifiedUser ? '✓ User Verified' : 'Verify as User'}
+            </button>
+            
+            <button
+              className={`tab-btn ${activeTab === 'rider' ? 'active' : ''}`}
+              onClick={() => setActiveTab('rider')}
+              disabled={isVerifiedRider}
+              style={{
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '8px',
+                backgroundColor: activeTab === 'rider' ? '#667eea' : '#f3f4f6',
+                color: activeTab === 'rider' ? 'white' : '#6b7280',
+                cursor: isVerifiedRider ? 'not-allowed' : 'pointer',
+                fontWeight: '600',
+                opacity: isVerifiedRider ? 0.5 : 1
+              }}
+            >
+              {isVerifiedRider ? '✓ Rider Verified' : isVerifiedUser ? 'Upgrade to Rider' : 'Verify as Rider'}
+            </button>
           </div>
 
-          <h3 style={{ marginTop: '2rem' }}>Citizenship Documents *</h3>
-          
-          <div className="form-group">
-            <label>Citizenship Number *</label>
-            <input 
-              type="text"
-              name="citizenshipNumber"
-              className="form-input"
-              value={formData.citizenshipNumber}
-              onChange={handleInputChange}
-              placeholder="Enter citizenship number"
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Citizenship Front *</label>
-              <input 
-                type="file"
-                className="form-input"
-                accept="image/*,application/pdf"
-                onChange={(e) => handleFileChange(e, 'citizenshipFront')}
-                required
-              />
-              {previews.citizenshipFront && (
-                <img src={previews.citizenshipFront} alt="Preview" className="file-preview" />
-              )}
-            </div>
-
-            <div className="form-group">
-              <label>Citizenship Back *</label>
-              <input 
-                type="file"
-                className="form-input"
-                accept="image/*,application/pdf"
-                onChange={(e) => handleFileChange(e, 'citizenshipBack')}
-                required
-              />
-              {previews.citizenshipBack && (
-                <img src={previews.citizenshipBack} alt="Preview" className="file-preview" />
-              )}
-            </div>
-          </div>
-
-          {(formData.verificationType === 'rider' || formData.verificationType === 'both') && (
-            <>
-              <h3 style={{ marginTop: '2rem' }}>Driving License Documents *</h3>
+          {/* ✅ Citizenship Verification Form */}
+          {activeTab === 'citizenship' && !isVerifiedUser && (
+            <form className="form-container" onSubmit={handleSubmitCitizenship}>
+              <h3 style={{ color: '#10b981', marginBottom: '20px' }}>
+                🟢 Citizenship Verification (User - Green Tick)
+              </h3>
               
+              <p style={{ marginBottom: '20px', color: '#6b7280' }}>
+                Verify your citizenship to request rides and use the platform as a passenger.
+              </p>
+
               <div className="form-group">
-                <label>Driving License Number *</label>
+                <label>Citizenship Number *</label>
                 <input 
                   type="text"
-                  name="drivingLicenseNumber"
                   className="form-input"
-                  value={formData.drivingLicenseNumber}
-                  onChange={handleInputChange}
-                  placeholder="Enter driving license number"
-                  required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+                  value={citizenshipForm.citizenshipNumber}
+                  onChange={(e) => setCitizenshipForm({ citizenshipNumber: e.target.value })}
+                  placeholder="Enter your citizenship number"
+                  required
                 />
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Driving License Front *</label>
+                  <label>Citizenship Front *</label>
                   <input 
                     type="file"
                     className="form-input"
                     accept="image/*,application/pdf"
-                    onChange={(e) => handleFileChange(e, 'drivingLicenseFront')}
-                    required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+                    onChange={(e) => handleFileChange(e, 'citizenship', 'front')}
+                    required
                   />
-                  {previews.drivingLicenseFront && (
-                    <img src={previews.drivingLicenseFront} alt="Preview" className="file-preview" />
+                  {citizenshipPreviews.front && (
+                    <img src={citizenshipPreviews.front} alt="Preview" className="file-preview" />
                   )}
                 </div>
 
                 <div className="form-group">
-                  <label>Driving License Back *</label>
+                  <label>Citizenship Back *</label>
                   <input 
                     type="file"
                     className="form-input"
                     accept="image/*,application/pdf"
-                    onChange={(e) => handleFileChange(e, 'drivingLicenseBack')}
-                    required={formData.verificationType === 'rider' || formData.verificationType === 'both'}
+                    onChange={(e) => handleFileChange(e, 'citizenship', 'back')}
+                    required
                   />
-                  {previews.drivingLicenseBack && (
-                    <img src={previews.drivingLicenseBack} alt="Preview" className="file-preview" />
+                  {citizenshipPreviews.back && (
+                    <img src={citizenshipPreviews.back} alt="Preview" className="file-preview" />
                   )}
                 </div>
               </div>
-            </>
+
+              <button 
+                type="submit"
+                className="btn-submit"
+                disabled={submitting}
+                style={{ backgroundColor: '#10b981' }}
+              >
+                {submitting ? 'Submitting...' : 'Submit Citizenship Verification'}
+              </button>
+            </form>
           )}
 
-          <button 
-            type="submit"
-            className="btn-submit"
-            disabled={submitting}
-          >
-            {submitting ? 'Submitting...' : 'Submit Verification Request'}
-          </button>
-        </form>
+          {/* ✅ Rider Verification Form */}
+          {activeTab === 'rider' && !isVerifiedRider && (
+            <form className="form-container" onSubmit={handleSubmitRider}>
+              <h3 style={{ color: '#3b82f6', marginBottom: '20px' }}>
+                🔵 {isVerifiedUser ? 'Upgrade to Rider' : 'Rider Verification'} (Blue Tick)
+              </h3>
+              
+              <p style={{ marginBottom: '20px', color: '#6b7280' }}>
+                {isVerifiedUser 
+                  ? 'Upgrade your account to offer rides and become a verified rider.'
+                  : 'Verify your driving license to offer rides on the platform.'}
+              </p>
+
+              <div className="form-group">
+                <label>Driving License Number *</label>
+                <input 
+                  type="text"
+                  className="form-input"
+                  value={riderForm.licenseNumber}
+                  onChange={(e) => setRiderForm(prev => ({ ...prev, licenseNumber: e.target.value }))}
+                  placeholder="Enter your driving license number"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>License Expiry Date *</label>
+                <input 
+                  type="date"
+                  className="form-input"
+                  value={riderForm.expiryDate}
+                  onChange={(e) => setRiderForm(prev => ({ ...prev, expiryDate: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Driving License Front *</label>
+                <input
+                  type="file"
+                  className="form-input"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => handleFileChange(e, 'rider', 'front')}
+                  required
+                />
+                {riderPreviews.front && (
+                  <img src={riderPreviews.front} alt="Preview" className="file-preview" />
+                )}
+              </div>
+
+              <button 
+                type="submit"
+                className="btn-submit"
+                disabled={submitting}
+                style={{ backgroundColor: '#3b82f6' }}
+              >
+                {submitting ? 'Submitting...' : isVerifiedUser ? 'Submit Rider Upgrade' : 'Submit Rider Verification'}
+              </button>
+            </form>
+          )}
+
+          {/* ✅ Already Verified Message */}
+          {isVerifiedUser && activeTab === 'citizenship' && (
+            <div className="info-banner" style={{ backgroundColor: '#d1fae5', borderColor: '#10b981' }}>
+              <strong>✅ You are already verified as a User!</strong>
+              <p>You have a green verification tick and can request rides.</p>
+            </div>
+          )}
+
+          {isVerifiedRider && activeTab === 'rider' && (
+            <div className="info-banner" style={{ backgroundColor: '#dbeafe', borderColor: '#3b82f6' }}>
+              <strong>✅ You are already verified as a Rider!</strong>
+              <p>You have a blue verification tick and can offer rides.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 };
+// ✅✅✅ END OF UPDATED VerifyYourselfPage Component ✅✅✅
 
-// ✅ Main Dashboard Component (NO CHANGES NEEDED - keeping your original code)
+// ✅ Main Dashboard Component (NO CHANGES - ALL YOUR ORIGINAL LOGIC PRESERVED)
 const Dashboard = () => {
   const { user, login } = useAuth();
   
@@ -1558,7 +2187,6 @@ const Dashboard = () => {
   };
 
   const switchMode = () => {
-    // Check if user is trying to switch to rider mode and is not verified
     if (!isRiderMode && !user?.isVerifiedRider) {
       alert('You need to be verified as a rider to access rider mode. Please complete your verification process.');
       setIsModeDropdownOpen(false);

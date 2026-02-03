@@ -123,7 +123,7 @@ const adminRoutes = require("./routes/adminRoutes");
 
 // Import models
 const User = require("./models/User");
-const Verification = require("./models/verification");
+const Verification = require("./models/Verification");
 const Notification = require("./models/Notification");
 
 // ✅ Initialize all models in an object
