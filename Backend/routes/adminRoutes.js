@@ -4,7 +4,8 @@ const {
   getPendingVerifications,
   getAllVerifications,
   approveVerification,
-  rejectVerification
+  rejectVerification,
+  deleteVerification
 } = require("../controllers/adminController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -27,5 +28,8 @@ router.put("/verifications/:id/approve", authMiddleware, adminOnly, approveVerif
 
 // Reject verification
 router.put("/verifications/:id/reject", authMiddleware, adminOnly, rejectVerification);
+
+// Delete verification
+router.delete("/verifications/:id", authMiddleware, adminOnly, deleteVerification);
 
 module.exports = router;

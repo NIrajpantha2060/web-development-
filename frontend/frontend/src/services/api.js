@@ -509,6 +509,16 @@ export const adminAPI = {
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
+  },
+
+  // Delete verification
+  deleteVerification: async (id) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(
+      `${API_BASE_URL}/admin/verifications/${id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
   }
 };
 

@@ -240,17 +240,16 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
               {getInitials(currentUser.username)}
             </div>
           )}
-          {/* Verification ticks */}
-          {user?.isVerifiedUser && (
-            <div className="verification-tick user-tick" title="Verified User">
-              ✓
-            </div>
-          )}
-          {user?.isVerifiedRider && (
+          {/* Verification ticks - Show only rider tick if verified as rider, otherwise show user tick */}
+          {user?.isVerifiedRider ? (
             <div className="verification-tick rider-tick" title="Verified Rider">
               ✓
             </div>
-          )}
+          ) : user?.isVerifiedUser ? (
+            <div className="verification-tick user-tick" title="Verified User">
+              ✓
+            </div>
+          ) : null}
         </div>
       </button>
 

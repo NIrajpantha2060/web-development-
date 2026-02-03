@@ -612,6 +612,8 @@ const AdminDashboard = () => {
   const [remarks, setRemarks] = useState('');
   const [approvalType, setApprovalType] = useState('user');
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [verificationToDelete, setVerificationToDelete] = useState(null);
 
   // ✅ FIX: Only fetch data after auth is loaded
   useEffect(() => {
@@ -758,7 +760,7 @@ const AdminDashboard = () => {
 
   const handleReject = async () => {
     if (!selectedVerification) return;
-    
+
     if (!remarks.trim()) {
       setMessage({ type: 'error', text: 'Please provide a reason for rejection' });
       return;
@@ -769,7 +771,7 @@ const AdminDashboard = () => {
 
       setMessage({ type: 'success', text: 'Verification rejected successfully!' });
       closeModal();
-      
+
       // Refresh the list
       if (activePage === 'pending-verifications') {
         fetchPendingVerifications();
@@ -783,6 +785,42 @@ const AdminDashboard = () => {
       setMessage({
         type: 'error',
         text: error.response?.data?.message || 'Failed to reject verification'
+      });
+    }
+  };
+
+  const openDeleteModal = (verification) => {
+    setVerificationToDelete(verification);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setVerificationToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!verificationToDelete) return;
+
+    try {
+      await adminAPI.deleteVerification(verificationToDelete.id);
+
+      setMessage({ type: 'success', text: 'Verification deleted successfully!' });
+      closeDeleteModal();
+
+      // Refresh the list
+      if (activePage === 'pending-verifications') {
+        fetchPendingVerifications();
+      } else {
+        fetchAllVerifications();
+      }
+
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error deleting verification:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete verification'
       });
     }
   };
@@ -968,22 +1006,39 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {verification.status === 'pending' && (
-          <div className="verification-actions">
-            <button 
-              className="btn-approve"
-              onClick={() => openApprovalModal(verification)}
-            >
-              ✓ Approve
-            </button>
-            <button 
-              className="btn-reject"
-              onClick={() => openRejectionModal(verification)}
-            >
-              ✗ Reject
-            </button>
-          </div>
-        )}
+        <div className="verification-actions">
+          {verification.status === 'pending' && (
+            <>
+              <button
+                className="btn-approve"
+                onClick={() => openApprovalModal(verification)}
+              >
+                ✓ Approve
+              </button>
+              <button
+                className="btn-reject"
+                onClick={() => openRejectionModal(verification)}
+              >
+                ✗ Reject
+              </button>
+            </>
+          )}
+          <button
+            className="btn-delete"
+            onClick={() => openDeleteModal(verification)}
+            style={{
+              background: '#dc3545',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginLeft: '8px'
+            }}
+          >
+            🗑️ Delete
+          </button>
+        </div>
       </div>
     );
   };
@@ -1172,6 +1227,55 @@ const AdminDashboard = () => {
                 onClick={actionType === 'approve' ? handleApprove : handleReject}
               >
                 {actionType === 'approve' ? '✓ Approve' : '✗ Reject'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <>
+          <div className="modal-overlay" onClick={closeDeleteModal}></div>
+          <div className="modal">
+            <div className="modal-header">
+              <h2>🗑️ Delete Verification</h2>
+              <button className="modal-close" onClick={closeDeleteModal}>×</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="modal-user-info">
+                <strong>User:</strong> {verificationToDelete?.user?.username}
+                <br />
+                <strong>Email:</strong> {verificationToDelete?.user?.email}
+                <br />
+                <strong>Type:</strong> {verificationToDelete?.verificationType?.replace('_', ' ')}
+                <br />
+                <strong>Status:</strong> {verificationToDelete?.status}
+              </div>
+
+              <div style={{ marginTop: '1rem', padding: '1rem', background: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '4px' }}>
+                <strong>⚠️ Warning:</strong> This action cannot be undone. The verification record will be permanently deleted from the database.
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeDeleteModal}>
+                Cancel
+              </button>
+              <button
+                className="btn-delete"
+                onClick={handleDelete}
+                style={{
+                  background: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                🗑️ Delete Permanently
               </button>
             </div>
           </div>

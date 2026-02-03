@@ -416,8 +416,37 @@ const rejectVerification = async (req, res) => {
     });
   } catch (error) {
     console.error("Reject verification error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Error rejecting verification",
+      error: error.message
+    });
+  }
+};
+
+// Delete verification
+const deleteVerification = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const verificationId = req.params.id;
+
+    const verification = await Verification.findByPk(verificationId);
+
+    if (!verification) {
+      return res.status(404).json({ message: "Verification not found" });
+    }
+
+    // Delete the verification record
+    await verification.destroy();
+
+    console.log(`Admin ${adminId} deleted verification ${verificationId}`);
+
+    res.status(200).json({
+      message: "Verification deleted successfully"
+    });
+  } catch (error) {
+    console.error("Delete verification error:", error);
+    res.status(500).json({
+      message: "Error deleting verification",
       error: error.message
     });
   }
@@ -427,5 +456,6 @@ module.exports = {
   getPendingVerifications,
   getAllVerifications,
   approveVerification,
-  rejectVerification
+  rejectVerification,
+  deleteVerification
 };

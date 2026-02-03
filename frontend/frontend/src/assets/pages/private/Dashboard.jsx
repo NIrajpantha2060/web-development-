@@ -1892,15 +1892,13 @@ const VerifyYourselfPage = () => {
         <h1>{isVerifiedUser || isVerifiedRider ? 'Update Verification' : 'Verify Yourself'}</h1>
         <p>Upload your identity documents for verification</p>
         
-        {/* Verification Status Badges */}
+        {/* Verification Status Badges - Show only rider badge if verified as rider, otherwise show user badge */}
         <div style={{ marginTop: '10px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          {isVerifiedUser && (
-            <span className="badge badge-green">✓ Verified User (Green Tick)</span>
-          )}
-          {isVerifiedRider && (
+          {isVerifiedRider ? (
             <span className="badge badge-purple" style={{ backgroundColor: '#3b82f6' }}>✓ Verified Rider (Blue Tick)</span>
-          )}
-          {!isVerifiedUser && !isVerifiedRider && (
+          ) : isVerifiedUser ? (
+            <span className="badge badge-green">✓ Verified User (Green Tick)</span>
+          ) : (
             <span className="badge badge-gray">⚠ Unverified</span>
           )}
         </div>

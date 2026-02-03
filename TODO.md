@@ -1,14 +1,15 @@
-# Remove Driving License Back from Verification System
+# Add Delete Verification Feature
 
-## Tasks
-- [ ] Remove "Driving License Back" input field from rider verification form in Dashboard.jsx
-- [ ] Remove `drivingLicenseBack` field from Verification model
-- [ ] Update verificationController.js to not handle `drivingLicenseBack`
-- [ ] Create database migration to drop `drivingLicenseBack` column from PostgreSQL
-- [ ] Update API service if needed
-- [ ] Run migration to drop column from database
-- [ ] Test verification process
+## Backend Changes
+- [x] Add deleteVerification function in adminController.js
+- [x] Add DELETE route in adminRoutes.js
 
-## Progress
-- Started: $(date)
-- Status: In Progress
+## Frontend Changes
+- [x] Add deleteVerification API call in api.js
+- [x] Update AdminDashboard.jsx to show delete button for all verifications
+- [x] Add delete confirmation modal
+- [x] Handle delete action and refresh list
+
+## Testing
+- [x] Test delete functionality
+- [x] Verify proper error handling
