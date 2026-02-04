@@ -1,5 +1,4 @@
 
-
 // import { useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
 // import { useAuth } from '../../context/AuthContext';
@@ -26,7 +25,6 @@
 //     return name.split(' ').map(n => n[0]).join('').toUpperCase();
 //   };
 
-//   // ✅ Get profile picture URL
 //   const getProfilePictureUrl = () => {
 //     if (user?.profilePicture) {
 //       return `http://localhost:5000${user.profilePicture}`;
@@ -34,13 +32,15 @@
 //     return null;
 //   };
 
+//   // ✅ NEW: Check if user is verified
+//   const isVerified = user?.isVerifiedUser || user?.isVerifiedRider;
+
 //   return (
 //     <div className="profile-dropdown-container">
 //       <button
 //         className="profile-btn"
 //         onClick={() => setIsOpen(!isOpen)}
 //       >
-//         {/* ✅ FIXED: Changed className from profile-avatar-img to profile-avatar */}
 //         <div className="profile-avatar-container">
 //           {getProfilePictureUrl() ? (
 //             <img
@@ -53,17 +53,16 @@
 //               {getInitials(currentUser.username)}
 //             </div>
 //           )}
-//           {/* Verification ticks */}
-//           {user?.isVerifiedUser && (
-//             <div className="verification-tick user-tick" title="Verified User">
-//               ✓
-//             </div>
-//           )}
-//           {user?.isVerifiedRider && (
+//           {/* Verification ticks - Show only rider tick if verified as rider, otherwise show user tick */}
+//           {user?.isVerifiedRider ? (
 //             <div className="verification-tick rider-tick" title="Verified Rider">
 //               ✓
 //             </div>
-//           )}
+//           ) : user?.isVerifiedUser ? (
+//             <div className="verification-tick user-tick" title="Verified User">
+//               ✓
+//             </div>
+//           ) : null}
 //         </div>
 //       </button>
 
@@ -73,7 +72,6 @@
 //           <div className="dropdown-menu">
 //             <div className="dropdown-header">
 //               <div className="user-info">
-//                 {/* ✅ FIXED: Changed className from user-avatar-img to user-avatar */}
 //                 {getProfilePictureUrl() ? (
 //                   <img 
 //                     src={getProfilePictureUrl()} 
@@ -115,6 +113,7 @@
 //                 <span>Upload Profile</span>
 //               </button>
 
+//               {/* ✅ UPDATED: Conditional verification button */}
 //               <button
 //                 className="dropdown-item"
 //                 onClick={() => handleNavigation('verify-yourself')}
@@ -122,7 +121,7 @@
 //                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
 //                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
 //                 </svg>
-//                 <span>Verify Yourself</span>
+//                 <span>{isVerified ? 'Update Verification' : 'Verify Yourself'}</span>
 //               </button>
 
 //               <button
@@ -219,7 +218,6 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
     return null;
   };
 
-  // ✅ NEW: Check if user is verified
   const isVerified = user?.isVerifiedUser || user?.isVerifiedRider;
 
   return (
@@ -240,15 +238,11 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
               {getInitials(currentUser.username)}
             </div>
           )}
-          {/* Verification ticks - Show only rider tick if verified as rider, otherwise show user tick */}
+          {/* ✅ UPDATED: Professional verification badges (Facebook/Instagram style) - No text, just checkmark */}
           {user?.isVerifiedRider ? (
-            <div className="verification-tick rider-tick" title="Verified Rider">
-              ✓
-            </div>
+            <div className="verification-tick rider-tick" title="Verified Rider"></div>
           ) : user?.isVerifiedUser ? (
-            <div className="verification-tick user-tick" title="Verified User">
-              ✓
-            </div>
+            <div className="verification-tick user-tick" title="Verified User"></div>
           ) : null}
         </div>
       </button>
@@ -300,7 +294,6 @@ const ProfileDropdown = ({ onNavigate, isRiderMode }) => {
                 <span>Upload Profile</span>
               </button>
 
-              {/* ✅ UPDATED: Conditional verification button */}
               <button
                 className="dropdown-item"
                 onClick={() => handleNavigation('verify-yourself')}

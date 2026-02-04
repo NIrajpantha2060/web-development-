@@ -65,17 +65,32 @@
   color: #0B3C5D;
 }
 
+/* ✅ UPDATED: Professional Verification Icon (Facebook/Instagram style) */
 .verified-icon {
-  color: #2EC4B6;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.4rem;
+  height: 1.4rem;
   display: flex;
   align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  flex-shrink: 0;
 }
 
+.verified-icon::before {
+  content: '✓';
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Alternative: SVG-based verification icon */
 .verified-icon svg {
   width: 100%;
   height: 100%;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
 }
 
 .driver-rating {
@@ -281,6 +296,15 @@
     font-size: 1.2rem;
   }
 
+  .verified-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .verified-icon::before {
+    font-size: 0.75rem;
+  }
+
   .ride-price .amount {
     font-size: 1.75rem;
   }
@@ -302,6 +326,15 @@
 
   .location-name {
     font-size: 1.05rem;
+  }
+
+  .verified-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  .verified-icon::before {
+    font-size: 0.7rem;
   }
 
   .btn-primary,

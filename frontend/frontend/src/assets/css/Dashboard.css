@@ -32,7 +32,7 @@
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 1rem; /* Gap between logo and brand name - matches HomePage */
+  gap: 1rem;
   text-decoration: none;
   cursor: pointer;
 }
@@ -49,7 +49,7 @@
 }
 
 .navbar-logo {
-  width: 4rem; /* Matches HomePage nav-logo-img */
+  width: 4rem;
   height: 4rem;
   border-radius: 50%;
   object-fit: cover;
@@ -67,10 +67,8 @@
 .navbar-menu {
   display: flex;
   align-items: center;
-  gap: 4rem; /* Space between nav links - matches HomePage */
+  gap: 4rem;
   list-style: none;
-  /* REMOVED: margin: 0 4rem; - this was causing the huge gap */
-  /* Now it naturally spaces with justify-content: space-between */
 }
 
 .nav-link {
@@ -99,7 +97,47 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+}
+
+/* ✅ NEW: Notification Icon */
+.notification-icon {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+
+.notification-icon:hover {
+  background: rgba(77, 163, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.notification-icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: #0B3C5D;
+  stroke-width: 2;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background: #EF4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #d5d5d5;
 }
 
 /* Mobile Menu Button */
@@ -181,6 +219,56 @@
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* ✅ NEW: Vehicle Filter Buttons */
+.vehicle-filters {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.75rem;
+  border: 2px solid #E4E7EB;
+  border-radius: 50px;
+  background: #FFFFFF;
+  color: #1F2933;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(11, 60, 93, 0.08);
+}
+
+.filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(77, 163, 255, 0.2);
+  border-color: #4DA3FF;
+  background: #F0F7FF;
+  color: #4DA3FF;
+}
+
+.filter-btn.active {
+  background: #4DA3FF;
+  color: #FFFFFF;
+  border-color: #4DA3FF;
+  box-shadow: 0 4px 16px rgba(77, 163, 255, 0.3);
+}
+
+.filter-btn svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+.filter-btn.active svg {
+  color: #FFFFFF;
 }
 
 /* Rides Grid */
@@ -633,6 +721,15 @@ select.form-input {
   .rides-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .vehicle-filters {
+    gap: 0.75rem;
+  }
+
+  .filter-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
 }
 
 /* Mobile Devices */
@@ -662,6 +759,15 @@ select.form-input {
     height: 3rem;
   }
 
+  .navbar-right {
+    gap: 1rem;
+  }
+
+  .notification-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
   .dashboard-main-content {
     padding: 6rem 1.5rem 5rem;
   }
@@ -672,6 +778,16 @@ select.form-input {
 
   .page-header p {
     font-size: 1.05rem;
+  }
+
+  .vehicle-filters {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .filter-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .rides-grid {
@@ -725,6 +841,19 @@ select.form-input {
     height: 2.5rem;
   }
 
+  .navbar-right {
+    gap: 0.75rem;
+  }
+
+  .notification-icon {
+    padding: 0.25rem;
+  }
+
+  .notification-icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
   .dashboard-main-content {
     padding: 5.5rem 1rem 4rem;
   }
@@ -735,6 +864,16 @@ select.form-input {
 
   .page-header h1 {
     font-size: 1.75rem;
+  }
+
+  .filter-btn {
+    padding: 0.7rem 1.25rem;
+    font-size: 0.95rem;
+  }
+
+  .filter-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
   .form-container {
