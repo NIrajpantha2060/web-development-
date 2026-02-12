@@ -1,15 +1,3 @@
-// const express = require("express");
-// const router = express.Router();
-// const { getUserInfo, updateUserInfo } = require("../controllers/userController");
-// const authMiddleware = require("../middleware/authMiddleware");
-
-// // GET user info (protected)
-// router.get("/info", authMiddleware, getUserInfo);
-
-// // UPDATE user info (protected)
-// router.put("/update", authMiddleware, updateUserInfo);
-
-// module.exports = router;
 
 
 const express = require("express");

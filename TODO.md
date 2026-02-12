@@ -1,15 +1,14 @@
-# Add Delete Verification Feature
+# Add Delete Ride Feature
 
 ## Backend Changes
-- [x] Add deleteVerification function in adminController.js
-- [x] Add DELETE route in adminRoutes.js
+- [x] Add deleteRide function in Ridecontroller.js with ownership validation and soft delete
+- [x] Add DELETE route in rideRoutes.js
 
 ## Frontend Changes
-- [x] Add deleteVerification API call in api.js
-- [x] Update AdminDashboard.jsx to show delete button for all verifications
-- [x] Add delete confirmation modal
-- [x] Handle delete action and refresh list
+- [x] Add deleteRide API call in api.js
+- [x] Update Dashboard.jsx to show cancel button for rider mode rides
+- [x] Add delete confirmation and refresh list
 
 ## Testing
 - [x] Test delete functionality
-- [x] Verify proper error handling
+- [x] Verify proper error handling (ownership, status validation)

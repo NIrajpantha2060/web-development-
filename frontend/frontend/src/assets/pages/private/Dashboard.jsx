@@ -1,7 +1,6 @@
 
 
 
-
 // import { useState, useRef, useEffect } from 'react';
 // import { FiEye, FiEyeOff } from 'react-icons/fi';
 // import RideCard from '../../components/RideCard';
@@ -10,7 +9,7 @@
 // import { userAPI, verificationAPI, passwordAPI } from '../../../services/api';
 // import '../../css/Dashboard.css';
 
-// // ✅ Upload Profile Page Component (NO CHANGES)
+// // ✅ Upload Profile Page Component
 // const UploadProfilePage = () => {
 //   const { user, setUser } = useAuth();
 //   const [selectedFile, setSelectedFile] = useState(null);
@@ -195,7 +194,7 @@
 //   );
 // };
 
-// // ✅ Change Password Page Component (NO CHANGES)
+// // ✅ Change Password Page Component
 // const ChangePasswordPage = () => {
 //   const { user } = useAuth();
 //   const [formData, setFormData] = useState({
@@ -391,16 +390,15 @@
 //   );
 // };
 
-// // ✅✅✅ UPDATED: Verify Yourself Page Component - THIS IS THE ONLY CHANGE! ✅✅✅
+// // ✅ UPDATED: Verify Yourself Page Component - REMOVED tick text from badges
 // const VerifyYourselfPage = () => {
 //   const { user, setUser } = useAuth();
 //   const [verificationStatus, setVerificationStatus] = useState(null);
 //   const [loading, setLoading] = useState(true);
 //   const [submitting, setSubmitting] = useState(false);
 //   const [message, setMessage] = useState({ type: '', text: '' });
-//   const [activeTab, setActiveTab] = useState('citizenship'); // 'citizenship' or 'rider'
+//   const [activeTab, setActiveTab] = useState('citizenship');
   
-//   // Citizenship form
 //   const [citizenshipForm, setCitizenshipForm] = useState({
 //     citizenshipNumber: ''
 //   });
@@ -413,7 +411,6 @@
 //     back: null
 //   });
 
-//   // Rider form
 //   const [riderForm, setRiderForm] = useState({
 //     licenseNumber: '',
 //     expiryDate: ''
@@ -436,7 +433,6 @@
 //       const data = await verificationAPI.getStatus();
 //       setVerificationStatus(data);
       
-//       // Set default tab based on verification status
 //       if (!data.isVerifiedUser) {
 //         setActiveTab('citizenship');
 //       } else if (!data.isVerifiedRider) {
@@ -479,7 +475,6 @@
 //     setMessage({ type: '', text: '' });
 //   };
 
-//   // ✅ Submit Citizenship Verification
 //   const handleSubmitCitizenship = async (e) => {
 //     e.preventDefault();
     
@@ -505,16 +500,13 @@
       
 //       setMessage({ type: 'success', text: 'Citizenship verification submitted successfully! ✅' });
       
-//       // Clear form
 //       setCitizenshipForm({ citizenshipNumber: '' });
 //       setCitizenshipFiles({ front: null, back: null });
 //       setCitizenshipPreviews({ front: null, back: null });
       
-//       // Clear file inputs
 //       const fileInputs = document.querySelectorAll('input[type="file"]');
 //       fileInputs.forEach(input => input.value = '');
       
-//       // Fetch updated status
 //       setTimeout(async () => {
 //         await fetchVerificationStatus();
 //       }, 1000);
@@ -530,7 +522,6 @@
 //     }
 //   };
 
-//   // ✅ Submit Rider Verification
 //   const handleSubmitRider = async (e) => {
 //     e.preventDefault();
     
@@ -553,7 +544,6 @@
 
 //       console.log('📤 Submitting rider verification...');
       
-//       // Check if user is verified - use upgrade endpoint
 //       let response;
 //       if (verificationStatus?.isVerifiedUser) {
 //         response = await verificationAPI.upgradeToRider(formData);
@@ -565,16 +555,13 @@
 //         setMessage({ type: 'success', text: 'Rider verification submitted successfully! ✅' });
 //       }
       
-//       // Clear form
 //       setRiderForm({ licenseNumber: '', expiryDate: '' });
 //       setRiderFiles({ front: null, back: null });
 //       setRiderPreviews({ front: null, back: null });
       
-//       // Clear file inputs
 //       const fileInputs = document.querySelectorAll('input[type="file"]');
 //       fileInputs.forEach(input => input.value = '');
       
-//       // Fetch updated status
 //       setTimeout(async () => {
 //         await fetchVerificationStatus();
 //       }, 1000);
@@ -609,12 +596,12 @@
 //         <h1>{isVerifiedUser || isVerifiedRider ? 'Update Verification' : 'Verify Yourself'}</h1>
 //         <p>Upload your identity documents for verification</p>
         
-//         {/* Verification Status Badges - Show only rider badge if verified as rider, otherwise show user badge */}
+//         {/* ✅ UPDATED: Removed tick text, showing only "Verified Rider" or "Verified User" */}
 //         <div style={{ marginTop: '10px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
 //           {isVerifiedRider ? (
-//             <span className="badge badge-purple" style={{ backgroundColor: '#3b82f6' }}>✓ Verified Rider (Blue Tick)</span>
+//             <span className="badge badge-purple" style={{ backgroundColor: '#3b82f6' }}>Verified Rider</span>
 //           ) : isVerifiedUser ? (
-//             <span className="badge badge-green">✓ Verified User (Green Tick)</span>
+//             <span className="badge badge-green">Verified User</span>
 //           ) : (
 //             <span className="badge badge-gray">⚠ Unverified</span>
 //           )}
@@ -644,7 +631,6 @@
 
 //       {!isPending && (
 //         <>
-//           {/* ✅ Tab Navigation */}
 //           <div className="verification-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px', justifyContent: 'center' }}>
 //             <button
 //               className={`tab-btn ${activeTab === 'citizenship' ? 'active' : ''}`}
@@ -683,11 +669,10 @@
 //             </button>
 //           </div>
 
-//           {/* ✅ Citizenship Verification Form */}
 //           {activeTab === 'citizenship' && !isVerifiedUser && (
 //             <form className="form-container" onSubmit={handleSubmitCitizenship}>
 //               <h3 style={{ color: '#10b981', marginBottom: '20px' }}>
-//                 🟢 Citizenship Verification (User - Green Tick)
+//                 🟢 Citizenship Verification (User)
 //               </h3>
               
 //               <p style={{ marginBottom: '20px', color: '#6b7280' }}>
@@ -747,11 +732,10 @@
 //             </form>
 //           )}
 
-//           {/* ✅ Rider Verification Form */}
 //           {activeTab === 'rider' && !isVerifiedRider && (
 //             <form className="form-container" onSubmit={handleSubmitRider}>
 //               <h3 style={{ color: '#3b82f6', marginBottom: '20px' }}>
-//                 🔵 {isVerifiedUser ? 'Upgrade to Rider' : 'Rider Verification'} (Blue Tick)
+//                 🔵 {isVerifiedUser ? 'Upgrade to Rider' : 'Rider Verification'}
 //               </h3>
               
 //               <p style={{ marginBottom: '20px', color: '#6b7280' }}>
@@ -808,18 +792,17 @@
 //             </form>
 //           )}
 
-//           {/* ✅ Already Verified Message */}
 //           {isVerifiedUser && activeTab === 'citizenship' && (
 //             <div className="info-banner" style={{ backgroundColor: '#d1fae5', borderColor: '#10b981' }}>
 //               <strong>✅ You are already verified as a User!</strong>
-//               <p>You have a green verification tick and can request rides.</p>
+//               <p>You can request rides on the platform.</p>
 //             </div>
 //           )}
 
 //           {isVerifiedRider && activeTab === 'rider' && (
 //             <div className="info-banner" style={{ backgroundColor: '#dbeafe', borderColor: '#3b82f6' }}>
 //               <strong>✅ You are already verified as a Rider!</strong>
-//               <p>You have a blue verification tick and can offer rides.</p>
+//               <p>You can offer rides on the platform.</p>
 //             </div>
 //           )}
 //         </>
@@ -827,9 +810,8 @@
 //     </div>
 //   );
 // };
-// // ✅✅✅ END OF UPDATED VerifyYourselfPage Component ✅✅✅
 
-// // ✅ Main Dashboard Component (NO CHANGES - ALL YOUR ORIGINAL LOGIC PRESERVED)
+// // ✅ UPDATED: Main Dashboard Component with Notification Icon and Vehicle Filter Buttons
 // const Dashboard = () => {
 //   const { user, login } = useAuth();
   
@@ -840,6 +822,9 @@
 //   const [logoShake, setLogoShake] = useState(false);
 //   const [isUpdating, setIsUpdating] = useState(false);
 //   const [updateMessage, setUpdateMessage] = useState('');
+  
+//   // ✅ NEW: Vehicle filter state
+//   const [vehicleFilter, setVehicleFilter] = useState('all'); // 'all', 'bike', 'car'
   
 //   const [userFormData, setUserFormData] = useState({
 //     username: '',
@@ -958,6 +943,27 @@
 //             <div className="page-header">
 //               <h1>{isRiderMode ? 'Your Posted Rides' : 'Available Rides'}</h1>
 //               <p>{isRiderMode ? 'Manage your offered rides' : 'Find your perfect ride'}</p>
+              
+//               {/* ✅ NEW: Vehicle Filter Buttons */}
+//               {!isRiderMode && (
+//                 <div className="vehicle-filters">
+//                   <button
+//                     className={`filter-btn ${vehicleFilter === 'bike' ? 'active' : ''}`}
+//                     onClick={() => setVehicleFilter(vehicleFilter === 'bike' ? 'all' : 'bike')}
+//                   >
+//                     <img src="/icons/bike logo.jpg" alt="Bike" style={{ width: '1.5rem', height: '1.5rem', flexShrink: 0 }} />
+//                     <span>Bikes</span>
+//                   </button>
+
+//                   <button
+//                     className={`filter-btn ${vehicleFilter === 'car' ? 'active' : ''}`}
+//                     onClick={() => setVehicleFilter(vehicleFilter === 'car' ? 'all' : 'car')}
+//                   >
+//                     <img src="/icons/car logo.jpg" alt="Car" style={{ width: '1.5rem', height: '1.5rem', flexShrink: 0 }} />
+//                     <span>Cars</span>
+//                   </button>
+//                 </div>
+//               )}
 //             </div>
 //             {isRiderMode ? (
 //               <div className="empty-state">
@@ -1286,6 +1292,14 @@
 //           </nav>
 
 //           <div className="navbar-right">
+//             {/* ✅ NEW: Notification Icon */}
+//             <button className="notification-icon" aria-label="Notifications">
+//               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+//               </svg>
+//               <span className="notification-badge">3</span>
+//             </button>
+
 //             <ProfileDropdown 
 //               onNavigate={handleNavigation}
 //               isRiderMode={isRiderMode}
@@ -1371,13 +1385,52 @@
 
 
 
-import { useState, useRef, useEffect } from 'react';
+
+
+
+
+
+import { useState, useEffect } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import RideCard from '../../components/RideCard';
 import ProfileDropdown from '../../components/ProfileDropdown';
 import { useAuth } from '../../../context/AuthContext';
-import { userAPI, verificationAPI, passwordAPI } from '../../../services/api';
+import { userAPI, verificationAPI, passwordAPI, rideAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
+
+// ===================================================================
+// HELPER COMPONENTS - Upload Profile, Change Password, Verify, AddRide
+// ===================================================================
+
+// ✅ Delete Ride Confirmation Modal Component
+const DeleteRideModal = ({ isOpen, onClose, onConfirm, ride }) => {
+  if (!isOpen || !ride) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Cancel Ride</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          <p>Are you sure you want to cancel this ride?</p>
+          <div className="ride-summary">
+            <p><strong>From:</strong> {ride.from}</p>
+            <p><strong>To:</strong> {ride.to}</p>
+            <p><strong>Date:</strong> {new Date(ride.date).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> {ride.time}</p>
+          </div>
+          <p className="warning-text">This action cannot be undone. The ride will be marked as cancelled.</p>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-secondary" onClick={onClose}>Keep Ride</button>
+          <button className="btn-danger" onClick={onConfirm}>Cancel Ride</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ✅ Upload Profile Page Component
 const UploadProfilePage = () => {
@@ -1760,7 +1813,8 @@ const ChangePasswordPage = () => {
   );
 };
 
-// ✅ UPDATED: Verify Yourself Page Component - REMOVED tick text from badges
+
+// ✅ Verify Yourself Page Component
 const VerifyYourselfPage = () => {
   const { user, setUser } = useAuth();
   const [verificationStatus, setVerificationStatus] = useState(null);
@@ -1966,7 +2020,6 @@ const VerifyYourselfPage = () => {
         <h1>{isVerifiedUser || isVerifiedRider ? 'Update Verification' : 'Verify Yourself'}</h1>
         <p>Upload your identity documents for verification</p>
         
-        {/* ✅ UPDATED: Removed tick text, showing only "Verified Rider" or "Verified User" */}
         <div style={{ marginTop: '10px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
           {isVerifiedRider ? (
             <span className="badge badge-purple" style={{ backgroundColor: '#3b82f6' }}>Verified Rider</span>
@@ -2181,7 +2234,371 @@ const VerifyYourselfPage = () => {
   );
 };
 
-// ✅ UPDATED: Main Dashboard Component with Notification Icon and Vehicle Filter Buttons
+
+// ✅ NEW: Add Ride Page Component
+const AddRidePage = ({ onRideAdded }) => {
+  const [formData, setFormData] = useState({
+    from: '',
+    to: '',
+    date: '',
+    time: '',
+    pickupLocation: '',
+    vehicleNumber: '',
+    vehicleType: 'car',
+    description: '',
+    price: '',
+    availableSeats: '1'
+  });
+  const [vehiclePhoto, setVehiclePhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Please select a valid image file (JPEG, PNG, GIF, WEBP)' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'File size must be less than 5MB' });
+      return;
+    }
+
+    setVehiclePhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setMessage({ type: '', text: '' });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.from.trim()) newErrors.from = 'From location is required';
+    else if (formData.from.length > 30) newErrors.from = 'From location must be 30 characters or less';
+
+    if (!formData.to.trim()) newErrors.to = 'To location is required';
+    else if (formData.to.length > 30) newErrors.to = 'To location must be 30 characters or less';
+
+    if (!formData.date) newErrors.date = 'Date is required';
+    if (!formData.time) newErrors.time = 'Time is required';
+
+    if (!formData.pickupLocation.trim()) newErrors.pickupLocation = 'Pickup location is required';
+    else if (formData.pickupLocation.length > 30) newErrors.pickupLocation = 'Pickup location must be 30 characters or less';
+
+    if (!formData.vehicleNumber.trim()) newErrors.vehicleNumber = 'Vehicle number is required';
+    else if (formData.vehicleNumber.length > 30) newErrors.vehicleNumber = 'Vehicle number must be 30 characters or less';
+
+    if (formData.description && formData.description.length > 400) {
+      newErrors.description = 'Description must be 400 characters or less';
+    }
+
+    if (formData.price && (isNaN(formData.price) || parseFloat(formData.price) < 0)) {
+      newErrors.price = 'Price must be a valid positive number';
+    }
+
+    if (formData.availableSeats && (isNaN(formData.availableSeats) || parseInt(formData.availableSeats) < 1 || parseInt(formData.availableSeats) > 10)) {
+      newErrors.availableSeats = 'Available seats must be between 1 and 10';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      setMessage({ type: 'error', text: 'Please fix the errors in the form' });
+      return;
+    }
+
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('from', formData.from.trim());
+      formDataToSend.append('to', formData.to.trim());
+      formDataToSend.append('date', formData.date);
+      formDataToSend.append('time', formData.time);
+      formDataToSend.append('pickupLocation', formData.pickupLocation.trim());
+      formDataToSend.append('vehicleNumber', formData.vehicleNumber.trim());
+      formDataToSend.append('vehicleType', formData.vehicleType);
+      if (formData.description.trim()) formDataToSend.append('description', formData.description.trim());
+      if (formData.price) formDataToSend.append('price', parseFloat(formData.price));
+      if (formData.availableSeats) formDataToSend.append('availableSeats', parseInt(formData.availableSeats));
+      if (vehiclePhoto) formDataToSend.append('vehiclePhoto', vehiclePhoto);
+
+      console.log('📤 Submitting ride...');
+      
+      const response = await rideAPI.addRide(formDataToSend);
+      
+      console.log('✅ Ride posted successfully:', response);
+      
+      setMessage({ type: 'success', text: 'Ride posted successfully! 🎉' });
+      
+      setFormData({
+        from: '',
+        to: '',
+        date: '',
+        time: '',
+        pickupLocation: '',
+        vehicleNumber: '',
+        vehicleType: 'car',
+        description: '',
+        price: '',
+        availableSeats: '1'
+      });
+      setVehiclePhoto(null);
+      setPhotoPreview(null);
+      
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+      
+      if (onRideAdded) {
+        setTimeout(() => onRideAdded(), 1000);
+      }
+      
+      setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+    } catch (error) {
+      console.error('❌ Add ride error:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to post ride. Please try again.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="add-ride-page">
+      <div className="page-header">
+        <h1>Add New Ride</h1>
+        <p>Offer a ride to fellow travelers</p>
+      </div>
+
+      {message.text && (
+        <div className={`update-message ${message.type}`}>
+          {message.text}
+        </div>
+      )}
+
+      <form className="form-container" onSubmit={handleSubmit}>
+        <div className="form-row">
+          <div className="form-group">
+            <label>From *</label>
+            <input 
+              type="text" 
+              name="from"
+              className={`form-input ${errors.from ? 'input-error' : ''}`}
+              placeholder="Starting location (max 30 chars)"
+              value={formData.from}
+              onChange={handleChange}
+              disabled={loading}
+              maxLength={30}
+            />
+            {errors.from && <span className="error-text">{errors.from}</span>}
+          </div>
+          <div className="form-group">
+            <label>To *</label>
+            <input 
+              type="text" 
+              name="to"
+              className={`form-input ${errors.to ? 'input-error' : ''}`}
+              placeholder="Destination (max 30 chars)"
+              value={formData.to}
+              onChange={handleChange}
+              disabled={loading}
+              maxLength={30}
+            />
+            {errors.to && <span className="error-text">{errors.to}</span>}
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>Date *</label>
+            <input 
+              type="date" 
+              name="date"
+              className={`form-input ${errors.date ? 'input-error' : ''}`}
+              value={formData.date}
+              onChange={handleChange}
+              disabled={loading}
+              min={new Date().toISOString().split('T')[0]}
+            />
+            {errors.date && <span className="error-text">{errors.date}</span>}
+          </div>
+          <div className="form-group">
+            <label>Time *</label>
+            <input 
+              type="time" 
+              name="time"
+              className={`form-input ${errors.time ? 'input-error' : ''}`}
+              value={formData.time}
+              onChange={handleChange}
+              disabled={loading}
+            />
+            {errors.time && <span className="error-text">{errors.time}</span>}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Pickup Location *</label>
+          <input 
+            type="text" 
+            name="pickupLocation"
+            className={`form-input ${errors.pickupLocation ? 'input-error' : ''}`}
+            placeholder="Exact pickup point (max 30 chars)"
+            value={formData.pickupLocation}
+            onChange={handleChange}
+            disabled={loading}
+            maxLength={30}
+          />
+          {errors.pickupLocation && <span className="error-text">{errors.pickupLocation}</span>}
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>Vehicle Number *</label>
+            <input 
+              type="text" 
+              name="vehicleNumber"
+              className={`form-input ${errors.vehicleNumber ? 'input-error' : ''}`}
+              placeholder="BA 1 KHA 1234 (max 30 chars)"
+              value={formData.vehicleNumber}
+              onChange={handleChange}
+              disabled={loading}
+              maxLength={30}
+            />
+            {errors.vehicleNumber && <span className="error-text">{errors.vehicleNumber}</span>}
+          </div>
+          <div className="form-group">
+            <label>Vehicle Type *</label>
+            <select 
+              name="vehicleType"
+              className="form-input"
+              value={formData.vehicleType}
+              onChange={handleChange}
+              disabled={loading}
+            >
+              <option value="car">Car</option>
+              <option value="bike">Bike</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>Price per Seat (NPR)</label>
+            <input 
+              type="number" 
+              name="price"
+              className={`form-input ${errors.price ? 'input-error' : ''}`}
+              placeholder="500"
+              value={formData.price}
+              onChange={handleChange}
+              disabled={loading}
+              min="0"
+              step="0.01"
+            />
+            {errors.price && <span className="error-text">{errors.price}</span>}
+          </div>
+          <div className="form-group">
+            <label>Available Seats</label>
+            <input 
+              type="number" 
+              name="availableSeats"
+              className={`form-input ${errors.availableSeats ? 'input-error' : ''}`}
+              placeholder="1-10"
+              value={formData.availableSeats}
+              onChange={handleChange}
+              disabled={loading}
+              min="1"
+              max="10"
+            />
+            {errors.availableSeats && <span className="error-text">{errors.availableSeats}</span>}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Vehicle Photo</label>
+          <input 
+            type="file" 
+            className="form-input"
+            accept="image/*"
+            onChange={handlePhotoChange}
+            disabled={loading}
+          />
+          <small className="form-help">
+            Accepted formats: JPEG, PNG, GIF, WEBP (Max size: 5MB)
+          </small>
+          {photoPreview && (
+            <div style={{ marginTop: '10px' }}>
+              <img 
+                src={photoPreview} 
+                alt="Vehicle preview" 
+                style={{ 
+                  maxWidth: '200px', 
+                  maxHeight: '200px', 
+                  borderRadius: '8px',
+                  objectFit: 'cover'
+                }} 
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="form-group">
+          <label>Description (Optional)</label>
+          <textarea 
+            name="description"
+            className={`form-input ${errors.description ? 'input-error' : ''}`}
+            rows="4"
+            placeholder="Any additional information about the ride... (max 400 chars)"
+            value={formData.description}
+            onChange={handleChange}
+            disabled={loading}
+            maxLength={400}
+          ></textarea>
+          <small className="form-help">
+            {formData.description.length}/400 characters
+          </small>
+          {errors.description && <span className="error-text">{errors.description}</span>}
+        </div>
+
+        <button 
+          type="submit"
+          className="btn-submit" 
+          disabled={loading}
+        >
+          {loading ? 'Publishing Ride...' : 'Publish Ride'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+
+// ===================================================================
+// MAIN DASHBOARD COMPONENT
+// ===================================================================
+
 const Dashboard = () => {
   const { user, login } = useAuth();
   
@@ -2194,54 +2611,63 @@ const Dashboard = () => {
   const [updateMessage, setUpdateMessage] = useState('');
   
   // ✅ NEW: Vehicle filter state
-  const [vehicleFilter, setVehicleFilter] = useState('all'); // 'all', 'bike', 'car'
+  const [vehicleFilter, setVehicleFilter] = useState('all');
+  
+  // ✅ NEW: Rides state
+  const [rides, setRides] = useState([]);
+  const [loadingRides, setLoadingRides] = useState(false);
   
   const [userFormData, setUserFormData] = useState({
     username: '',
     phone: ''
   });
 
-  const mockRides = [
-    {
-      id: 1,
-      driverName: 'Suman Shrestha',
-      driverRating: 4.8,
-      from: 'Kathmandu',
-      to: 'Pokhara',
-      date: '2026-01-22',
-      time: '08:00 AM',
-      price: 1500,
-      availableSeats: 3,
-      vehicleType: 'Sedan',
-      isVerified: true
-    },
-    {
-      id: 2,
-      driverName: 'Prakash Thapa',
-      driverRating: 4.6,
-      from: 'Lalitpur',
-      to: 'Chitwan',
-      date: '2026-01-23',
-      time: '09:30 AM',
-      price: 1200,
-      availableSeats: 2,
-      vehicleType: 'SUV',
-      isVerified: true
-    },
-    {
-      id: 3,
-      driverName: 'Maya Gurung',
-      driverRating: 4.9,
-      from: 'Bhaktapur',
-      to: 'Nagarkot',
-      date: '2026-01-24',
-      time: '06:00 AM',
-      price: 800,
-      availableSeats: 4,
-      vehicleType: 'Hatchback',
-      isVerified: true
+  // ✅ NEW: Fetch rides based on mode
+  const fetchRides = async () => {
+    setLoadingRides(true);
+    try {
+      if (isRiderMode) {
+        const response = await rideAPI.getMyRides();
+        console.log('✅ My rides fetched:', response.count);
+        const activeRides = (response.rides || []).filter(ride => ride.status !== 'cancelled');
+        setRides(activeRides);
+      } else {
+        const filters = {};
+        if (vehicleFilter !== 'all') {
+          filters.vehicleType = vehicleFilter;
+        }
+        const response = await rideAPI.getAllRides(filters);
+        console.log('✅ All rides fetched:', response.count);
+        setRides(response.rides || []);
+      }
+    } catch (error) {
+      console.error('Error fetching rides:', error);
+      setRides([]);
+    } finally {
+      setLoadingRides(false);
     }
-  ];
+  };
+
+  // ✅ NEW: Handle ride deletion
+  const handleDeleteRide = async (ride) => {
+    if (!window.confirm(`Are you sure you want to cancel this ride from ${ride.from} to ${ride.to}?`)) {
+      return;
+    }
+
+    try {
+      await rideAPI.deleteRide(ride.id);
+      console.log('✅ Ride cancelled successfully');
+      setRides(prevRides => prevRides.filter(item => item.id !== ride.id));
+    } catch (error) {
+      console.error('Error cancelling ride:', error);
+      alert(error.response?.data?.message || 'Failed to cancel ride');
+    }
+  };
+
+  // ✅ NEW: Fetch rides on mount and when mode/filter changes
+  useEffect(() => {
+    fetchRides();
+  }, [isRiderMode, vehicleFilter]);
 
   const handleNavigation = (page) => {
     setActivePage(page);
@@ -2314,16 +2740,14 @@ const Dashboard = () => {
               <h1>{isRiderMode ? 'Your Posted Rides' : 'Available Rides'}</h1>
               <p>{isRiderMode ? 'Manage your offered rides' : 'Find your perfect ride'}</p>
               
-              {/* ✅ NEW: Vehicle Filter Buttons */}
+              {/* ✅ Vehicle Filter Buttons - only for user mode */}
               {!isRiderMode && (
                 <div className="vehicle-filters">
                   <button
                     className={`filter-btn ${vehicleFilter === 'bike' ? 'active' : ''}`}
                     onClick={() => setVehicleFilter(vehicleFilter === 'bike' ? 'all' : 'bike')}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 6l2-2m4 0l2 2m-8 4l-4 4 4 4m8-8l4 4-4 4M6 6h12a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2z" />
-                    </svg>
+                    <img src="/icons/bike logo.jpg" alt="Bike" style={{ width: '1.5rem', height: '1.5rem', flexShrink: 0 }} />
                     <span>Bikes</span>
                   </button>
 
@@ -2331,27 +2755,57 @@ const Dashboard = () => {
                     className={`filter-btn ${vehicleFilter === 'car' ? 'active' : ''}`}
                     onClick={() => setVehicleFilter(vehicleFilter === 'car' ? 'all' : 'car')}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h2a1 1 0 001-1m-6 0h4" />
-                    </svg>
+                    <img src="/icons/car logo.jpg" alt="Car" style={{ width: '1.5rem', height: '1.5rem', flexShrink: 0 }} />
                     <span>Cars</span>
                   </button>
                 </div>
               )}
             </div>
-            {isRiderMode ? (
+            
+            {loadingRides ? (
+              <div className="loading-state">Loading rides...</div>
+            ) : rides.length === 0 ? (
               <div className="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                <h3>No rides posted yet</h3>
-                <p>Start offering rides to fellow travelers</p>
+                <h3>{isRiderMode ? 'No rides posted yet' : 'No rides available'}</h3>
+                <p>{isRiderMode ? 'Start offering rides to fellow travelers' : 'Check back later for available rides'}</p>
               </div>
             ) : (
               <div className="rides-grid">
-                {mockRides.map(ride => (
-                  <RideCard key={ride.id} ride={ride} />
+                {rides.map(ride => (
+                  <div key={ride.id} className="ride-card-wrapper">
+                    <RideCard
+                      ride={{
+                        id: ride.id,
+                        driverName: ride.rider?.username || 'Anonymous',
+                        driverRating: 4.5,
+                        from: ride.from,
+                        to: ride.to,
+                        date: ride.date,
+                        time: ride.time,
+                        price: ride.price || 0,
+                        availableSeats: ride.availableSeats || 0,
+                        vehicleType: ride.vehicleType === 'bike' ? 'Bike' : 'Car',
+                        isVerified: ride.rider?.isVerifiedRider || false,
+                        pickupLocation: ride.pickupLocation,
+                        vehicleNumber: ride.vehicleNumber,
+                        vehiclePhoto: ride.vehiclePhoto,
+                        description: ride.description
+                      }}
+                    />
+                    {isRiderMode && (
+                      <div className="ride-management-actions">
+                        <button
+                          className="btn-danger btn-small"
+                          onClick={() => handleDeleteRide(ride)}
+                        >
+                          Cancel Ride
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -2409,57 +2863,7 @@ const Dashboard = () => {
         );
 
       case 'add-ride':
-        return (
-          <div className="add-ride-page">
-            <div className="page-header">
-              <h1>Add New Ride</h1>
-              <p>Offer a ride to fellow travelers</p>
-            </div>
-            <div className="form-container">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>From</label>
-                  <input type="text" className="form-input" placeholder="Starting location" />
-                </div>
-                <div className="form-group">
-                  <label>To</label>
-                  <input type="text" className="form-input" placeholder="Destination" />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Date</label>
-                  <input type="date" className="form-input" />
-                </div>
-                <div className="form-group">
-                  <label>Time</label>
-                  <input type="time" className="form-input" />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Price per Seat (NPR)</label>
-                  <input type="number" className="form-input" placeholder="500" />
-                </div>
-                <div className="form-group">
-                  <label>Available Seats</label>
-                  <input type="number" className="form-input" placeholder="3" />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Vehicle Type</label>
-                <select className="form-input">
-                  <option>Select vehicle type</option>
-                  <option>Sedan</option>
-                  <option>SUV</option>
-                  <option>Hatchback</option>
-                  <option>Van</option>
-                </select>
-              </div>
-              <button className="btn-submit">Publish Ride</button>
-            </div>
-          </div>
-        );
+        return <AddRidePage onRideAdded={fetchRides} />;
 
       case 'vehicle-profile':
         return (
@@ -2667,7 +3071,6 @@ const Dashboard = () => {
           </nav>
 
           <div className="navbar-right">
-            {/* ✅ NEW: Notification Icon */}
             <button className="notification-icon" aria-label="Notifications">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
