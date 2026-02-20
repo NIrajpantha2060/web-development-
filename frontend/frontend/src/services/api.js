@@ -283,8 +283,60 @@
 //   }
 // };
 
-// export default api;
+// // ✅ Ride API calls
+// export const rideAPI = {
+//   // Add new ride
+//   addRide: async (formData) => {
+//     const token = localStorage.getItem('token');
+//     const response = await axios.post(`${API_BASE_URL}/rides`, formData, {
+//       headers: {
+//         'Authorization': `Bearer ${token}`,
+//         'Content-Type': 'multipart/form-data'
+//       }
+//     });
+//     return response.data;
+//   },
 
+//   // Get my posted rides
+//   getMyRides: async () => {
+//     const token = localStorage.getItem('token');
+//     const response = await axios.get(`${API_BASE_URL}/rides/my-rides`, {
+//       headers: { Authorization: `Bearer ${token}` }
+//     });
+//     return response.data;
+//   },
+
+//   // Get all active rides (with optional filters)
+//   getAllRides: async (filters = {}) => {
+//     const token = localStorage.getItem('token');
+//     const params = new URLSearchParams();
+
+//     if (filters.vehicleType) params.append('vehicleType', filters.vehicleType);
+//     if (filters.from) params.append('from', filters.from);
+//     if (filters.to) params.append('to', filters.to);
+//     if (filters.date) params.append('date', filters.date);
+
+//     const url = params.toString()
+//       ? `${API_BASE_URL}/rides?${params.toString()}`
+//       : `${API_BASE_URL}/rides`;
+
+//     const response = await axios.get(url, {
+//       headers: { Authorization: `Bearer ${token}` }
+//     });
+//     return response.data;
+//   },
+
+//   // Delete/cancel a ride
+//   deleteRide: async (rideId) => {
+//     const token = localStorage.getItem('token');
+//     const response = await axios.delete(`${API_BASE_URL}/rides/${rideId}`, {
+//       headers: { Authorization: `Bearer ${token}` }
+//     });
+//     return response.data;
+//   }
+// };
+
+// export default api;
 
 
 import axios from 'axios';
@@ -617,6 +669,51 @@ export const rideAPI = {
   deleteRide: async (rideId) => {
     const token = localStorage.getItem('token');
     const response = await axios.delete(`${API_BASE_URL}/rides/${rideId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  }
+};
+
+// ✅ NEW: Vehicle API calls
+export const vehicleAPI = {
+  // Get vehicle profile
+  getVehicleProfile: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/vehicles`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Create vehicle profile
+  createVehicleProfile: async (formData) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/vehicles`, formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  // Update vehicle profile
+  updateVehicleProfile: async (formData) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(`${API_BASE_URL}/vehicles`, formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  // Delete vehicle profile
+  deleteVehicleProfile: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(`${API_BASE_URL}/vehicles`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;

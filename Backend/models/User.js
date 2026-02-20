@@ -58,7 +58,7 @@
 //   tableName: 'users'
 // });
 
-// // ✅ IMPORTANT: Define association method
+// // ✅ UPDATED: Define association method with Ride model
 // User.associate = (models) => {
 //   User.hasMany(models.Verification, { 
 //     foreignKey: 'userId',
@@ -67,6 +67,11 @@
 //   User.hasMany(models.Notification, { 
 //     foreignKey: 'userId',
 //     as: 'notifications'
+//   });
+//   // ✅ ADDED: Ride association
+//   User.hasMany(models.Ride, { 
+//     foreignKey: 'userId',
+//     as: 'rides'
 //   });
 // };
 
@@ -131,7 +136,7 @@ const User = sequelize.define("User", {
   tableName: 'users'
 });
 
-// ✅ UPDATED: Define association method with Ride model
+// ✅ UPDATED: Define association method with Ride and Vehicle models
 User.associate = (models) => {
   User.hasMany(models.Verification, { 
     foreignKey: 'userId',
@@ -141,10 +146,14 @@ User.associate = (models) => {
     foreignKey: 'userId',
     as: 'notifications'
   });
-  // ✅ ADDED: Ride association
   User.hasMany(models.Ride, { 
     foreignKey: 'userId',
     as: 'rides'
+  });
+  // ✅ NEW: Vehicle association (one-to-one)
+  User.hasOne(models.Vehicle, { 
+    foreignKey: 'userId',
+    as: 'vehicle'
   });
 };
 

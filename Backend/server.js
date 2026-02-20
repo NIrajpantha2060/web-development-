@@ -1,3 +1,4 @@
+
 // const express = require("express");
 // const cors = require("cors");
 // const path = require("path");
@@ -12,17 +13,20 @@
 // const verificationRoutes = require("./routes/verificationRoutes");
 // const notificationRoutes = require("./routes/notificationRoutes");
 // const adminRoutes = require("./routes/adminRoutes");
+// const rideRoutes = require("./routes/rideRoutes"); // ✅ ADDED
 
 // // Import models
 // const User = require("./models/User");
 // const Verification = require("./models/Verification");
 // const Notification = require("./models/Notification");
+// const Ride = require("./models/Ride"); // ✅ ADDED
 
 // // ✅ Initialize all models in an object
 // const models = {
 //   User,
 //   Verification,
-//   Notification
+//   Notification,
+//   Ride // ✅ ADDED
 // };
 
 // // ✅ Call associate method on each model if it exists
@@ -45,6 +49,7 @@
 // // ✅ OPTIONAL: Add explicit routes for debugging (can remove later)
 // app.use('/uploads/profiles', express.static(path.join(__dirname, 'uploads', 'profiles')));
 // app.use('/uploads/documents', express.static(path.join(__dirname, 'uploads', 'documents')));
+// app.use('/uploads/vehicles', express.static(path.join(__dirname, 'uploads', 'vehicles'))); // ✅ ADDED
 
 // // Test route
 // app.get("/", (req, res) => {
@@ -56,12 +61,15 @@
 //   const fs = require('fs');
 //   const profilesPath = path.join(__dirname, 'uploads', 'profiles');
 //   const documentsPath = path.join(__dirname, 'uploads', 'documents');
+//   const vehiclesPath = path.join(__dirname, 'uploads', 'vehicles'); // ✅ ADDED
   
 //   res.json({
 //     profilesExists: fs.existsSync(profilesPath),
 //     documentsExists: fs.existsSync(documentsPath),
+//     vehiclesExists: fs.existsSync(vehiclesPath), // ✅ ADDED
 //     profilesFiles: fs.existsSync(profilesPath) ? fs.readdirSync(profilesPath) : [],
-//     documentsFiles: fs.existsSync(documentsPath) ? fs.readdirSync(documentsPath) : []
+//     documentsFiles: fs.existsSync(documentsPath) ? fs.readdirSync(documentsPath) : [],
+//     vehiclesFiles: fs.existsSync(vehiclesPath) ? fs.readdirSync(vehiclesPath) : [] // ✅ ADDED
 //   });
 // });
 
@@ -99,6 +107,7 @@
 // app.use("/api/verification", verificationRoutes);
 // app.use("/api/notifications", notificationRoutes);
 // app.use("/api/admin", adminRoutes);
+// app.use("/api/rides", rideRoutes); // ✅ ADDED
 
 // // Connect database and sync models
 // sequelize.sync({ alter: false }).then(() => {
@@ -115,9 +124,6 @@
 
 // module.exports = app;
 
-
-
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -132,20 +138,23 @@ const userRoutes = require("./routes/userRoutes");
 const verificationRoutes = require("./routes/verificationRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const rideRoutes = require("./routes/rideRoutes"); // ✅ ADDED
+const rideRoutes = require("./routes/rideRoutes");
+const vehicleRoutes = require("./routes/vehicleRoutes"); // ✅ NEW
 
 // Import models
 const User = require("./models/User");
 const Verification = require("./models/Verification");
 const Notification = require("./models/Notification");
-const Ride = require("./models/Ride"); // ✅ ADDED
+const Ride = require("./models/Ride");
+const Vehicle = require("./models/Vehicle"); // ✅ NEW
 
 // ✅ Initialize all models in an object
 const models = {
   User,
   Verification,
   Notification,
-  Ride // ✅ ADDED
+  Ride,
+  Vehicle // ✅ NEW
 };
 
 // ✅ Call associate method on each model if it exists
@@ -161,61 +170,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ FIX: Serve static files - MUST be before routes
-// This serves ALL files in uploads folder and its subfolders
+// ✅ Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// ✅ OPTIONAL: Add explicit routes for debugging (can remove later)
 app.use('/uploads/profiles', express.static(path.join(__dirname, 'uploads', 'profiles')));
 app.use('/uploads/documents', express.static(path.join(__dirname, 'uploads', 'documents')));
-app.use('/uploads/vehicles', express.static(path.join(__dirname, 'uploads', 'vehicles'))); // ✅ ADDED
+app.use('/uploads/vehicles', express.static(path.join(__dirname, 'uploads', 'vehicles')));
 
 // Test route
 app.get("/", (req, res) => {
   res.send("Lift Nepal Backend Running 🚗");
 });
 
-// ✅ DEBUG: Add this route to check if files exist
+// ✅ DEBUG: Test upload endpoint
 app.get("/uploads/test", (req, res) => {
   const fs = require('fs');
   const profilesPath = path.join(__dirname, 'uploads', 'profiles');
   const documentsPath = path.join(__dirname, 'uploads', 'documents');
-  const vehiclesPath = path.join(__dirname, 'uploads', 'vehicles'); // ✅ ADDED
+  const vehiclesPath = path.join(__dirname, 'uploads', 'vehicles');
   
   res.json({
     profilesExists: fs.existsSync(profilesPath),
     documentsExists: fs.existsSync(documentsPath),
-    vehiclesExists: fs.existsSync(vehiclesPath), // ✅ ADDED
+    vehiclesExists: fs.existsSync(vehiclesPath),
     profilesFiles: fs.existsSync(profilesPath) ? fs.readdirSync(profilesPath) : [],
     documentsFiles: fs.existsSync(documentsPath) ? fs.readdirSync(documentsPath) : [],
-    vehiclesFiles: fs.existsSync(vehiclesPath) ? fs.readdirSync(vehiclesPath) : [] // ✅ ADDED
-  });
-});
-
-// ✅ DEBUG: Test upload endpoint without auth to isolate issues
-app.post("/api/test-upload", (req, res, next) => {
-  console.log('\n=== TEST UPLOAD ENDPOINT ===');
-  console.log('Request headers:', req.headers);
-  console.log('Request body:', req.body);
-  console.log('Request files before middleware:', req.files);
-  next();
-}, require('./middleware/verificationUploadMiddleware'), (req, res) => {
-  console.log('Request files after middleware:', req.files ? Object.keys(req.files) : 'None');
-  if (req.files) {
-    Object.entries(req.files).forEach(([key, fileArray]) => {
-      fileArray.forEach(file => {
-        console.log(`  ${key}: ${file.filename}`);
-        const fs = require('fs');
-        const exists = fs.existsSync(file.path);
-        console.log(`    Path: ${file.path}`);
-        console.log(`    File exists on disk: ${exists ? '✅' : '❌'}`);
-      });
-    });
-  }
-  res.json({
-    message: 'Test upload received',
-    filesCount: req.files ? Object.keys(req.files).length : 0,
-    files: req.files
+    vehiclesFiles: fs.existsSync(vehiclesPath) ? fs.readdirSync(vehiclesPath) : []
   });
 });
 
@@ -226,7 +205,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/verification", verificationRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/rides", rideRoutes); // ✅ ADDED
+app.use("/api/rides", rideRoutes);
+app.use("/api/vehicles", vehicleRoutes); // ✅ NEW
 
 // Connect database and sync models
 sequelize.sync({ alter: false }).then(() => {
