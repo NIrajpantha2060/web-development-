@@ -377,6 +377,11 @@ const AddRidePage = ({ onRideAdded, onNavigate }) => {
   const [vehicleProfile, setVehicleProfile] = useState(null);
   const [checkingVehicle, setCheckingVehicle] = useState(true);
   
+  // ✅ Active ride check states
+  const [hasActiveRide, setHasActiveRide] = useState(false);
+  const [activeRideInfo, setActiveRideInfo] = useState(null);
+  const [checkingActiveRide, setCheckingActiveRide] = useState(true);
+  
   const [formData, setFormData] = useState({
     from: '',
     to: '',
@@ -398,10 +403,24 @@ const AddRidePage = ({ onRideAdded, onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // ✅ Check if user has vehicle profile on mount
+  // ✅ Check if user has vehicle profile and active ride on mount
   useEffect(() => {
     checkVehicleProfile();
+    checkForActiveRide();
   }, []);
+
+  // ✅ Check if user already has an active ride
+  const checkForActiveRide = async () => {
+    try {
+      const response = await rideAPI.checkActiveRide();
+      setHasActiveRide(response.hasActiveRide);
+      setActiveRideInfo(response.activeRide);
+    } catch (error) {
+      console.error('Error checking active ride:', error);
+    } finally {
+      setCheckingActiveRide(false);
+    }
+  };
 
   // ✅ Auto-update max seats when vehicle type changes
   useEffect(() => {
@@ -601,10 +620,50 @@ const AddRidePage = ({ onRideAdded, onNavigate }) => {
     }
   };
 
-  if (checkingVehicle) {
+  if (checkingVehicle || checkingActiveRide) {
     return (
       <div className="add-ride-page">
         <div className="loading-state">Loading...</div>
+      </div>
+    );
+  }
+
+  // ✅ Show active ride message if user already has an active ride
+  if (hasActiveRide && activeRideInfo) {
+    return (
+      <div className="add-ride-page">
+        <div className="page-header">
+          <h1>Ride Already in Progress</h1>
+          <p>You already have an active ride scheduled</p>
+        </div>
+
+        <div className="active-ride-banner">
+          <div className="active-ride-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{ width: '48px', height: '48px' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div className="active-ride-content">
+            <h3>You have an active ride</h3>
+            <div className="active-ride-details">
+              <p><strong>Route:</strong> {activeRideInfo.from} → {activeRideInfo.to}</p>
+              <p><strong>Date:</strong> {new Date(activeRideInfo.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p><strong>Time:</strong> {activeRideInfo.time}</p>
+            </div>
+            <p className="active-ride-info">
+              Complete or cancel your current ride before adding a new one.
+            </p>
+          </div>
+          {onNavigate && (
+            <button 
+              type="button" 
+              className="go-to-rides-btn"
+              onClick={() => onNavigate('your-rides')}
+            >
+              Go to My Rides
+            </button>
+          )}
+        </div>
       </div>
     );
   }

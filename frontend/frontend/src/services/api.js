@@ -636,10 +636,28 @@ export const rideAPI = {
     return response.data;
   },
 
-  // Get my posted rides
+  // Check if user has an active ride
+  checkActiveRide: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/rides/check-active`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get my active/upcoming rides (date >= today)
   getMyRides: async () => {
     const token = localStorage.getItem('token');
     const response = await axios.get(`${API_BASE_URL}/rides/my-rides`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get my ride history (past rides, cancelled, completed)
+  getMyRideHistory: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/rides/my-history`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;

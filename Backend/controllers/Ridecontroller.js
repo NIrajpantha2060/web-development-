@@ -321,6 +321,33 @@ const addRide = async (req, res) => {
     });
   }
 
+  // ✅ SMART CHECK: Prevent adding ride if user already has an active ride (date >= today)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const existingActiveRide = await Ride.findOne({
+    where: {
+      userId: req.user.id,
+      status: 'active',
+      date: {
+        [Op.gte]: today
+      }
+    }
+  });
+
+  if (existingActiveRide) {
+    return res.status(400).json({
+      message: "You already have an active ride scheduled. Complete or cancel your current ride before adding a new one.",
+      existingRide: {
+        id: existingActiveRide.id,
+        from: existingActiveRide.from,
+        to: existingActiveRide.to,
+        date: existingActiveRide.date,
+        time: existingActiveRide.time
+      }
+    });
+  }
+
   // ✅ NEW: Check if user has vehicle profile
   let userVehicle = await Vehicle.findOne({
     where: { userId: req.user.id }
@@ -459,12 +486,20 @@ const addRide = async (req, res) => {
   }
 };
 
-// ✅ GET MY RIDES (only rides posted by logged-in user)
+// ✅ GET MY ACTIVE RIDES (only upcoming/active rides - date >= today)
 const getMyRides = async (req, res) => {
   try {
+    // Get today's date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const rides = await Ride.findAll({
       where: { 
-        userId: req.user.id 
+        userId: req.user.id,
+        status: 'active',
+        date: {
+          [Op.gte]: today // Only rides with date >= today
+        }
       },
       include: [
         {
@@ -473,10 +508,10 @@ const getMyRides = async (req, res) => {
           attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
         }
       ],
-      order: [['createdAt', 'DESC']]
+      order: [['date', 'ASC'], ['time', 'ASC']] // Order by closest date first
     });
 
-    console.log(`✅ Found ${rides.length} rides for user ${req.user.id}`);
+    console.log(`✅ Found ${rides.length} active rides for user ${req.user.id}`);
 
     res.status(200).json({
       message: "Rides fetched successfully",
@@ -517,14 +552,21 @@ const getMyRides = async (req, res) => {
   }
 };
 
-// ✅ GET ALL ACTIVE RIDES (for users to browse - FUTURE USE)
+// ✅ GET ALL ACTIVE RIDES (for users to browse - only upcoming rides)
 const getAllRides = async (req, res) => {
   try {
     const { vehicleType, from, to, date } = req.query;
 
-    // Build filter conditions
+    // Get today's date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Build filter conditions - only show active rides with date >= today
     const whereConditions = {
-      status: 'active'
+      status: 'active',
+      date: {
+        [Op.gte]: today
+      }
     };
 
     if (vehicleType && ['bike', 'car'].includes(vehicleType.toLowerCase())) {
@@ -561,6 +603,17 @@ const getAllRides = async (req, res) => {
 
     console.log(`✅ Found ${rides.length} active rides`);
 
+    // ✅ Get total rides count for each unique rider
+    const riderIds = [...new Set(rides.map(r => r.rider?.id).filter(Boolean))];
+    const riderTotalRides = {};
+    
+    for (const riderId of riderIds) {
+      const count = await Ride.count({
+        where: { userId: riderId }
+      });
+      riderTotalRides[riderId] = count;
+    }
+
     res.status(200).json({
       message: "Active rides fetched successfully",
       count: rides.length,
@@ -583,9 +636,11 @@ const getAllRides = async (req, res) => {
         rider: ride.rider ? {
           id: ride.rider.id,
           username: ride.rider.username,
+          phone: ride.rider.phone,
           profilePicture: ride.rider.profilePicture,
           isVerifiedUser: ride.rider.isVerifiedUser,
-          isVerifiedRider: ride.rider.isVerifiedRider
+          isVerifiedRider: ride.rider.isVerifiedRider,
+          totalRides: riderTotalRides[ride.rider.id] || 0
         } : null
       }))
     });
@@ -645,9 +700,123 @@ const deleteRide = async (req, res) => {
   }
 };
 
+// ✅ GET MY RIDE HISTORY (past rides - date < today OR cancelled/completed)
+const getMyRideHistory = async (req, res) => {
+  try {
+    // Get today's date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const rides = await Ride.findAll({
+      where: { 
+        userId: req.user.id,
+        [Op.or]: [
+          // Past dates (regardless of status)
+          {
+            date: {
+              [Op.lt]: today
+            }
+          },
+          // Cancelled or completed rides (regardless of date)
+          {
+            status: {
+              [Op.in]: ['cancelled', 'completed']
+            }
+          }
+        ]
+      },
+      include: [
+        {
+          model: User,
+          as: 'rider',
+          attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+        }
+      ],
+      order: [['date', 'DESC'], ['time', 'DESC']] // Most recent first
+    });
+
+    console.log(`✅ Found ${rides.length} ride history entries for user ${req.user.id}`);
+
+    res.status(200).json({
+      message: "Ride history fetched successfully",
+      count: rides.length,
+      rides: rides.map(ride => ({
+        id: ride.id,
+        from: ride.from,
+        to: ride.to,
+        date: ride.date,
+        time: ride.time,
+        pickupLocation: ride.pickupLocation,
+        vehicleNumber: ride.vehicleNumber,
+        vehiclePhoto: ride.vehiclePhoto,
+        vehicleType: ride.vehicleType,
+        description: ride.description,
+        price: ride.price,
+        availableSeats: ride.availableSeats,
+        status: ride.status,
+        createdAt: ride.createdAt,
+        updatedAt: ride.updatedAt,
+        rider: ride.rider ? {
+          id: ride.rider.id,
+          username: ride.rider.username,
+          email: ride.rider.email,
+          phone: ride.rider.phone,
+          profilePicture: ride.rider.profilePicture,
+          isVerifiedUser: ride.rider.isVerifiedUser,
+          isVerifiedRider: ride.rider.isVerifiedRider
+        } : null
+      }))
+    });
+  } catch (error) {
+    console.error("Get ride history error:", error);
+    res.status(500).json({ 
+      message: "Server error while fetching ride history",
+      error: error.message 
+    });
+  }
+};
+
+// ✅ CHECK IF USER HAS ACTIVE RIDE (for frontend to show/hide Add Ride button)
+const checkActiveRide = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const activeRide = await Ride.findOne({
+      where: {
+        userId: req.user.id,
+        status: 'active',
+        date: {
+          [Op.gte]: today
+        }
+      },
+      attributes: ['id', 'from', 'to', 'date', 'time', 'status']
+    });
+
+    res.status(200).json({
+      hasActiveRide: !!activeRide,
+      activeRide: activeRide ? {
+        id: activeRide.id,
+        from: activeRide.from,
+        to: activeRide.to,
+        date: activeRide.date,
+        time: activeRide.time
+      } : null
+    });
+  } catch (error) {
+    console.error("Check active ride error:", error);
+    res.status(500).json({ 
+      message: "Server error while checking active ride",
+      error: error.message 
+    });
+  }
+};
+
 module.exports = { 
   addRide, 
   getMyRides,
+  getMyRideHistory,
   getAllRides,
-  deleteRide
+  deleteRide,
+  checkActiveRide
 };

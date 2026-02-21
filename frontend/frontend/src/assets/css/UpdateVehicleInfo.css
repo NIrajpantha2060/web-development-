@@ -123,3 +123,96 @@
     width: 100%;
   }
 }
+
+/* ✅ Active Ride Banner Styles */
+.active-ride-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 24px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 16px;
+  margin: 20px 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.active-ride-icon {
+  background-color: #fff7ed;
+  border-radius: 50%;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.active-ride-icon svg {
+  color: #f59e0b;
+}
+
+.active-ride-content {
+  max-width: 400px;
+}
+
+.active-ride-content h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0 0 16px 0;
+}
+
+.active-ride-details {
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 16px;
+}
+
+.active-ride-details p {
+  margin: 8px 0;
+  font-size: 15px;
+  color: #78350f;
+}
+
+.active-ride-details strong {
+  color: #92400e;
+}
+
+.active-ride-info {
+  font-size: 14px;
+  color: #b45309;
+  margin: 0 0 20px 0;
+  font-style: italic;
+}
+
+.go-to-rides-btn {
+  padding: 14px 32px;
+  background-color: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+.go-to-rides-btn:hover {
+  background-color: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+@media (max-width: 480px) {
+  .active-ride-banner {
+    padding: 30px 16px;
+  }
+  
+  .active-ride-content h3 {
+    font-size: 18px;
+  }
+  
+  .active-ride-details {
+    padding: 12px 16px;
+  }
+}

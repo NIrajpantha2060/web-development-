@@ -2,7 +2,7 @@
 
 import '../css/RideCard.css';
 
-const RideCard = ({ ride, onDelete, showDeleteButton = false }) => {
+const RideCard = ({ ride, onDelete, onViewDetails, showDeleteButton = false }) => {
   const {
     driverName = 'Driver Name',
     driverRating = 4.5,
@@ -19,6 +19,12 @@ const RideCard = ({ ride, onDelete, showDeleteButton = false }) => {
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleViewDetails = () => {
+    if (onViewDetails) {
+      onViewDetails(ride);
+    }
   };
 
   return (
@@ -45,7 +51,7 @@ const RideCard = ({ ride, onDelete, showDeleteButton = false }) => {
           </div>
         </div>
         <div className="ride-price">
-          <span className="currency">NPR</span>
+          <span className="currency">Rs.</span>
           <span className="amount">{price}</span>
         </div>
       </div>
@@ -106,7 +112,7 @@ const RideCard = ({ ride, onDelete, showDeleteButton = false }) => {
       </div>
 
       <div className="ride-actions">
-        <button className="btn-secondary">View Details</button>
+        <button className="btn-secondary" onClick={handleViewDetails}>View Details</button>
         {showDeleteButton ? (
           <button className="btn-danger" onClick={onDelete}>Cancel Ride</button>
         ) : (
