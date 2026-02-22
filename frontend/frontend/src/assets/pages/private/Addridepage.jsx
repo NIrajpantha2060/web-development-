@@ -379,6 +379,7 @@ const AddRidePage = ({ onRideAdded, onNavigate }) => {
   
   // ✅ Active ride check states
   const [hasActiveRide, setHasActiveRide] = useState(false);
+  const [hasBookings, setHasBookings] = useState(false);
   const [activeRideInfo, setActiveRideInfo] = useState(null);
   const [checkingActiveRide, setCheckingActiveRide] = useState(true);
   
@@ -414,6 +415,7 @@ const AddRidePage = ({ onRideAdded, onNavigate }) => {
     try {
       const response = await rideAPI.checkActiveRide();
       setHasActiveRide(response.hasActiveRide);
+      setHasBookings(response.hasBookings || false);
       setActiveRideInfo(response.activeRide);
     } catch (error) {
       console.error('Error checking active ride:', error);
@@ -633,8 +635,8 @@ const AddRidePage = ({ onRideAdded, onNavigate }) => {
     return (
       <div className="add-ride-page">
         <div className="page-header">
-          <h1>Ride Already in Progress</h1>
-          <p>You already have an active ride scheduled</p>
+          <h1>{hasBookings ? 'Ride Has Bookings' : 'Ride Already in Progress'}</h1>
+          <p>{hasBookings ? 'Your ride has confirmed bookings from passengers' : 'You already have an active ride scheduled'}</p>
         </div>
 
         <div className="active-ride-banner">
@@ -644,14 +646,20 @@ const AddRidePage = ({ onRideAdded, onNavigate }) => {
             </svg>
           </div>
           <div className="active-ride-content">
-            <h3>You have an active ride</h3>
+            <h3>{hasBookings ? 'Passengers have booked your ride!' : 'You have an active ride'}</h3>
             <div className="active-ride-details">
               <p><strong>Route:</strong> {activeRideInfo.from} → {activeRideInfo.to}</p>
               <p><strong>Date:</strong> {new Date(activeRideInfo.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
               <p><strong>Time:</strong> {activeRideInfo.time}</p>
+              <p><strong>Status:</strong> {activeRideInfo.status === 'taken' ? 'Fully Booked' : 'Active'}</p>
+              {activeRideInfo.bookedSeats > 0 && (
+                <p><strong>Seats Booked:</strong> {activeRideInfo.bookedSeats} / {activeRideInfo.availableSeats}</p>
+              )}
             </div>
             <p className="active-ride-info">
-              Complete or cancel your current ride before adding a new one.
+              {hasBookings 
+                ? 'You cannot add a new ride while passengers have booked your current ride. Please complete the ride first.'
+                : 'Complete or cancel your current ride before adding a new one.'}
             </p>
           </div>
           {onNavigate && (

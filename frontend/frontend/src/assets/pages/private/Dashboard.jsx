@@ -1771,7 +1771,7 @@
 
 // PART 1 of 2 - Dashboard.jsx (Lines 1-450)
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import RideCard from '../../components/RideCard';
 import RideDetailsModal from '../../components/RideDetailsModal';
@@ -1780,7 +1780,7 @@ import ProfileDropdown from '../../components/ProfileDropdown';
 import UpdateVehicleInfoPage from './UpdateVehicleInfo';
 import AddRidePageComponent from './Addridepage'; // ✅ Import smart AddRidePage
 import { useAuth } from '../../../context/AuthContext';
-import { userAPI, verificationAPI, passwordAPI, rideAPI, bookingAPI } from '../../../services/api';
+import { userAPI, verificationAPI, passwordAPI, rideAPI, bookingAPI, notificationAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 
 // ===================================================================
@@ -3644,6 +3644,16 @@ const Dashboard = () => {
   // ✅ State for user's bookings (to check if user booked a ride)
   const [myBookings, setMyBookings] = useState([]);
   
+  // ✅ State for ride history (rider mode)
+  const [rideHistory, setRideHistory] = useState([]);
+  const [loadingRideHistory, setLoadingRideHistory] = useState(false);
+  
+  // ✅ State for notifications
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const notificationRef = useRef(null);
+  
   const [userFormData, setUserFormData] = useState({
     username: '',
     phone: ''
@@ -3671,6 +3681,21 @@ const Dashboard = () => {
       setRides([]);
     } finally {
       setLoadingRides(false);
+    }
+  };
+
+  // ✅ NEW: Fetch ride history for rider mode
+  const fetchRideHistory = async () => {
+    setLoadingRideHistory(true);
+    try {
+      const response = await rideAPI.getMyRideHistory();
+      console.log('✅ Ride history fetched:', response.count);
+      setRideHistory(response.rides || []);
+    } catch (error) {
+      console.error('Error fetching ride history:', error);
+      setRideHistory([]);
+    } finally {
+      setLoadingRideHistory(false);
     }
   };
 
@@ -3756,6 +3781,116 @@ const Dashboard = () => {
     fetchRides();
     fetchMyBookings();
   }, [isRiderMode, vehicleFilter]);
+
+  // ✅ NEW: Fetch ride history when navigating to history page in rider mode
+  useEffect(() => {
+    if (activePage === 'history' && isRiderMode) {
+      fetchRideHistory();
+    }
+  }, [activePage, isRiderMode]);
+
+  // ✅ NEW: Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      const response = await notificationAPI.getAll();
+      setNotifications(response.notifications || []);
+      setUnreadCount(response.unreadCount || 0);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  // ✅ Fetch notifications on mount and every 30 seconds
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ✅ Close notification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotificationDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // ✅ Mark notification as read
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await notificationAPI.markAsRead(notificationId);
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  // ✅ Mark all notifications as read
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationAPI.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
+  // ✅ Delete notification
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      await notificationAPI.delete(notificationId);
+      const deletedNotif = notifications.find(n => n.id === notificationId);
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      if (deletedNotif && !deletedNotif.isRead) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  // ✅ Get notification icon based on type
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'verification_approved':
+        return '✅';
+      case 'verification_rejected':
+        return '❌';
+      case 'ride_booked':
+        return '🚗';
+      case 'ride_cancelled':
+        return '🚫';
+      case 'booking_cancelled':
+        return '🚫';
+      case 'verification_pending':
+        return '⏳';
+      default:
+        return '🔔';
+    }
+  };
+
+  // ✅ Format notification time
+  const formatNotificationTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   const handleNavigation = (page) => {
     setActivePage(page);
@@ -3902,15 +4037,113 @@ const Dashboard = () => {
           <div className="history-page">
             <div className="page-header">
               <h1>Your Rides History</h1>
-              <p>View your past bookings and trips</p>
+              <p>{isRiderMode ? 'View your past rides and bookings' : 'View your past bookings and trips'}</p>
             </div>
-            <div className="empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <h3>No ride history yet</h3>
-              <p>Your completed rides will appear here</p>
-            </div>
+            
+            {!isRiderMode ? (
+              // User mode - show message (to be implemented later)
+              <div className="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3>No booking history yet</h3>
+                <p>Your completed bookings will appear here</p>
+              </div>
+            ) : loadingRideHistory ? (
+              <div className="loading-state">Loading ride history...</div>
+            ) : rideHistory.length === 0 ? (
+              <div className="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3>No ride history yet</h3>
+                <p>Your past rides will appear here once they expire</p>
+              </div>
+            ) : (
+              <div className="ride-history-list">
+                {rideHistory.map(ride => (
+                  <div key={ride.id} className="ride-history-card">
+                    <div className="ride-history-header">
+                      <div className="ride-route">
+                        <span className="ride-from">{ride.from}</span>
+                        <span className="ride-arrow">→</span>
+                        <span className="ride-to">{ride.to}</span>
+                      </div>
+                      <span className={`ride-status-badge ${ride.status}`}>
+                        {ride.status === 'cancelled' ? 'Cancelled' : 
+                         ride.status === 'completed' ? 'Completed' : 'Expired'}
+                      </span>
+                    </div>
+                    
+                    <div className="ride-history-details">
+                      <div className="ride-info-row">
+                        <span className="ride-info-label">Date:</span>
+                        <span className="ride-info-value">{new Date(ride.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                      </div>
+                      <div className="ride-info-row">
+                        <span className="ride-info-label">Time:</span>
+                        <span className="ride-info-value">{ride.time}</span>
+                      </div>
+                      <div className="ride-info-row">
+                        <span className="ride-info-label">Pickup Location:</span>
+                        <span className="ride-info-value">{ride.pickupLocation}</span>
+                      </div>
+                      <div className="ride-info-row">
+                        <span className="ride-info-label">Vehicle:</span>
+                        <span className="ride-info-value">{ride.vehicleType === 'bike' ? '🏍️ Bike' : '🚗 Car'} - {ride.vehicleNumber}</span>
+                      </div>
+                      <div className="ride-info-row">
+                        <span className="ride-info-label">Price:</span>
+                        <span className="ride-info-value">Rs. {ride.price || 0} per seat</span>
+                      </div>
+                      <div className="ride-info-row">
+                        <span className="ride-info-label">Seats:</span>
+                        <span className="ride-info-value">{ride.bookedSeats || 0}/{ride.availableSeats} booked</span>
+                      </div>
+                    </div>
+                    
+                    <div className="ride-booking-section">
+                      <h4>Booked By</h4>
+                      {ride.bookedBy === 'None' || !ride.bookings || ride.bookings.length === 0 ? (
+                        <div className="no-bookings">
+                          <span className="no-booking-text">No one booked this ride</span>
+                        </div>
+                      ) : (
+                        <div className="booking-list">
+                          {ride.bookings.map(booking => (
+                            <div key={booking.id} className="booking-item">
+                              <div className="passenger-info">
+                                <div className="passenger-avatar">
+                                  {booking.passenger?.profilePicture ? (
+                                    <img 
+                                      src={`http://localhost:5000${booking.passenger.profilePicture}`} 
+                                      alt={booking.passenger.username}
+                                    />
+                                  ) : (
+                                    <span>{booking.passenger?.username?.charAt(0).toUpperCase() || 'U'}</span>
+                                  )}
+                                </div>
+                                <div className="passenger-details">
+                                  <span className="passenger-name">{booking.passenger?.username || 'Unknown'}</span>
+                                  <span className="passenger-contact">{booking.passenger?.phone || 'No phone'}</span>
+                                </div>
+                              </div>
+                              <div className="booking-meta">
+                                <span className="seats-booked">{booking.seatsBooked} seat(s)</span>
+                                <span className="booking-amount">Rs. {booking.totalAmount}</span>
+                                <span className={`payment-status ${booking.paymentStatus}`}>
+                                  {booking.paymentStatus === 'completed' ? '✓ Paid' : booking.paymentStatus}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
 
@@ -4107,12 +4340,78 @@ const Dashboard = () => {
           </nav>
 
           <div className="navbar-right">
-            <button className="notification-icon" aria-label="Notifications">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="notification-badge">3</span>
-            </button>
+            {/* ✅ Notification Bell with Dropdown */}
+            <div className="notification-wrapper" ref={notificationRef}>
+              <button 
+                className="notification-icon" 
+                aria-label="Notifications"
+                onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {showNotificationDropdown && (
+                <div className="notification-dropdown">
+                  <div className="notification-dropdown-header">
+                    <h3>Notifications</h3>
+                    {unreadCount > 0 && (
+                      <button 
+                        className="mark-all-read-btn"
+                        onClick={handleMarkAllAsRead}
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="notification-list">
+                    {notifications.length === 0 ? (
+                      <div className="notification-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="empty-icon">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <p>No notifications yet</p>
+                      </div>
+                    ) : (
+                      notifications.map(notification => (
+                        <div 
+                          key={notification.id} 
+                          className={`notification-item ${!notification.isRead ? 'unread' : ''} ${notification.type}`}
+                          onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
+                        >
+                          <div className="notification-icon-type">
+                            {getNotificationIcon(notification.type)}
+                          </div>
+                          <div className="notification-content">
+                            <div className="notification-title">{notification.title}</div>
+                            <div className="notification-message">{notification.message}</div>
+                            <div className="notification-time">
+                              {formatNotificationTime(notification.createdAt)}
+                            </div>
+                          </div>
+                          <button 
+                            className="notification-delete-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNotification(notification.id);
+                            }}
+                            aria-label="Delete notification"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <ProfileDropdown 
               onNavigate={handleNavigation}

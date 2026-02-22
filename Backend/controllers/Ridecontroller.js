@@ -294,6 +294,8 @@
 const Ride = require("../models/Ride");
 const User = require("../models/User");
 const Vehicle = require("../models/Vehicle");
+const RideBooking = require("../models/RideBooking");
+const Notification = require("../models/Notification");
 const { Op } = require("sequelize");
 
 // ✅ ADD NEW RIDE (UPDATED WITH SMART LOGIC)
@@ -321,29 +323,46 @@ const addRide = async (req, res) => {
     });
   }
 
-  // ✅ SMART CHECK: Prevent adding ride if user already has an active ride (date >= today)
+  // ✅ SMART CHECK: Prevent adding ride if user already has an active/booked ride (date >= today)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
+  // Check for rides with status 'active' or 'taken' (fully booked but not completed)
   const existingActiveRide = await Ride.findOne({
     where: {
       userId: req.user.id,
-      status: 'active',
+      status: {
+        [Op.in]: ['active', 'taken']
+      },
       date: {
         [Op.gte]: today
       }
-    }
+    },
+    include: [{
+      model: RideBooking,
+      as: 'bookings',
+      where: { bookingStatus: 'confirmed' },
+      required: false
+    }]
   });
 
   if (existingActiveRide) {
+    const hasBookings = existingActiveRide.bookings && existingActiveRide.bookings.length > 0;
+    const message = hasBookings 
+      ? "You have a ride with confirmed bookings. Complete your current ride before adding a new one."
+      : "You already have an active ride scheduled. Complete or cancel your current ride before adding a new one.";
+    
     return res.status(400).json({
-      message: "You already have an active ride scheduled. Complete or cancel your current ride before adding a new one.",
+      message,
+      hasBookings,
       existingRide: {
         id: existingActiveRide.id,
         from: existingActiveRide.from,
         to: existingActiveRide.to,
         date: existingActiveRide.date,
-        time: existingActiveRide.time
+        time: existingActiveRide.time,
+        status: existingActiveRide.status,
+        bookedSeats: existingActiveRide.bookedSeats
       }
     });
   }
@@ -687,10 +706,38 @@ const deleteRide = async (req, res) => {
       return res.status(400).json({ message: "Cannot delete a completed ride" });
     }
 
+    // ✅ Get all confirmed bookings for this ride to notify passengers
+    const confirmedBookings = await RideBooking.findAll({
+      where: {
+        rideId: id,
+        bookingStatus: 'confirmed'
+      },
+      include: [{ model: User, as: 'passenger', attributes: ['id', 'username'] }]
+    });
+
     // Update status to cancelled (soft delete)
     await ride.update({ status: 'cancelled' });
 
+    // ✅ Update all bookings to cancelled and refunded
+    await RideBooking.update(
+      { bookingStatus: 'cancelled', paymentStatus: 'refunded' },
+      { where: { rideId: id, bookingStatus: 'confirmed' } }
+    );
+
+    // ✅ Send notification to all passengers who had booked
+    const rider = await User.findByPk(req.user.id, { attributes: ['username'] });
+    for (const booking of confirmedBookings) {
+      await Notification.create({
+        userId: booking.passengerId,
+        type: 'ride_cancelled',
+        title: 'Ride Cancelled 🚨',
+        message: `The ride from ${ride.from} to ${ride.to} on ${new Date(ride.date).toLocaleDateString()} has been cancelled by ${rider.username}. Your payment of Rs. ${booking.totalAmount} will be refunded.`,
+        relatedId: ride.id
+      });
+    }
+
     console.log(`✅ Ride ${id} cancelled by user ${req.user.id}`);
+    console.log(`📬 Notified ${confirmedBookings.length} passenger(s) about cancellation`);
 
     res.status(200).json({
       message: "Ride cancelled successfully",
@@ -709,6 +756,7 @@ const deleteRide = async (req, res) => {
 };
 
 // ✅ GET MY RIDE HISTORY (past rides - date < today OR cancelled/completed)
+// ✅ UPDATED: Now includes booking information (customer details)
 const getMyRideHistory = async (req, res) => {
   try {
     // Get today's date at midnight
@@ -738,6 +786,24 @@ const getMyRideHistory = async (req, res) => {
           model: User,
           as: 'rider',
           attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+        },
+        // ✅ NEW: Include bookings with passenger details
+        {
+          model: RideBooking,
+          as: 'bookings',
+          required: false, // Left join - include rides even without bookings
+          where: {
+            bookingStatus: {
+              [Op.in]: ['confirmed', 'completed'] // Only show confirmed/completed bookings
+            }
+          },
+          include: [
+            {
+              model: User,
+              as: 'passenger',
+              attributes: ['id', 'username', 'email', 'phone', 'profilePicture']
+            }
+          ]
         }
       ],
       order: [['date', 'DESC'], ['time', 'DESC']] // Most recent first
@@ -761,6 +827,7 @@ const getMyRideHistory = async (req, res) => {
         description: ride.description,
         price: ride.price,
         availableSeats: ride.availableSeats,
+        bookedSeats: ride.bookedSeats || 0,
         status: ride.status,
         createdAt: ride.createdAt,
         updatedAt: ride.updatedAt,
@@ -772,7 +839,28 @@ const getMyRideHistory = async (req, res) => {
           profilePicture: ride.rider.profilePicture,
           isVerifiedUser: ride.rider.isVerifiedUser,
           isVerifiedRider: ride.rider.isVerifiedRider
-        } : null
+        } : null,
+        // ✅ NEW: Include booking information with customer details
+        bookings: (ride.bookings || []).map(booking => ({
+          id: booking.id,
+          seatsBooked: booking.seatsBooked,
+          totalAmount: booking.totalAmount,
+          paymentMethod: booking.paymentMethod,
+          paymentStatus: booking.paymentStatus,
+          bookingStatus: booking.bookingStatus,
+          createdAt: booking.createdAt,
+          passenger: booking.passenger ? {
+            id: booking.passenger.id,
+            username: booking.passenger.username,
+            email: booking.passenger.email,
+            phone: booking.passenger.phone,
+            profilePicture: booking.passenger.profilePicture
+          } : null
+        })),
+        // ✅ Convenience field: Summary of who booked
+        bookedBy: (ride.bookings && ride.bookings.length > 0) 
+          ? ride.bookings.map(b => b.passenger?.username || 'Unknown').join(', ')
+          : 'None'
       }))
     });
   } catch (error) {
@@ -790,25 +878,40 @@ const checkActiveRide = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Check for rides with status 'active' or 'taken' (fully booked but not completed)
     const activeRide = await Ride.findOne({
       where: {
         userId: req.user.id,
-        status: 'active',
+        status: {
+          [Op.in]: ['active', 'taken']
+        },
         date: {
           [Op.gte]: today
         }
       },
-      attributes: ['id', 'from', 'to', 'date', 'time', 'status']
+      include: [{
+        model: RideBooking,
+        as: 'bookings',
+        where: { bookingStatus: 'confirmed' },
+        required: false
+      }],
+      attributes: ['id', 'from', 'to', 'date', 'time', 'status', 'bookedSeats', 'availableSeats']
     });
+
+    const hasBookings = activeRide?.bookings && activeRide.bookings.length > 0;
 
     res.status(200).json({
       hasActiveRide: !!activeRide,
+      hasBookings,
       activeRide: activeRide ? {
         id: activeRide.id,
         from: activeRide.from,
         to: activeRide.to,
         date: activeRide.date,
-        time: activeRide.time
+        time: activeRide.time,
+        status: activeRide.status,
+        bookedSeats: activeRide.bookedSeats,
+        availableSeats: activeRide.availableSeats
       } : null
     });
   } catch (error) {

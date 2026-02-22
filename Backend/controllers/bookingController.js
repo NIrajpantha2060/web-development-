@@ -1,6 +1,7 @@
 const RideBooking = require("../models/RideBooking");
 const Ride = require("../models/Ride");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const bcrypt = require("bcryptjs");
 const { Op } = require("sequelize");
 
@@ -384,7 +385,17 @@ const applyForRide = async (req, res) => {
       status: newStatus
     });
 
+    // ✅ Create notification for the rider (ride owner)
+    await Notification.create({
+      userId: ride.userId,
+      type: 'ride_booked',
+      title: 'New Ride Booking! 🎉',
+      message: `Your ride from ${ride.from} to ${ride.to} has been booked by ${user.username}. ${seats} seat(s) booked for Rs. ${totalAmount}.`,
+      relatedId: booking.id
+    });
+
     console.log(`✅ Ride ${rideId} booked by user ${req.user.id}. ${seats} seat(s). Status: ${newStatus}`);
+    console.log(`📬 Notification sent to rider ${ride.userId}`);
 
     res.status(201).json({
       message: "Ride booked successfully! Payment completed.",
@@ -487,8 +498,15 @@ const cancelBooking = async (req, res) => {
 
   try {
     const booking = await RideBooking.findByPk(id, {
-      include: [{ model: Ride, as: 'ride' }]
+      include: [{ 
+        model: Ride, 
+        as: 'ride',
+        include: [{ model: User, as: 'rider', attributes: ['id', 'username'] }]
+      }]
     });
+    
+    // Get passenger info for notification
+    const passenger = await User.findByPk(req.user.id, { attributes: ['username'] });
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
@@ -526,6 +544,18 @@ const cancelBooking = async (req, res) => {
     }
 
     console.log(`✅ Booking ${id} cancelled by user ${req.user.id}`);
+
+    // ✅ Send notification to the rider about booking cancellation
+    if (booking.ride && booking.ride.userId) {
+      await Notification.create({
+        userId: booking.ride.userId,
+        type: 'booking_cancelled',
+        title: 'Booking Cancelled 🚨',
+        message: `${passenger.username} has cancelled their booking for your ride from ${booking.ride.from} to ${booking.ride.to}. ${booking.seatsBooked} seat(s) are now available again.`,
+        relatedId: booking.id
+      });
+      console.log(`📬 Notification sent to rider ${booking.ride.userId}`);
+    }
 
     res.status(200).json({
       message: "Booking cancelled successfully. Refund initiated.",

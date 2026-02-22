@@ -140,6 +140,245 @@
   border: 2px solid #d5d5d5;
 }
 
+/* ✅ Notification Wrapper */
+.notification-wrapper {
+  position: relative;
+}
+
+/* ✅ Notification Dropdown */
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  width: 380px;
+  max-height: 480px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(11, 60, 93, 0.2), 0 4px 12px rgba(11, 60, 93, 0.1);
+  border: 1px solid #E4E7EB;
+  overflow: hidden;
+  z-index: 1001;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #E4E7EB;
+  background: linear-gradient(135deg, #0B3C5D 0%, #1a5a8a 100%);
+}
+
+.notification-dropdown-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.mark-all-read-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mark-all-read-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.02);
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+  background: #F7FAFC;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+  background: #CBD5E0;
+  border-radius: 3px;
+}
+
+.notification-empty {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #52606D;
+}
+
+.notification-empty .empty-icon {
+  width: 48px;
+  height: 48px;
+  color: #CBD5E0;
+  margin-bottom: 1rem;
+}
+
+.notification-empty p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #7B8794;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #F0F4F8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.notification-item:hover {
+  background: #F7FAFC;
+}
+
+.notification-item.unread {
+  background: linear-gradient(90deg, #EBF8FF 0%, #FFFFFF 100%);
+  border-left: 3px solid #4DA3FF;
+}
+
+.notification-item.unread:hover {
+  background: linear-gradient(90deg, #D4EDFF 0%, #F7FAFC 100%);
+}
+
+/* Notification type colors */
+.notification-item.verification_approved {
+  border-left-color: #10B981;
+}
+
+.notification-item.verification_rejected {
+  border-left-color: #EF4444;
+}
+
+.notification-item.ride_booked {
+  border-left-color: #4DA3FF;
+}
+
+.notification-item.ride_cancelled {
+  border-left-color: #F59E0B;
+}
+
+.notification-item.booking_cancelled {
+  border-left-color: #F59E0B;
+}
+
+.notification-icon-type {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: #F0F7FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+/* Type-specific icon backgrounds */
+.notification-item.verification_approved .notification-icon-type {
+  background: #D1FAE5;
+}
+
+.notification-item.verification_rejected .notification-icon-type {
+  background: #FEE2E2;
+}
+
+.notification-item.ride_booked .notification-icon-type {
+  background: #DBEAFE;
+}
+
+.notification-item.ride_cancelled .notification-icon-type {
+  background: #FEF3C7;
+}
+
+.notification-item.booking_cancelled .notification-icon-type {
+  background: #FEF3C7;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1F2933;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+
+.notification-message {
+  font-size: 0.82rem;
+  color: #52606D;
+  line-height: 1.45;
+  margin-bottom: 0.35rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notification-time {
+  font-size: 0.72rem;
+  color: #9AA5B1;
+  font-weight: 500;
+}
+
+.notification-delete-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #9AA5B1;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.notification-item:hover .notification-delete-btn {
+  opacity: 1;
+}
+
+.notification-delete-btn:hover {
+  background: #FEE2E2;
+  color: #EF4444;
+}
+
 /* Mobile Menu Button */
 .mobile-menu-btn {
   display: none;
@@ -818,6 +1057,40 @@ select.form-input {
     height: 1.5rem;
   }
 
+  /* ✅ Mobile notification dropdown */
+  .notification-dropdown {
+    width: calc(100vw - 2rem);
+    right: -1rem;
+    max-height: 60vh;
+  }
+
+  .notification-dropdown-header {
+    padding: 0.85rem 1rem;
+  }
+
+  .notification-dropdown-header h3 {
+    font-size: 1rem;
+  }
+
+  .notification-item {
+    padding: 0.85rem 1rem;
+  }
+
+  .notification-icon-type {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 1rem;
+  }
+
+  .notification-title {
+    font-size: 0.85rem;
+  }
+
+  .notification-message {
+    font-size: 0.78rem;
+  }
+
   .dashboard-main-content {
     padding: 6rem 1.5rem 5rem;
   }
@@ -996,4 +1269,279 @@ select.form-input {
 html, body {
   overflow-x: hidden;
   max-width: 100vw;
+}
+
+/* ===================================================================
+   RIDE HISTORY STYLES 
+   =================================================================== */
+
+.ride-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.ride-history-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(11, 60, 93, 0.08);
+  border: 1px solid #E4E7EB;
+  transition: all 0.3s ease;
+}
+
+.ride-history-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(11, 60, 93, 0.12);
+}
+
+.ride-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #E4E7EB;
+}
+
+.ride-route {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0B3C5D;
+}
+
+.ride-arrow {
+  color: #4DA3FF;
+  font-weight: bold;
+}
+
+.ride-status-badge {
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.ride-status-badge.cancelled {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.ride-status-badge.completed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.ride-status-badge.active,
+.ride-status-badge.taken {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.ride-history-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.ride-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ride-info-label {
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.ride-info-value {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.ride-booking-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.ride-booking-section h4 {
+  color: #0B3C5D;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ride-booking-section h4::before {
+  content: '👥';
+}
+
+.no-bookings {
+  padding: 1rem;
+  text-align: center;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+}
+
+.no-booking-text {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.booking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.booking-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.booking-item:hover {
+  border-color: #4DA3FF;
+  box-shadow: 0 2px 8px rgba(77, 163, 255, 0.15);
+}
+
+.passenger-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.passenger-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4DA3FF, #0B3C5D);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.passenger-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.passenger-avatar span {
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.passenger-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.passenger-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+.passenger-contact {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.booking-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.seats-booked {
+  background: #e0f2fe;
+  color: #0284c7;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.booking-amount {
+  font-weight: 700;
+  color: #0B3C5D;
+  font-size: 1rem;
+}
+
+.payment-status {
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.payment-status.completed {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.payment-status.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.payment-status.failed {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Mobile Responsive for Ride History */
+@media (max-width: 768px) {
+  .ride-history-card {
+    padding: 1rem;
+  }
+
+  .ride-history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .ride-route {
+    font-size: 1.1rem;
+  }
+
+  .ride-history-details {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .booking-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
