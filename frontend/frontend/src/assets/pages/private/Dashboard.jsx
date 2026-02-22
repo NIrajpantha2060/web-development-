@@ -1775,11 +1775,12 @@ import { useState, useEffect } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import RideCard from '../../components/RideCard';
 import RideDetailsModal from '../../components/RideDetailsModal';
+import ApplyRideModal from '../../components/ApplyRideModal';
 import ProfileDropdown from '../../components/ProfileDropdown';
 import UpdateVehicleInfoPage from './UpdateVehicleInfo';
 import AddRidePageComponent from './Addridepage'; // ✅ Import smart AddRidePage
 import { useAuth } from '../../../context/AuthContext';
-import { userAPI, verificationAPI, passwordAPI, rideAPI } from '../../../services/api';
+import { userAPI, verificationAPI, passwordAPI, rideAPI, bookingAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 
 // ===================================================================
@@ -2620,144 +2621,271 @@ const VerifyYourselfPage = () => {
   );
 };
 
-// ✅ Payment Method Page Component
+// ✅ Payment Method Page Component - Debit Card & MPIN
 const PaymentMethodPage = () => {
-  const [formData, setFormData] = useState({
-    debitCardNumber: '',
+  const [paymentStatus, setPaymentStatus] = useState({
+    hasPaymentSetup: false,
+    hasMpinSetup: false,
+    cardLastFour: null,
+    cardBrand: null,
+    cardHolderName: null,
+    cardExpiry: null
+  });
+  const [activeTab, setActiveTab] = useState('card'); // 'card' | 'mpin'
+  const [cardForm, setCardForm] = useState({
+    cardNumber: '',
+    cardHolderName: '',
+    cardExpiry: '',
+    cvv: ''
+  });
+  const [mpinForm, setMpinForm] = useState({
     mpin: '',
-    confirmMpin: ''
+    confirmMpin: '',
+    currentMpin: '',
+    newMpin: '',
+    confirmNewMpin: ''
   });
   const [showMpin, setShowMpin] = useState({
     mpin: false,
-    confirm: false
+    confirm: false,
+    current: false,
+    new: false,
+    confirmNew: false
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [fetchingStatus, setFetchingStatus] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [savedPayment, setSavedPayment] = useState(null);
 
-  // Load saved payment info on mount
+  // Fetch payment status on mount
   useEffect(() => {
-    const saved = localStorage.getItem('paymentMethod');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setSavedPayment(parsed);
-    }
+    fetchPaymentStatus();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    
-    // Only allow numbers for debit card and MPIN
-    if (name === 'debitCardNumber') {
-      const cleaned = value.replace(/\D/g, '').slice(0, 16);
-      setFormData(prev => ({ ...prev, [name]: cleaned }));
-    } else if (name === 'mpin' || name === 'confirmMpin') {
-      const cleaned = value.replace(/\D/g, '').slice(0, 6);
-      setFormData(prev => ({ ...prev, [name]: cleaned }));
+  const fetchPaymentStatus = async () => {
+    setFetchingStatus(true);
+    try {
+      const status = await bookingAPI.getPaymentStatus();
+      setPaymentStatus(status);
+      // Set active tab based on status
+      if (status.hasPaymentSetup && !status.hasMpinSetup) {
+        setActiveTab('mpin');
+      }
+    } catch (error) {
+      console.error('Error fetching payment status:', error);
+    } finally {
+      setFetchingStatus(false);
+    }
+  };
+
+  // Format card number with spaces
+  const formatCardNumber = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const matches = v.match(/\d{4,16}/g);
+    const match = matches && matches[0] || '';
+    const parts = [];
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4));
+    }
+    return parts.length ? parts.join(' ') : v;
+  };
+
+  // Format expiry date
+  const formatExpiry = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length >= 2) {
+      return v.substring(0, 2) + '/' + v.substring(2, 4);
+    }
+    return v;
+  };
+
+  const handleCardChange = (field, value) => {
+    setMessage({ type: '', text: '' });
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
+
+    if (field === 'cardNumber') {
+      setCardForm(prev => ({ ...prev, cardNumber: formatCardNumber(value) }));
+    } else if (field === 'cardExpiry') {
+      const cleaned = value.replace(/[^0-9/]/g, '');
+      if (cleaned.length <= 5) {
+        setCardForm(prev => ({ ...prev, cardExpiry: formatExpiry(cleaned.replace('/', '')) }));
+      }
+    } else if (field === 'cvv') {
+      const cleaned = value.replace(/[^0-9]/g, '').slice(0, 3);
+      setCardForm(prev => ({ ...prev, cvv: cleaned }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-
-    if (message.text) {
-      setMessage({ type: '', text: '' });
+      setCardForm(prev => ({ ...prev, [field]: value }));
     }
   };
 
-  const formatCardNumber = (number) => {
-    return number.replace(/(\d{4})(?=\d)/g, '$1 ');
-  };
-
-  const maskCardNumber = (number) => {
-    if (!number) return '';
-    const last4 = number.slice(-4);
-    return `**** **** **** ${last4}`;
-  };
-
-  const validateForm = () => {
+  const validateCardForm = () => {
     const newErrors = {};
-
-    if (!formData.debitCardNumber) {
-      newErrors.debitCardNumber = 'Debit card number is required';
-    } else if (formData.debitCardNumber.length < 13 || formData.debitCardNumber.length > 16) {
-      newErrors.debitCardNumber = 'Card number must be 13-16 digits';
+    const cleanCardNumber = cardForm.cardNumber.replace(/\s/g, '');
+    
+    if (!cleanCardNumber) {
+      newErrors.cardNumber = 'Card number is required';
+    } else if (cleanCardNumber.length !== 16) {
+      newErrors.cardNumber = 'Card number must be 16 digits';
     }
 
-    if (!formData.mpin) {
-      newErrors.mpin = 'MPIN is required';
-    } else if (formData.mpin.length < 4 || formData.mpin.length > 6) {
-      newErrors.mpin = 'MPIN must be 4-6 digits';
+    if (!cardForm.cardHolderName.trim()) {
+      newErrors.cardHolderName = 'Cardholder name is required';
     }
 
-    if (!formData.confirmMpin) {
-      newErrors.confirmMpin = 'Please confirm your MPIN';
-    } else if (formData.mpin !== formData.confirmMpin) {
-      newErrors.confirmMpin = 'MPIN does not match';
+    if (!cardForm.cardExpiry) {
+      newErrors.cardExpiry = 'Expiry date is required';
+    } else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardForm.cardExpiry)) {
+      newErrors.cardExpiry = 'Invalid format (MM/YY)';
+    }
+
+    if (!cardForm.cvv) {
+      newErrors.cvv = 'CVV is required';
+    } else if (cardForm.cvv.length !== 3) {
+      newErrors.cvv = 'CVV must be 3 digits';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
+  const validateMpinSetup = () => {
+    const newErrors = {};
+    
+    if (!mpinForm.mpin) {
+      newErrors.mpin = 'MPIN is required';
+    } else if (mpinForm.mpin.length !== 4) {
+      newErrors.mpin = 'MPIN must be 4 digits';
     }
+
+    if (!mpinForm.confirmMpin) {
+      newErrors.confirmMpin = 'Please confirm MPIN';
+    } else if (mpinForm.mpin !== mpinForm.confirmMpin) {
+      newErrors.confirmMpin = 'MPINs do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateMpinChange = () => {
+    const newErrors = {};
+    
+    if (!mpinForm.currentMpin) {
+      newErrors.currentMpin = 'Current MPIN is required';
+    }
+
+    if (!mpinForm.newMpin) {
+      newErrors.newMpin = 'New MPIN is required';
+    } else if (mpinForm.newMpin.length !== 4) {
+      newErrors.newMpin = 'MPIN must be 4 digits';
+    }
+
+    if (!mpinForm.confirmNewMpin) {
+      newErrors.confirmNewMpin = 'Please confirm new MPIN';
+    } else if (mpinForm.newMpin !== mpinForm.confirmNewMpin) {
+      newErrors.confirmNewMpin = 'MPINs do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleCardSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateCardForm()) return;
 
     setLoading(true);
     setMessage({ type: '', text: '' });
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Save to localStorage (simulated for college project)
-      const paymentData = {
-        debitCardNumber: formData.debitCardNumber,
-        mpin: formData.mpin, // In real app, this should be hashed
-        savedAt: new Date().toISOString()
-      };
-      
-      localStorage.setItem('paymentMethod', JSON.stringify(paymentData));
-      setSavedPayment(paymentData);
-
-      setMessage({ type: 'success', text: 'Payment method saved successfully! You can use this for future ride payments.' });
-      setFormData({
-        debitCardNumber: '',
-        mpin: '',
-        confirmMpin: ''
+      const response = await bookingAPI.setupPayment({
+        cardNumber: cardForm.cardNumber.replace(/\s/g, ''),
+        cardHolderName: cardForm.cardHolderName,
+        cardExpiry: cardForm.cardExpiry,
+        cvv: cardForm.cvv
       });
+
+      setPaymentStatus(prev => ({
+        ...prev,
+        hasPaymentSetup: true,
+        cardLastFour: response.paymentInfo.cardLastFour,
+        cardBrand: response.paymentInfo.cardBrand,
+        cardHolderName: response.paymentInfo.cardHolderName
+      }));
+
+      setCardForm({ cardNumber: '', cardHolderName: '', cardExpiry: '', cvv: '' });
+      setMessage({ type: 'success', text: 'Debit card linked successfully!' });
+
+      // If MPIN not set, prompt to set it
+      if (!paymentStatus.hasMpinSetup) {
+        setTimeout(() => {
+          setActiveTab('mpin');
+          setMessage({ type: 'info', text: 'Now set up your 4-digit MPIN to secure your payments.' });
+        }, 1500);
+      }
     } catch (error) {
-      console.error('Save payment error:', error);
-      setMessage({
-        type: 'error',
-        text: 'Failed to save payment method. Please try again.'
-      });
+      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to link card' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRemovePayment = () => {
-    if (window.confirm('Are you sure you want to remove your saved payment method?')) {
-      localStorage.removeItem('paymentMethod');
-      setSavedPayment(null);
-      setMessage({ type: 'success', text: 'Payment method removed successfully.' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  const handleMpinSetup = async (e) => {
+    e.preventDefault();
+    if (!validateMpinSetup()) return;
+
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      await bookingAPI.setupMpin(mpinForm.mpin);
+      setPaymentStatus(prev => ({ ...prev, hasMpinSetup: true }));
+      setMpinForm({ mpin: '', confirmMpin: '', currentMpin: '', newMpin: '', confirmNewMpin: '' });
+      setMessage({ type: 'success', text: 'MPIN set up successfully! You can now book rides securely.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to set up MPIN' });
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleMpinChangeSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateMpinChange()) return;
+
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      await bookingAPI.changeMpin(mpinForm.currentMpin, mpinForm.newMpin);
+      setMpinForm({ mpin: '', confirmMpin: '', currentMpin: '', newMpin: '', confirmNewMpin: '' });
+      setMessage({ type: 'success', text: 'MPIN changed successfully!' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to change MPIN' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (fetchingStatus) {
+    return (
+      <div className="payment-page">
+        <div className="page-header">
+          <h1>Payment Information</h1>
+        </div>
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div className="spinner" style={{ margin: '0 auto' }}></div>
+          <p style={{ marginTop: '16px', color: '#6b7280' }}>Loading payment info...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="payment-page">
       <div className="page-header">
-        <h1>Payment Method</h1>
-        <p>Add your debit card for ride payments</p>
+        <h1>Payment Information</h1>
+        <p>Manage your debit card and payment MPIN</p>
       </div>
 
       {message.text && (
@@ -2766,138 +2894,361 @@ const PaymentMethodPage = () => {
         </div>
       )}
 
-      {savedPayment && (
-        <div className="saved-payment-card" style={{
-          backgroundColor: '#f0fdf4',
-          border: '1px solid #22c55e',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '24px'
+      {/* Linked Card Display */}
+      {paymentStatus.hasPaymentSetup && (
+        <div className="linked-card-display" style={{
+          background: 'linear-gradient(135deg, #1a1f36 0%, #2d3748 100%)',
+          borderRadius: '16px',
+          padding: '24px',
+          color: 'white',
+          marginBottom: '24px',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
-          <h3 style={{ color: '#16a34a', marginBottom: '12px' }}>💳 Saved Payment Method</h3>
-          <p style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '2px', marginBottom: '8px' }}>
-            {maskCardNumber(savedPayment.debitCardNumber)}
-          </p>
-          <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '16px' }}>
-            Added on {new Date(savedPayment.savedAt).toLocaleDateString()}
-          </p>
-          <button 
-            className="btn-delete"
-            onClick={handleRemovePayment}
-            style={{ 
-              backgroundColor: '#ef4444', 
-              color: 'white', 
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}
-          >
-            Remove Payment Method
-          </button>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+              <span style={{ fontSize: '14px', opacity: 0.8 }}>Linked Card</span>
+              <span style={{ fontWeight: '600' }}>{paymentStatus.cardBrand || 'Card'}</span>
+            </div>
+            <div style={{ fontSize: '24px', letterSpacing: '3px', fontFamily: 'monospace', marginBottom: '20px' }}>
+              •••• •••• •••• {paymentStatus.cardLastFour}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '10px', opacity: 0.7, marginBottom: '4px' }}>CARDHOLDER</div>
+                <div style={{ fontSize: '14px' }}>{paymentStatus.cardHolderName}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ 
+                  background: paymentStatus.hasMpinSetup ? '#22c55e' : '#f59e0b',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '500'
+                }}>
+                  {paymentStatus.hasMpinSetup ? '✓ MPIN Set' : '⚠ MPIN Required'}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      <form className="form-container" onSubmit={handleSubmit}>
-        <h3 style={{ marginBottom: '20px', color: '#374151' }}>
-          {savedPayment ? 'Update Payment Method' : 'Add New Payment Method'}
-        </h3>
-
-        <div className="form-group">
-          <label>Debit Card Number *</label>
-          <input
-            type="text"
-            name="debitCardNumber"
-            className={`form-input ${errors.debitCardNumber ? 'input-error' : ''}`}
-            value={formatCardNumber(formData.debitCardNumber)}
-            onChange={handleChange}
-            placeholder="Enter 13-16 digit card number"
-            disabled={loading}
-            maxLength={19}
-          />
-          {errors.debitCardNumber && (
-            <span className="error-text">{errors.debitCardNumber}</span>
-          )}
-          <small className="form-help">Enter your debit card number (13-16 digits)</small>
-        </div>
-
-        <div className="form-group">
-          <label>MPIN (4-6 digits) *</label>
-          <div className="password-input-wrapper">
-            <input
-              type={showMpin.mpin ? "text" : "password"}
-              name="mpin"
-              className={`form-input ${errors.mpin ? 'input-error' : ''}`}
-              value={formData.mpin}
-              onChange={handleChange}
-              placeholder="Enter 4-6 digit MPIN"
-              disabled={loading}
-              maxLength={6}
-            />
-            <button
-              type="button"
-              className="password-toggle-icon"
-              onClick={() => setShowMpin(prev => ({ ...prev, mpin: !prev.mpin }))}
-              disabled={loading}
-              aria-label={showMpin.mpin ? "Hide MPIN" : "Show MPIN"}
-            >
-              {showMpin.mpin ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-            </button>
-          </div>
-          {errors.mpin && (
-            <span className="error-text">{errors.mpin}</span>
-          )}
-          <small className="form-help">This MPIN will be used to confirm payments when booking rides</small>
-        </div>
-
-        <div className="form-group">
-          <label>Confirm MPIN *</label>
-          <div className="password-input-wrapper">
-            <input
-              type={showMpin.confirm ? "text" : "password"}
-              name="confirmMpin"
-              className={`form-input ${errors.confirmMpin ? 'input-error' : ''}`}
-              value={formData.confirmMpin}
-              onChange={handleChange}
-              placeholder="Re-enter your MPIN"
-              disabled={loading}
-              maxLength={6}
-            />
-            <button
-              type="button"
-              className="password-toggle-icon"
-              onClick={() => setShowMpin(prev => ({ ...prev, confirm: !prev.confirm }))}
-              disabled={loading}
-              aria-label={showMpin.confirm ? "Hide MPIN" : "Show MPIN"}
-            >
-              {showMpin.confirm ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-            </button>
-          </div>
-          {errors.confirmMpin && (
-            <span className="error-text">{errors.confirmMpin}</span>
-          )}
-        </div>
-
-        <button 
-          type="submit"
-          className="btn-submit" 
-          disabled={loading}
+      {/* Tabs */}
+      <div className="payment-tabs" style={{
+        display: 'flex',
+        gap: '8px',
+        marginBottom: '24px',
+        borderBottom: '2px solid #e5e7eb',
+        paddingBottom: '0'
+      }}>
+        <button
+          className={`tab-btn ${activeTab === 'card' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('card'); setErrors({}); setMessage({ type: '', text: '' }); }}
+          style={{
+            padding: '12px 24px',
+            border: 'none',
+            background: activeTab === 'card' ? '#4DA3FF' : 'transparent',
+            color: activeTab === 'card' ? 'white' : '#6b7280',
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            fontWeight: '500',
+            transition: 'all 0.2s'
+          }}
         >
-          {loading ? 'Saving...' : savedPayment ? 'Update Payment Method' : 'Save Payment Method'}
+          💳 Debit Card
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'mpin' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('mpin'); setErrors({}); setMessage({ type: '', text: '' }); }}
+          style={{
+            padding: '12px 24px',
+            border: 'none',
+            background: activeTab === 'mpin' ? '#4DA3FF' : 'transparent',
+            color: activeTab === 'mpin' ? 'white' : '#6b7280',
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            fontWeight: '500',
+            transition: 'all 0.2s'
+          }}
+        >
+          🔐 MPIN
+        </button>
+      </div>
 
-        <div style={{ 
-          marginTop: '20px', 
-          padding: '16px', 
-          backgroundColor: '#f3f4f6', 
-          borderRadius: '8px',
-          fontSize: '14px',
-          color: '#6b7280'
-        }}>
-          <strong>🔒 Security Note:</strong> Your payment information is stored securely. 
-          The MPIN will be required when you book a ride to confirm the payment.
+      {/* Card Tab */}
+      {activeTab === 'card' && (
+        <form className="form-container" onSubmit={handleCardSubmit}>
+          <h3 style={{ marginBottom: '20px', color: '#374151' }}>
+            {paymentStatus.hasPaymentSetup ? 'Update Debit Card' : 'Link Debit Card'}
+          </h3>
+
+          <div className="form-group">
+            <label>Card Number *</label>
+            <input
+              type="text"
+              className={`form-input ${errors.cardNumber ? 'input-error' : ''}`}
+              value={cardForm.cardNumber}
+              onChange={(e) => handleCardChange('cardNumber', e.target.value)}
+              placeholder="1234 5678 9012 3456"
+              disabled={loading}
+              maxLength={19}
+            />
+            {errors.cardNumber && <span className="error-text">{errors.cardNumber}</span>}
+          </div>
+
+          <div className="form-group">
+            <label>Cardholder Name *</label>
+            <input
+              type="text"
+              className={`form-input ${errors.cardHolderName ? 'input-error' : ''}`}
+              value={cardForm.cardHolderName}
+              onChange={(e) => handleCardChange('cardHolderName', e.target.value.toUpperCase())}
+              placeholder="JOHN DOE"
+              disabled={loading}
+            />
+            {errors.cardHolderName && <span className="error-text">{errors.cardHolderName}</span>}
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Expiry Date *</label>
+              <input
+                type="text"
+                className={`form-input ${errors.cardExpiry ? 'input-error' : ''}`}
+                value={cardForm.cardExpiry}
+                onChange={(e) => handleCardChange('cardExpiry', e.target.value)}
+                placeholder="MM/YY"
+                disabled={loading}
+                maxLength={5}
+              />
+              {errors.cardExpiry && <span className="error-text">{errors.cardExpiry}</span>}
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>CVV *</label>
+              <input
+                type="password"
+                className={`form-input ${errors.cvv ? 'input-error' : ''}`}
+                value={cardForm.cvv}
+                onChange={(e) => handleCardChange('cvv', e.target.value)}
+                placeholder="•••"
+                disabled={loading}
+                maxLength={3}
+              />
+              {errors.cvv && <span className="error-text">{errors.cvv}</span>}
+            </div>
+          </div>
+
+          <button type="submit" className="btn-submit" disabled={loading}>
+            {loading ? 'Linking...' : paymentStatus.hasPaymentSetup ? 'Update Card' : 'Link Card'}
+          </button>
+        </form>
+      )}
+
+      {/* MPIN Tab */}
+      {activeTab === 'mpin' && (
+        <div className="form-container">
+          {!paymentStatus.hasPaymentSetup ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '40px 20px',
+              backgroundColor: '#fef3c7',
+              borderRadius: '12px',
+              border: '1px solid #f59e0b'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>💳</div>
+              <h3 style={{ color: '#92400e', marginBottom: '8px' }}>Link a Card First</h3>
+              <p style={{ color: '#a16207' }}>You need to link a debit card before setting up your MPIN.</p>
+              <button
+                onClick={() => setActiveTab('card')}
+                style={{
+                  marginTop: '16px',
+                  padding: '10px 24px',
+                  background: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Link Debit Card
+              </button>
+            </div>
+          ) : !paymentStatus.hasMpinSetup ? (
+            // Setup MPIN Form
+            <form onSubmit={handleMpinSetup}>
+              <h3 style={{ marginBottom: '20px', color: '#374151' }}>Set Up MPIN</h3>
+              <p style={{ color: '#6b7280', marginBottom: '20px' }}>
+                Create a 4-digit MPIN to authorize payments when booking rides.
+              </p>
+
+              <div className="form-group">
+                <label>Enter MPIN (4 digits) *</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showMpin.mpin ? "text" : "password"}
+                    className={`form-input ${errors.mpin ? 'input-error' : ''}`}
+                    value={mpinForm.mpin}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                      setMpinForm(prev => ({ ...prev, mpin: cleaned }));
+                      if (errors.mpin) setErrors(prev => ({ ...prev, mpin: '' }));
+                    }}
+                    placeholder="••••"
+                    disabled={loading}
+                    maxLength={4}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-icon"
+                    onClick={() => setShowMpin(prev => ({ ...prev, mpin: !prev.mpin }))}
+                  >
+                    {showMpin.mpin ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                  </button>
+                </div>
+                {errors.mpin && <span className="error-text">{errors.mpin}</span>}
+              </div>
+
+              <div className="form-group">
+                <label>Confirm MPIN *</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showMpin.confirm ? "text" : "password"}
+                    className={`form-input ${errors.confirmMpin ? 'input-error' : ''}`}
+                    value={mpinForm.confirmMpin}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                      setMpinForm(prev => ({ ...prev, confirmMpin: cleaned }));
+                      if (errors.confirmMpin) setErrors(prev => ({ ...prev, confirmMpin: '' }));
+                    }}
+                    placeholder="••••"
+                    disabled={loading}
+                    maxLength={4}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-icon"
+                    onClick={() => setShowMpin(prev => ({ ...prev, confirm: !prev.confirm }))}
+                  >
+                    {showMpin.confirm ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                  </button>
+                </div>
+                {errors.confirmMpin && <span className="error-text">{errors.confirmMpin}</span>}
+              </div>
+
+              <button type="submit" className="btn-submit" disabled={loading}>
+                {loading ? 'Setting up...' : 'Set Up MPIN'}
+              </button>
+            </form>
+          ) : (
+            // Change MPIN Form
+            <form onSubmit={handleMpinChangeSubmit}>
+              <h3 style={{ marginBottom: '20px', color: '#374151' }}>Change MPIN</h3>
+              <p style={{ color: '#6b7280', marginBottom: '20px' }}>
+                Enter your current MPIN and choose a new 4-digit MPIN.
+              </p>
+
+              <div className="form-group">
+                <label>Current MPIN *</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showMpin.current ? "text" : "password"}
+                    className={`form-input ${errors.currentMpin ? 'input-error' : ''}`}
+                    value={mpinForm.currentMpin}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                      setMpinForm(prev => ({ ...prev, currentMpin: cleaned }));
+                      if (errors.currentMpin) setErrors(prev => ({ ...prev, currentMpin: '' }));
+                    }}
+                    placeholder="••••"
+                    disabled={loading}
+                    maxLength={4}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-icon"
+                    onClick={() => setShowMpin(prev => ({ ...prev, current: !prev.current }))}
+                  >
+                    {showMpin.current ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                  </button>
+                </div>
+                {errors.currentMpin && <span className="error-text">{errors.currentMpin}</span>}
+              </div>
+
+              <div className="form-group">
+                <label>New MPIN *</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showMpin.new ? "text" : "password"}
+                    className={`form-input ${errors.newMpin ? 'input-error' : ''}`}
+                    value={mpinForm.newMpin}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                      setMpinForm(prev => ({ ...prev, newMpin: cleaned }));
+                      if (errors.newMpin) setErrors(prev => ({ ...prev, newMpin: '' }));
+                    }}
+                    placeholder="••••"
+                    disabled={loading}
+                    maxLength={4}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-icon"
+                    onClick={() => setShowMpin(prev => ({ ...prev, new: !prev.new }))}
+                  >
+                    {showMpin.new ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                  </button>
+                </div>
+                {errors.newMpin && <span className="error-text">{errors.newMpin}</span>}
+              </div>
+
+              <div className="form-group">
+                <label>Confirm New MPIN *</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showMpin.confirmNew ? "text" : "password"}
+                    className={`form-input ${errors.confirmNewMpin ? 'input-error' : ''}`}
+                    value={mpinForm.confirmNewMpin}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                      setMpinForm(prev => ({ ...prev, confirmNewMpin: cleaned }));
+                      if (errors.confirmNewMpin) setErrors(prev => ({ ...prev, confirmNewMpin: '' }));
+                    }}
+                    placeholder="••••"
+                    disabled={loading}
+                    maxLength={4}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-icon"
+                    onClick={() => setShowMpin(prev => ({ ...prev, confirmNew: !prev.confirmNew }))}
+                  >
+                    {showMpin.confirmNew ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                  </button>
+                </div>
+                {errors.confirmNewMpin && <span className="error-text">{errors.confirmNewMpin}</span>}
+              </div>
+
+              <button type="submit" className="btn-submit" disabled={loading}>
+                {loading ? 'Changing...' : 'Change MPIN'}
+              </button>
+            </form>
+          )}
         </div>
-      </form>
+      )}
+
+      <div style={{ 
+        marginTop: '24px', 
+        padding: '16px', 
+        backgroundColor: '#f3f4f6', 
+        borderRadius: '8px',
+        fontSize: '14px',
+        color: '#6b7280'
+      }}>
+        <strong>🔒 Security Note:</strong> Your card details are stored securely. 
+        Only the last 4 digits are shown for your reference. The MPIN will be required when booking rides.
+      </div>
     </div>
   );
 };
@@ -3286,6 +3637,13 @@ const Dashboard = () => {
   const [selectedRide, setSelectedRide] = useState(null);
   const [showRideDetailsModal, setShowRideDetailsModal] = useState(false);
   
+  // ✅ State for apply/book ride modal
+  const [rideToBook, setRideToBook] = useState(null);
+  const [showApplyRideModal, setShowApplyRideModal] = useState(false);
+  
+  // ✅ State for user's bookings (to check if user booked a ride)
+  const [myBookings, setMyBookings] = useState([]);
+  
   const [userFormData, setUserFormData] = useState({
     username: '',
     phone: ''
@@ -3329,7 +3687,14 @@ const Dashboard = () => {
 
   // ✅ Handle view ride details
   const handleViewRideDetails = (rideData) => {
-    setSelectedRide(rideData);
+    // Check if user has booked this ride
+    const userBooking = myBookings.find(
+      b => b.ride?.id === rideData.id && b.bookingStatus === 'confirmed'
+    );
+    setSelectedRide({
+      ...rideData,
+      userBooking: userBooking || null
+    });
     setShowRideDetailsModal(true);
   };
 
@@ -3338,8 +3703,58 @@ const Dashboard = () => {
     setSelectedRide(null);
   };
 
+  // ✅ Handle book ride (open ApplyRideModal)
+  const handleBookRide = (rideData) => {
+    setRideToBook(rideData);
+    setShowApplyRideModal(true);
+  };
+
+  const closeApplyRideModal = (success = false) => {
+    setShowApplyRideModal(false);
+    setRideToBook(null);
+    
+    // Refresh rides if booking was successful
+    if (success) {
+      fetchRides();
+    }
+  };
+
+  const handleBookingSuccess = (response) => {
+    console.log('✅ Booking successful:', response);
+    // Refresh bookings when a new booking is made
+    fetchMyBookings();
+  };
+
+  // ✅ Fetch user's bookings
+  const fetchMyBookings = async () => {
+    try {
+      const response = await bookingAPI.getMyBookings();
+      setMyBookings(response.bookings || []);
+      console.log('✅ My bookings fetched:', response.count);
+    } catch (error) {
+      console.error('Error fetching my bookings:', error);
+      setMyBookings([]);
+    }
+  };
+
+  // ✅ Handle cancel booking
+  const handleCancelBooking = async (bookingId) => {
+    try {
+      await bookingAPI.cancelBooking(bookingId);
+      console.log('✅ Booking cancelled successfully');
+      // Refresh bookings and rides
+      fetchMyBookings();
+      fetchRides();
+      closeRideDetailsModal();
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      alert(error.response?.data?.message || 'Failed to cancel booking');
+    }
+  };
+
   useEffect(() => {
     fetchRides();
+    fetchMyBookings();
   }, [isRiderMode, vehicleFilter]);
 
   const handleNavigation = (page) => {
@@ -3451,6 +3866,7 @@ const Dashboard = () => {
                     <RideCard
                       ride={{
                         id: ride.id,
+                        userId: ride.userId || ride.rider?.id, // Fallback to rider.id if userId not present
                         driverName: ride.rider?.username || 'Anonymous',
                         driverRating: 4.5,
                         driverPhone: ride.rider?.phone || '',
@@ -3462,6 +3878,8 @@ const Dashboard = () => {
                         time: ride.time,
                         price: ride.price || 0,
                         availableSeats: ride.availableSeats || 0,
+                        bookedSeats: ride.bookedSeats || 0,
+                        status: ride.status || 'active',
                         vehicleType: ride.vehicleType === 'bike' ? 'Bike' : 'Car',
                         isVerified: ride.rider?.isVerifiedRider || false,
                         pickupLocation: ride.pickupLocation,
@@ -3470,24 +3888,8 @@ const Dashboard = () => {
                         description: ride.description
                       }}
                       onViewDetails={handleViewRideDetails}
+                      onBookRide={!isRiderMode ? handleBookRide : undefined}
                     />
-                    {isRiderMode && (
-                      <button
-                        className="btn-delete-cross"
-                        onClick={() => {
-                          if (window.confirm(`Do you want to delete your posted ride from ${ride.from} to ${ride.to}?`)) {
-                            handleDeleteRide(ride);
-                          }
-                        }}
-                        title="Delete Ride"
-                        aria-label="Delete Ride"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                      </button>
-                    )}
                   </div>
                 ))}
               </div>
@@ -3764,6 +4166,26 @@ const Dashboard = () => {
         isOpen={showRideDetailsModal}
         onClose={closeRideDetailsModal}
         ride={selectedRide}
+        currentUserId={user?.id}
+        onCancelRide={(ride) => {
+          if (window.confirm(`Are you sure you want to cancel this ride from ${ride.from} to ${ride.to}?`)) {
+            handleDeleteRide(ride);
+            closeRideDetailsModal();
+          }
+        }}
+        onCancelBooking={(booking) => {
+          if (window.confirm(`Are you sure you want to cancel your booking? A refund will be initiated.`)) {
+            handleCancelBooking(booking.id);
+          }
+        }}
+      />
+
+      {/* ✅ Apply/Book Ride Modal */}
+      <ApplyRideModal
+        isOpen={showApplyRideModal}
+        onClose={closeApplyRideModal}
+        ride={rideToBook}
+        onSuccess={handleBookingSuccess}
       />
 
       <div className="mode-toggle-container">

@@ -130,3 +130,12 @@ Thumbs.db
 # Uploads
 # =========================
 Backend/uploads/
+
+# =========================
+# Debug/One-time migration scripts
+# =========================
+Backend/check_db.js
+Backend/check_rides.js
+Backend/migrate_card_fields.js
+Backend/run_migration.js
+Backend/migrations/

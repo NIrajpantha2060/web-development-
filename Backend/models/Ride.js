@@ -64,9 +64,15 @@ const Ride = sequelize.define("Ride", {
     allowNull: false,
     defaultValue: 'active',
     validate: {
-      isIn: [['active', 'cancelled', 'completed']]
+      isIn: [['active', 'cancelled', 'completed', 'taken']]
     },
-    comment: 'active = ride available, cancelled = rider cancelled, completed = ride finished'
+    comment: 'active = ride available, cancelled = rider cancelled, completed = ride finished, taken = all seats booked'
+  },
+  bookedSeats: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    comment: 'Number of seats already booked'
   },
   userId: {
     type: DataTypes.INTEGER,
@@ -88,6 +94,11 @@ Ride.associate = (models) => {
   Ride.belongsTo(models.User, { 
     foreignKey: 'userId',
     as: 'rider'
+  });
+  // ✅ NEW: RideBooking association
+  Ride.hasMany(models.RideBooking, { 
+    foreignKey: 'rideId',
+    as: 'bookings'
   });
 };
 

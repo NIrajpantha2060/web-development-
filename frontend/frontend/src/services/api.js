@@ -738,4 +738,88 @@ export const vehicleAPI = {
   }
 };
 
+// ✅ NEW: Booking & Payment API calls
+export const bookingAPI = {
+  // Setup MPIN (first time)
+  setupMpin: async (mpin) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/bookings/mpin/setup`, { mpin }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Verify MPIN
+  verifyMpin: async (mpin) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/bookings/mpin/verify`, { mpin }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Change MPIN
+  changeMpin: async (currentMpin, newMpin) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(`${API_BASE_URL}/bookings/mpin/change`, { currentMpin, newMpin }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Setup payment info (debit card)
+  setupPayment: async (cardDetails) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/bookings/payment/setup`, cardDetails, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get payment status
+  getPaymentStatus: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/bookings/payment/status`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Apply for ride (book with payment)
+  applyForRide: async (rideId, seatsToBook, mpin) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/bookings/apply`, { rideId, seatsToBook, mpin }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get my bookings (as passenger)
+  getMyBookings: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/bookings/my-bookings`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Cancel booking
+  cancelBooking: async (bookingId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get passengers for my ride (as driver)
+  getRidePassengers: async (rideId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/bookings/ride/${rideId}/passengers`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  }
+};
+
 export default api;

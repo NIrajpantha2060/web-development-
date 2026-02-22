@@ -343,3 +343,59 @@
     font-size: 1rem;
   }
 }
+
+/* ============================= */
+/* Taken Ride Styles             */
+/* ============================= */
+
+.ride-card.taken {
+  position: relative;
+  opacity: 0.85;
+  border-color: #d1d5db;
+}
+
+.ride-card.taken:hover {
+  transform: none;
+  box-shadow: 0 2px 12px rgba(11, 60, 93, 0.08);
+  border-color: #d1d5db;
+}
+
+.taken-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  z-index: 5;
+}
+
+.taken-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.detail-item span.no-seats {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.btn-primary.btn-taken {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-primary.btn-taken:hover {
+  background: #9ca3af;
+  transform: none;
+  box-shadow: none;
+}

@@ -2,7 +2,7 @@
 
 import '../css/RideCard.css';
 
-const RideCard = ({ ride, onDelete, onViewDetails, showDeleteButton = false }) => {
+const RideCard = ({ ride, onDelete, onViewDetails, onBookRide, showDeleteButton = false }) => {
   const {
     driverName = 'Driver Name',
     driverRating = 4.5,
@@ -12,9 +12,14 @@ const RideCard = ({ ride, onDelete, onViewDetails, showDeleteButton = false }) =
     time = '10:00 AM',
     price = 1500,
     availableSeats = 3,
+    bookedSeats = 0,
     vehicleType = 'Sedan',
-    isVerified = true
+    isVerified = true,
+    status = 'active'
   } = ride || {};
+
+  const remainingSeats = availableSeats - (bookedSeats || 0);
+  const isTaken = status === 'taken' || remainingSeats <= 0;
 
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
@@ -27,8 +32,23 @@ const RideCard = ({ ride, onDelete, onViewDetails, showDeleteButton = false }) =
     }
   };
 
+  const handleBookRide = () => {
+    if (onBookRide && !isTaken) {
+      onBookRide(ride);
+    }
+  };
+
   return (
-    <div className="ride-card">
+    <div className={`ride-card ${isTaken ? 'taken' : ''}`}>
+      {/* Taken Badge */}
+      {isTaken && (
+        <div className="taken-badge">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+          </svg>
+          Ride Taken
+        </div>
+      )}
       <div className="ride-card-header">
         <div className="driver-info">
           <div className="driver-avatar">
@@ -101,7 +121,7 @@ const RideCard = ({ ride, onDelete, onViewDetails, showDeleteButton = false }) =
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <span>{availableSeats} seats</span>
+          <span className={remainingSeats <= 0 ? 'no-seats' : ''}>{remainingSeats} / {availableSeats} seats</span>
         </div>
         <div className="detail-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -116,7 +136,13 @@ const RideCard = ({ ride, onDelete, onViewDetails, showDeleteButton = false }) =
         {showDeleteButton ? (
           <button className="btn-danger" onClick={onDelete}>Cancel Ride</button>
         ) : (
-          <button className="btn-primary">Book Ride</button>
+          <button 
+            className={`btn-primary ${isTaken ? 'btn-taken' : ''}`}
+            onClick={handleBookRide}
+            disabled={isTaken}
+          >
+            {isTaken ? 'Fully Booked' : 'Book Ride'}
+          </button>
         )}
       </div>
     </div>

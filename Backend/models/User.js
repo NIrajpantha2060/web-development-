@@ -130,13 +130,58 @@ const User = sequelize.define("User", {
     allowNull: false,
     defaultValue: false,
     comment: 'True if user has verified driving license (purple tick)'
+  },
+  // ✅ NEW: Payment and MPIN fields
+  mpin: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Hashed 4-digit MPIN for payment verification'
+  },
+  hasMpinSetup: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'True if user has set up MPIN'
+  },
+  paymentMethod: {
+    type: DataTypes.STRING(30),
+    allowNull: true,
+    defaultValue: 'debit_card',
+    comment: 'Payment method - debit card only'
+  },
+  hasPaymentSetup: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'True if user has set up payment info'
+  },
+  // Debit Card fields
+  cardLastFour: {
+    type: DataTypes.STRING(4),
+    allowNull: true,
+    comment: 'Last 4 digits of debit card'
+  },
+  cardHolderName: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    comment: 'Name on the debit card'
+  },
+  cardExpiry: {
+    type: DataTypes.STRING(5),
+    allowNull: true,
+    comment: 'Card expiry in MM/YY format'
+  },
+  cardBrand: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    comment: 'Card brand (Visa, Mastercard, etc.)'
   }
 }, {
   timestamps: true,
   tableName: 'users'
 });
 
-// ✅ UPDATED: Define association method with Ride and Vehicle models
+// ✅ UPDATED: Define association method with Ride, Vehicle, and RideBooking models
 User.associate = (models) => {
   User.hasMany(models.Verification, { 
     foreignKey: 'userId',
@@ -150,10 +195,15 @@ User.associate = (models) => {
     foreignKey: 'userId',
     as: 'rides'
   });
-  // ✅ NEW: Vehicle association (one-to-one)
+  // ✅ Vehicle association (one-to-one)
   User.hasOne(models.Vehicle, { 
     foreignKey: 'userId',
     as: 'vehicle'
+  });
+  // ✅ NEW: RideBooking association (as passenger)
+  User.hasMany(models.RideBooking, { 
+    foreignKey: 'passengerId',
+    as: 'bookings'
   });
 };
 

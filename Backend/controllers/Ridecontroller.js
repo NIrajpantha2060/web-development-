@@ -496,7 +496,9 @@ const getMyRides = async (req, res) => {
     const rides = await Ride.findAll({
       where: { 
         userId: req.user.id,
-        status: 'active',
+        status: {
+          [Op.in]: ['active', 'taken'] // ✅ Include both active and taken rides
+        },
         date: {
           [Op.gte]: today // Only rides with date >= today
         }
@@ -511,13 +513,14 @@ const getMyRides = async (req, res) => {
       order: [['date', 'ASC'], ['time', 'ASC']] // Order by closest date first
     });
 
-    console.log(`✅ Found ${rides.length} active rides for user ${req.user.id}`);
+    console.log(`✅ Found ${rides.length} active/taken rides for user ${req.user.id}`);
 
     res.status(200).json({
       message: "Rides fetched successfully",
       count: rides.length,
       rides: rides.map(ride => ({
         id: ride.id,
+        userId: ride.userId, // ✅ Include userId for ownership check
         from: ride.from,
         to: ride.to,
         date: ride.date,
@@ -529,6 +532,7 @@ const getMyRides = async (req, res) => {
         description: ride.description,
         price: ride.price,
         availableSeats: ride.availableSeats,
+        bookedSeats: ride.bookedSeats || 0, // ✅ Include bookedSeats
         status: ride.status,
         createdAt: ride.createdAt,
         updatedAt: ride.updatedAt,
@@ -561,9 +565,11 @@ const getAllRides = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Build filter conditions - only show active rides with date >= today
+    // Build filter conditions - show active and taken rides with date >= today
     const whereConditions = {
-      status: 'active',
+      status: {
+        [Op.in]: ['active', 'taken']
+      },
       date: {
         [Op.gte]: today
       }
@@ -601,7 +607,7 @@ const getAllRides = async (req, res) => {
       order: [['date', 'ASC'], ['time', 'ASC']]
     });
 
-    console.log(`✅ Found ${rides.length} active rides`);
+    console.log(`✅ Found ${rides.length} active/taken rides`);
 
     // ✅ Get total rides count for each unique rider
     const riderIds = [...new Set(rides.map(r => r.rider?.id).filter(Boolean))];
@@ -619,6 +625,7 @@ const getAllRides = async (req, res) => {
       count: rides.length,
       rides: rides.map(ride => ({
         id: ride.id,
+        userId: ride.userId, // ✅ Include userId for ownership check
         from: ride.from,
         to: ride.to,
         date: ride.date,
@@ -630,6 +637,7 @@ const getAllRides = async (req, res) => {
         description: ride.description,
         price: ride.price,
         availableSeats: ride.availableSeats,
+        bookedSeats: ride.bookedSeats || 0,
         status: ride.status,
         createdAt: ride.createdAt,
         updatedAt: ride.updatedAt,

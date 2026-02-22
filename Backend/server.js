@@ -139,14 +139,16 @@ const verificationRoutes = require("./routes/verificationRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const rideRoutes = require("./routes/rideRoutes");
-const vehicleRoutes = require("./routes/vehicleRoutes"); // ✅ NEW
+const vehicleRoutes = require("./routes/vehicleRoutes");
+const bookingRoutes = require("./routes/bookingRoutes"); // ✅ NEW: Booking & Payment routes
 
 // Import models
 const User = require("./models/User");
 const Verification = require("./models/Verification");
 const Notification = require("./models/Notification");
 const Ride = require("./models/Ride");
-const Vehicle = require("./models/Vehicle"); // ✅ NEW
+const Vehicle = require("./models/Vehicle");
+const RideBooking = require("./models/RideBooking"); // ✅ NEW: Ride bookings
 
 // ✅ Initialize all models in an object
 const models = {
@@ -154,7 +156,8 @@ const models = {
   Verification,
   Notification,
   Ride,
-  Vehicle // ✅ NEW
+  Vehicle,
+  RideBooking // ✅ NEW: Ride bookings
 };
 
 // ✅ Call associate method on each model if it exists
@@ -206,9 +209,11 @@ app.use("/api/verification", verificationRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/rides", rideRoutes);
-app.use("/api/vehicles", vehicleRoutes); // ✅ NEW
+app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/bookings", bookingRoutes); // ✅ NEW: Booking & Payment routes
 
 // Connect database and sync models
+// ✅ NOTE: Use alter: false to prevent enum issues
 sequelize.sync({ alter: false }).then(() => {
   console.log("✅ Database connected and models synced");
 }).catch((error) => {
