@@ -3648,6 +3648,17 @@ const Dashboard = () => {
   const [rideHistory, setRideHistory] = useState([]);
   const [loadingRideHistory, setLoadingRideHistory] = useState(false);
   
+  // ✅ NEW: State for user booking history (user mode - completed rides)
+  const [userBookingHistory, setUserBookingHistory] = useState([]);
+  const [loadingUserHistory, setLoadingUserHistory] = useState(false);
+  
+  // ✅ NEW: State for rating modal
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [bookingToRate, setBookingToRate] = useState(null);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingReview, setRatingReview] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  
   // ✅ State for notifications
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -3696,6 +3707,62 @@ const Dashboard = () => {
       setRideHistory([]);
     } finally {
       setLoadingRideHistory(false);
+    }
+  };
+
+  // ✅ NEW: Fetch user booking history (for user mode)
+  const fetchUserBookingHistory = async () => {
+    setLoadingUserHistory(true);
+    try {
+      const response = await bookingAPI.getMyRideHistory();
+      console.log('✅ User booking history fetched:', response.count);
+      setUserBookingHistory(response.bookings || []);
+    } catch (error) {
+      console.error('Error fetching user booking history:', error);
+      setUserBookingHistory([]);
+    } finally {
+      setLoadingUserHistory(false);
+    }
+  };
+
+  // ✅ NEW: Handle opening rating modal
+  const handleOpenRatingModal = (booking) => {
+    setBookingToRate(booking);
+    setRatingValue(0);
+    setRatingReview('');
+    setShowRatingModal(true);
+  };
+
+  // ✅ NEW: Handle submitting rating
+  const handleSubmitRating = async () => {
+    if (!ratingValue || ratingValue < 1 || ratingValue > 5) {
+      alert('Please select a rating between 1 and 5 stars');
+      return;
+    }
+
+    setSubmittingRating(true);
+    try {
+      await bookingAPI.rateRider(bookingToRate.id, ratingValue, ratingReview || null);
+      console.log('✅ Rating submitted successfully');
+      
+      // Update the local state to reflect the rating
+      setUserBookingHistory(prev => 
+        prev.map(b => 
+          b.id === bookingToRate.id 
+            ? { ...b, riderRating: ratingValue, riderReview: ratingReview, hasRated: true, ratedAt: new Date() }
+            : b
+        )
+      );
+      
+      setShowRatingModal(false);
+      setBookingToRate(null);
+      setRatingValue(0);
+      setRatingReview('');
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      alert(error.response?.data?.message || 'Failed to submit rating');
+    } finally {
+      setSubmittingRating(false);
     }
   };
 
@@ -3786,6 +3853,10 @@ const Dashboard = () => {
   useEffect(() => {
     if (activePage === 'history' && isRiderMode) {
       fetchRideHistory();
+    }
+    // Fetch user booking history when in user mode
+    if (activePage === 'history' && !isRiderMode) {
+      fetchUserBookingHistory();
     }
   }, [activePage, isRiderMode]);
 
@@ -4041,14 +4112,145 @@ const Dashboard = () => {
             </div>
             
             {!isRiderMode ? (
-              // User mode - show message (to be implemented later)
-              <div className="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3>No booking history yet</h3>
-                <p>Your completed bookings will appear here</p>
-              </div>
+              // ✅ User mode - Show completed/past bookings with rating option
+              loadingUserHistory ? (
+                <div className="loading-state">Loading your ride history...</div>
+              ) : userBookingHistory.length === 0 ? (
+                <div className="empty-state">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h3>No booking history yet</h3>
+                  <p>Your completed bookings will appear here after the ride date passes</p>
+                </div>
+              ) : (
+                <div className="user-booking-history-list">
+                  {userBookingHistory.map(booking => (
+                    <div key={booking.id} className="user-history-card">
+                      <div className="user-history-header">
+                        <div className="ride-route">
+                          <span className="ride-from">{booking.ride?.from}</span>
+                          <span className="ride-arrow">→</span>
+                          <span className="ride-to">{booking.ride?.to}</span>
+                        </div>
+                        <div className="booking-ids">
+                          <span className="booking-id">Booking: {booking.bookingId}</span>
+                          <span className="ride-id">Ride: {booking.ride?.rideId}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="user-history-content">
+                        {/* Ride Details */}
+                        <div className="history-section">
+                          <h4>Ride Details</h4>
+                          <div className="history-details-grid">
+                            <div className="history-detail-row">
+                              <span className="detail-label">Date:</span>
+                              <span className="detail-value">{new Date(booking.ride?.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                            </div>
+                            <div className="history-detail-row">
+                              <span className="detail-label">Time:</span>
+                              <span className="detail-value">{booking.ride?.time}</span>
+                            </div>
+                            <div className="history-detail-row">
+                              <span className="detail-label">Pickup:</span>
+                              <span className="detail-value">{booking.ride?.pickupLocation}</span>
+                            </div>
+                            <div className="history-detail-row">
+                              <span className="detail-label">Vehicle:</span>
+                              <span className="detail-value">{booking.ride?.vehicleType === 'bike' ? '🏍️ Bike' : '🚗 Car'} - {booking.ride?.vehicleNumber}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Rider Details */}
+                        <div className="history-section">
+                          <h4>Rider Details</h4>
+                          <div className="rider-info-card">
+                            <div className="rider-avatar">
+                              {booking.ride?.rider?.profilePicture ? (
+                                <img 
+                                  src={`http://localhost:5000${booking.ride.rider.profilePicture}`} 
+                                  alt={booking.ride.rider.username}
+                                />
+                              ) : (
+                                <span className="avatar-initials">{booking.ride?.rider?.username?.charAt(0).toUpperCase() || 'R'}</span>
+                              )}
+                              {booking.ride?.rider?.isVerifiedRider && (
+                                <span className="verified-badge" title="Verified Rider">✓</span>
+                              )}
+                            </div>
+                            <div className="rider-details">
+                              <span className="rider-name">{booking.ride?.rider?.username || 'Unknown Rider'}</span>
+                              <span className="rider-phone">{booking.ride?.rider?.phone || 'No phone'}</span>
+                              <div className="rider-badges">
+                                {booking.ride?.rider?.isVerifiedUser && <span className="badge verified-user">Verified User</span>}
+                                {booking.ride?.rider?.isVerifiedRider && <span className="badge verified-rider">Verified Rider</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Booking Details */}
+                        <div className="history-section">
+                          <h4>Booking Details</h4>
+                          <div className="history-details-grid">
+                            <div className="history-detail-row">
+                              <span className="detail-label">Seats Booked:</span>
+                              <span className="detail-value">{booking.seatsBooked} seat(s)</span>
+                            </div>
+                            <div className="history-detail-row">
+                              <span className="detail-label">Total Paid:</span>
+                              <span className="detail-value amount">Rs. {booking.totalAmount}</span>
+                            </div>
+                            <div className="history-detail-row">
+                              <span className="detail-label">Payment Method:</span>
+                              <span className="detail-value">{booking.paymentMethod === 'debit_card' ? '💳 Debit Card' : booking.paymentMethod}</span>
+                            </div>
+                            <div className="history-detail-row">
+                              <span className="detail-label">Transaction ID:</span>
+                              <span className="detail-value transaction">{booking.transactionId}</span>
+                            </div>
+                            <div className="history-detail-row">
+                              <span className="detail-label">Booked On:</span>
+                              <span className="detail-value">{new Date(booking.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Rating Section */}
+                        <div className="history-section rating-section">
+                          <h4>Rate Your Ride</h4>
+                          {booking.hasRated ? (
+                            <div className="rating-display">
+                              <div className="stars-display">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                  <span key={star} className={`star ${star <= booking.riderRating ? 'filled' : ''}`}>★</span>
+                                ))}
+                                <span className="rating-text">{booking.riderRating}/5</span>
+                              </div>
+                              {booking.riderReview && (
+                                <p className="review-text">"{booking.riderReview}"</p>
+                              )}
+                              <span className="rated-at">Rated on {new Date(booking.ratedAt).toLocaleDateString()}</span>
+                            </div>
+                          ) : (
+                            <div className="rating-prompt">
+                              <p>How was your ride experience?</p>
+                              <button 
+                                className="btn-rate"
+                                onClick={() => handleOpenRatingModal(booking)}
+                              >
+                                ⭐ Rate This Ride
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
             ) : loadingRideHistory ? (
               <div className="loading-state">Loading ride history...</div>
             ) : rideHistory.length === 0 ? (
@@ -4486,6 +4688,82 @@ const Dashboard = () => {
         ride={rideToBook}
         onSuccess={handleBookingSuccess}
       />
+
+      {/* ✅ Rating Modal */}
+      {showRatingModal && bookingToRate && (
+        <div className="modal-overlay" onClick={() => setShowRatingModal(false)}>
+          <div className="modal-content rating-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Rate Your Ride</h3>
+              <button className="modal-close" onClick={() => setShowRatingModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="rating-ride-info">
+                <p className="rating-route">
+                  <strong>{bookingToRate.ride?.from}</strong> → <strong>{bookingToRate.ride?.to}</strong>
+                </p>
+                <p className="rating-rider">
+                  Rider: <strong>{bookingToRate.ride?.rider?.username || 'Unknown'}</strong>
+                </p>
+                <p className="rating-date">
+                  {new Date(bookingToRate.ride?.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                </p>
+              </div>
+              
+              <div className="rating-stars-input">
+                <label>How was your experience?</label>
+                <div className="stars-container">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={`star-btn ${star <= ratingValue ? 'selected' : ''}`}
+                      onClick={() => setRatingValue(star)}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <span className="rating-label">
+                  {ratingValue === 0 ? 'Select a rating' :
+                   ratingValue === 1 ? 'Poor' :
+                   ratingValue === 2 ? 'Fair' :
+                   ratingValue === 3 ? 'Good' :
+                   ratingValue === 4 ? 'Very Good' : 'Excellent'}
+                </span>
+              </div>
+              
+              <div className="rating-review-input">
+                <label>Write a review (optional)</label>
+                <textarea
+                  value={ratingReview}
+                  onChange={(e) => setRatingReview(e.target.value)}
+                  placeholder="Share your experience with the rider..."
+                  maxLength={500}
+                  rows={4}
+                />
+                <small>{ratingReview.length}/500 characters</small>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn-secondary" 
+                onClick={() => setShowRatingModal(false)}
+                disabled={submittingRating}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-primary"
+                onClick={handleSubmitRating}
+                disabled={ratingValue === 0 || submittingRating}
+              >
+                {submittingRating ? 'Submitting...' : 'Submit Rating'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mode-toggle-container">
         <button className="mode-toggle-trigger" onClick={toggleModeDropdown}>

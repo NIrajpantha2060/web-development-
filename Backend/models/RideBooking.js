@@ -65,6 +65,26 @@ const RideBooking = sequelize.define("RideBooking", {
       isIn: [['confirmed', 'cancelled', 'completed']]
     },
     comment: 'confirmed = booking active, cancelled = user cancelled, completed = ride completed'
+  },
+  // ✅ NEW: Rating fields for passenger to rate the rider
+  riderRating: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 1,
+      max: 5
+    },
+    comment: 'Rating given by passenger to rider (1-5 stars)'
+  },
+  riderReview: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: 'Optional review text from passenger'
+  },
+  ratedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'When the rating was submitted'
   }
 }, {
   timestamps: true,

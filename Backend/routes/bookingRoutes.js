@@ -10,7 +10,9 @@ const {
   applyForRide,
   getMyBookings,
   cancelBooking,
-  getRideBookings
+  getRideBookings,
+  getMyRideHistory,
+  rateRider
 } = require("../controllers/bookingController");
 
 // ✅ MPIN Routes
@@ -25,7 +27,11 @@ router.get("/payment/status", verifyToken, getPaymentStatus);
 // ✅ Booking Routes
 router.post("/apply", verifyToken, applyForRide);
 router.get("/my-bookings", verifyToken, getMyBookings);
+router.get("/my-history", verifyToken, getMyRideHistory);
 router.put("/:id/cancel", verifyToken, cancelBooking);
 router.get("/ride/:rideId/passengers", verifyToken, getRideBookings);
+
+// ✅ Rating Routes
+router.post("/:bookingId/rate", verifyToken, rateRider);
 
 module.exports = router;

@@ -1545,3 +1545,466 @@ html, body {
     justify-content: flex-start;
   }
 }
+
+/* =============================================================
+   USER BOOKING HISTORY STYLES (User Mode - Ride History)
+   ============================================================= */
+
+.user-booking-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.user-history-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(11, 60, 93, 0.08);
+  overflow: hidden;
+  border: 1px solid #E4E7EB;
+}
+
+.user-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #0B3C5D 0%, #1a5a7a 100%);
+  color: white;
+}
+
+.user-history-header .ride-route {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.user-history-header .ride-from,
+.user-history-header .ride-to {
+  color: white;
+}
+
+.user-history-header .ride-arrow {
+  color: #4DA3FF;
+  font-weight: bold;
+}
+
+.booking-ids {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.booking-id, .ride-id {
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.user-history-content {
+  padding: 1.5rem;
+}
+
+.history-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #E4E7EB;
+}
+
+.history-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.history-section h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0B3C5D;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.history-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.history-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.detail-label {
+  color: #6B7280;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: #1F2933;
+  font-size: 0.95rem;
+}
+
+.detail-value.amount {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.detail-value.transaction {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  background: #f3f4f6;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Rider Info Card */
+.rider-info-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #E4E7EB;
+}
+
+.rider-avatar {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0B3C5D, #4DA3FF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rider-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rider-avatar .avatar-initials {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.rider-avatar .verified-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: #16a34a;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  border: 2px solid white;
+}
+
+.rider-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.rider-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0B3C5D;
+}
+
+.rider-phone {
+  font-size: 0.9rem;
+  color: #6B7280;
+}
+
+.rider-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.rider-badges .badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.badge.verified-user {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.badge.verified-rider {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+/* Rating Section */
+.rating-section {
+  background: #fffbeb;
+  margin: -1.5rem;
+  margin-top: 1.5rem;
+  padding: 1.5rem !important;
+  border-bottom: none !important;
+}
+
+.rating-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.stars-display {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stars-display .star {
+  font-size: 1.5rem;
+  color: #e0e0e0;
+}
+
+.stars-display .star.filled {
+  color: #f59e0b;
+}
+
+.rating-text {
+  margin-left: 0.5rem;
+  font-weight: 700;
+  color: #0B3C5D;
+}
+
+.review-text {
+  font-style: italic;
+  color: #6B7280;
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid #f59e0b;
+}
+
+.rated-at {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.rating-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.rating-prompt p {
+  color: #6B7280;
+  margin: 0;
+}
+
+.btn-rate {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-rate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* Rating Modal Styles */
+.rating-modal {
+  max-width: 450px;
+}
+
+.rating-modal .modal-header {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.rating-modal .modal-header h3 {
+  color: white;
+}
+
+.rating-modal .modal-close {
+  color: white;
+}
+
+.rating-ride-info {
+  text-align: center;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.rating-route {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.rating-rider {
+  color: #6B7280;
+  margin-bottom: 0.25rem;
+}
+
+.rating-date {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.rating-stars-input {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.rating-stars-input label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0B3C5D;
+  margin-bottom: 0.75rem;
+}
+
+.stars-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  cursor: pointer;
+  color: #e0e0e0;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.star-btn:hover {
+  transform: scale(1.15);
+}
+
+.star-btn.selected {
+  color: #f59e0b;
+}
+
+.rating-label {
+  font-size: 0.9rem;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.rating-review-input {
+  margin-bottom: 1rem;
+}
+
+.rating-review-input label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0B3C5D;
+  margin-bottom: 0.5rem;
+}
+
+.rating-review-input textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #E4E7EB;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.rating-review-input textarea:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.rating-review-input small {
+  display: block;
+  text-align: right;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+/* Mobile Responsive for User Booking History */
+@media (max-width: 768px) {
+  .user-history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .booking-ids {
+    align-items: flex-start;
+  }
+
+  .history-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rider-info-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .rider-badges {
+    justify-content: center;
+  }
+
+  .rating-section {
+    text-align: center;
+  }
+
+  .rating-prompt {
+    align-items: center;
+  }
+
+  .rating-display {
+    align-items: center;
+  }
+
+  .star-btn {
+    font-size: 2rem;
+  }
+}

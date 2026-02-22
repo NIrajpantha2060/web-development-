@@ -631,6 +631,187 @@ const getRideBookings = async (req, res) => {
   }
 };
 
+// ✅ NEW: GET MY RIDE HISTORY (completed/past bookings for user mode)
+const getMyRideHistory = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    // Get bookings where ride date has passed OR booking is completed/cancelled
+    const bookings = await RideBooking.findAll({
+      where: { 
+        passengerId: req.user.id 
+      },
+      include: [
+        {
+          model: Ride,
+          as: 'ride',
+          where: {
+            [Op.or]: [
+              { date: { [Op.lt]: todayStr } }, // Past rides
+              { status: 'completed' }
+            ]
+          },
+          include: [
+            {
+              model: User,
+              as: 'rider',
+              attributes: ['id', 'username', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+            }
+          ]
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    console.log(`✅ Found ${bookings.length} ride history for user ${req.user.id}`);
+
+    res.status(200).json({
+      message: "Ride history fetched successfully",
+      count: bookings.length,
+      bookings: bookings.map(booking => ({
+        id: booking.id,
+        bookingId: `BK${String(booking.id).padStart(6, '0')}`,
+        seatsBooked: booking.seatsBooked,
+        totalAmount: booking.totalAmount,
+        paymentMethod: booking.paymentMethod,
+        paymentStatus: booking.paymentStatus,
+        transactionId: booking.transactionId,
+        bookingStatus: booking.bookingStatus,
+        createdAt: booking.createdAt,
+        // Rating info
+        riderRating: booking.riderRating,
+        riderReview: booking.riderReview,
+        ratedAt: booking.ratedAt,
+        hasRated: !!booking.riderRating,
+        // Ride info
+        ride: booking.ride ? {
+          id: booking.ride.id,
+          rideId: `RD${String(booking.ride.id).padStart(6, '0')}`,
+          from: booking.ride.from,
+          to: booking.ride.to,
+          date: booking.ride.date,
+          time: booking.ride.time,
+          pickupLocation: booking.ride.pickupLocation,
+          vehicleType: booking.ride.vehicleType,
+          vehicleNumber: booking.ride.vehicleNumber,
+          vehiclePhoto: booking.ride.vehiclePhoto,
+          price: booking.ride.price,
+          status: booking.ride.status,
+          description: booking.ride.description,
+          // Rider (driver) info
+          rider: booking.ride.rider ? {
+            id: booking.ride.rider.id,
+            username: booking.ride.rider.username,
+            phone: booking.ride.rider.phone,
+            profilePicture: booking.ride.rider.profilePicture,
+            isVerifiedUser: booking.ride.rider.isVerifiedUser,
+            isVerifiedRider: booking.ride.rider.isVerifiedRider
+          } : null
+        } : null
+      }))
+    });
+  } catch (error) {
+    console.error("Get ride history error:", error);
+    res.status(500).json({ 
+      message: "Server error while fetching ride history",
+      error: error.message 
+    });
+  }
+};
+
+// ✅ NEW: RATE RIDER (after ride completion)
+const rateRider = async (req, res) => {
+  const { bookingId } = req.params;
+  const { rating, review } = req.body;
+
+  // Validation
+  if (!rating || rating < 1 || rating > 5) {
+    return res.status(400).json({ 
+      message: "Rating must be between 1 and 5 stars" 
+    });
+  }
+
+  try {
+    // Find the booking
+    const booking = await RideBooking.findByPk(bookingId, {
+      include: [
+        {
+          model: Ride,
+          as: 'ride',
+          include: [
+            {
+              model: User,
+              as: 'rider',
+              attributes: ['id', 'username']
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Verify the booking belongs to the current user
+    if (booking.passengerId !== req.user.id) {
+      return res.status(403).json({ message: "You can only rate your own bookings" });
+    }
+
+    // Check if already rated
+    if (booking.riderRating) {
+      return res.status(400).json({ message: "You have already rated this ride" });
+    }
+
+    // Check if the ride date has passed (can only rate after ride)
+    const rideDate = new Date(booking.ride.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (rideDate >= today) {
+      return res.status(400).json({ 
+        message: "You can only rate a ride after it has been completed" 
+      });
+    }
+
+    // Update booking with rating
+    await booking.update({
+      riderRating: rating,
+      riderReview: review || null,
+      ratedAt: new Date()
+    });
+
+    // Send notification to the rider
+    await Notification.create({
+      userId: booking.ride.userId,
+      type: 'rider_rated',
+      title: 'New Rating Received! ⭐',
+      message: `You received a ${rating}-star rating for your ride from ${booking.ride.from} to ${booking.ride.to}${review ? `: "${review}"` : '.'}`,
+      relatedId: booking.id
+    });
+
+    console.log(`✅ Booking ${bookingId} rated: ${rating} stars by user ${req.user.id}`);
+
+    res.status(200).json({
+      message: "Rating submitted successfully!",
+      rating: {
+        bookingId: booking.id,
+        riderRating: rating,
+        riderReview: review || null,
+        ratedAt: booking.ratedAt
+      }
+    });
+  } catch (error) {
+    console.error("Rate rider error:", error);
+    res.status(500).json({ 
+      message: "Server error while submitting rating",
+      error: error.message 
+    });
+  }
+};
+
 module.exports = { 
   setupMpin,
   verifyMpin,
@@ -640,5 +821,7 @@ module.exports = {
   applyForRide,
   getMyBookings,
   cancelBooking,
-  getRideBookings
+  getRideBookings,
+  getMyRideHistory,
+  rateRider
 };

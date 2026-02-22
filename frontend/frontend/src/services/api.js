@@ -803,10 +803,28 @@ export const bookingAPI = {
     return response.data;
   },
 
+  // ✅ NEW: Get my ride history (completed/past rides as passenger)
+  getMyRideHistory: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/bookings/my-history`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
   // Cancel booking
   cancelBooking: async (bookingId) => {
     const token = localStorage.getItem('token');
     const response = await axios.put(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // ✅ NEW: Rate a rider (after ride completion)
+  rateRider: async (bookingId, rating, review = null) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/bookings/${bookingId}/rate`, { rating, review }, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
