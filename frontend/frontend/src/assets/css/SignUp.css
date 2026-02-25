@@ -226,26 +226,25 @@
   user-select: none;
 }
 
-/* Submit Button - Seafoam/Blue gradient */
+/* Submit Button - Matching Login Style */
 .signup-button {
   width: 100%;
-  padding: 0.95rem;
-  font-size: 1.05rem;
+  padding: 1.1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   font-family: 'Inter', sans-serif;
   color: white;
-  background: linear-gradient(135deg, #4EC9B0 0%, #5DB8E5 100%);
+  background: linear-gradient(135deg, #c9584e, #e55d5d);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0.6rem;
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 1rem;
-  box-shadow: 0 4px 12px rgba(78, 201, 176, 0.3);
 }
 
 .signup-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(78, 201, 176, 0.4);
+  box-shadow: 0 4px 12px rgba(201, 88, 78, 0.4);
 }
 
 .signup-button:active {

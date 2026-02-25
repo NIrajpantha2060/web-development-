@@ -697,6 +697,47 @@
 }
 
 /* Responsive */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .apply-modal {
+    max-width: 95%;
+    margin: 1rem;
+  }
+
+  .apply-modal-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .apply-modal-body {
+    padding: 1.5rem;
+  }
+
+  .mpin-inputs {
+    gap: 0.75rem;
+  }
+
+  .mpin-input {
+    width: 50px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+
+  .payment-options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .payment-option {
+    padding: 1rem;
+  }
+
+  .card-visual {
+    padding: 1.25rem;
+  }
+}
+
+/* Mobile */
 @media (max-width: 480px) {
   .apply-modal {
     max-width: 100%;

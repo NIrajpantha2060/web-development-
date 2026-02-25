@@ -774,13 +774,19 @@
 }
 
 .passenger-detail .phone-link {
-  color: #4DA3FF;
+  color: #1f2937;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
+  background: #e0f2fe;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  display: inline-block;
 }
 
 .passenger-detail .phone-link:hover {
-  text-decoration: underline;
+  background: #bae6fd;
+  text-decoration: none;
 }
 
 .passenger-detail.amount {
@@ -793,6 +799,51 @@
 }
 
 /* Responsive Design */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .ride-details-modal {
+    max-width: 90%;
+    max-height: 90vh;
+  }
+}
+
+/* Small Tablet / Large Mobile */
+@media (max-width: 768px) {
+  .ride-details-modal {
+    max-width: 95%;
+    max-height: 92vh;
+  }
+
+  .ride-details-modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .ride-details-modal-body {
+    padding: 1.25rem;
+  }
+
+  .section-title {
+    font-size: 0.8rem;
+  }
+
+  .rider-avatar-img,
+  .rider-avatar-placeholder {
+    width: 70px;
+    height: 70px;
+  }
+
+  .rider-name {
+    font-size: 1.1rem;
+  }
+
+  .trip-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+/* Mobile */
 @media (max-width: 640px) {
   .ride-details-modal {
     max-height: 95vh;

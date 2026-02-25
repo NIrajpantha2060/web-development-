@@ -167,11 +167,11 @@ const Login = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="login-form">
+            <form onSubmit={handleSubmit} className="login-form" noValidate>
               <div className="form-group">
                 <label htmlFor="email" className="form-label">Email</label>
                 <input
-                  type="email"
+                  type="text"
                   id="email"
                   name="email"
                   value={formData.email}

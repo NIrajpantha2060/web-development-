@@ -1,4 +1,5 @@
-.update-vehicle-page {
+.update-vehicle-page,
+.add-ride-page {
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;

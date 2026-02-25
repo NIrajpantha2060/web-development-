@@ -19,6 +19,19 @@
 }
 
 /* Mobile Responsive */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .dashboard-main {
+    margin-left: 220px;
+  }
+
+  .dashboard-content {
+    padding: 20px;
+  }
+}
+
+/* Mobile Landscape / Small Tablet */
 @media (max-width: 768px) {
   .dashboard-main {
     margin-left: 0;
@@ -29,6 +42,7 @@
   }
 }
 
+/* Mobile Portrait */
 @media (max-width: 480px) {
   .dashboard-content {
     padding: 12px;

@@ -1,7 +1,7 @@
 
 
 import { useState, useEffect, useRef } from 'react';
-import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiPhone } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import RideCard from '../../components/RideCard';
 import RideDetailsModal from '../../components/RideDetailsModal';
@@ -2972,7 +2972,10 @@ const Dashboard = () => {
                                 </div>
                                 <div className="passenger-details">
                                   <span className="passenger-name">{booking.passenger?.username || 'Unknown'}</span>
-                                  <span className="passenger-contact">{booking.passenger?.phone || 'No phone'}</span>
+                                  <span className="passenger-contact">
+                                    <FiPhone className="phone-icon" />
+                                    {booking.passenger?.phone || 'No phone'}
+                                  </span>
                                 </div>
                               </div>
                               <div className="booking-meta">

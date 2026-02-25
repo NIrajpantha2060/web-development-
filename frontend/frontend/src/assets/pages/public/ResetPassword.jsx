@@ -154,7 +154,7 @@ const ResetPassword = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="reset-password-form">
+            <form onSubmit={handleSubmit} className="reset-password-form" noValidate>
               <div className="form-group">
                 <label htmlFor="newPassword" className="form-label">New Password</label>
                 <div className="password-input-wrapper">

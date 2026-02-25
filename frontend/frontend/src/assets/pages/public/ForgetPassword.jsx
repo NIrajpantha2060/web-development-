@@ -124,11 +124,11 @@ const ForgetPassword = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="forget-password-form">
+            <form onSubmit={handleSubmit} className="forget-password-form" noValidate>
               <div className="form-group">
                 <label htmlFor="email" className="form-label">Email Address</label>
                 <input
-                  type="email"
+                  type="text"
                   id="email"
                   name="email"
                   value={email}
