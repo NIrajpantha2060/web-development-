@@ -2,6 +2,7 @@ const RideBooking = require("../models/RideBooking");
 const Ride = require("../models/Ride");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const Report = require("../models/Report");
 const bcrypt = require("bcryptjs");
 const { Op } = require("sequelize");
 
@@ -667,6 +668,19 @@ const getMyRideHistory = async (req, res) => {
 
     console.log(`✅ Found ${bookings.length} ride history for user ${req.user.id}`);
 
+    // Get booking IDs to check for reports
+    const bookingIds = bookings.map(b => b.id);
+    
+    // Check which bookings have been reported by this user
+    const reportedBookings = await Report.findAll({
+      where: {
+        bookingId: { [Op.in]: bookingIds },
+        reporterId: req.user.id
+      },
+      attributes: ['bookingId']
+    });
+    const reportedBookingIds = new Set(reportedBookings.map(r => r.bookingId));
+
     res.status(200).json({
       message: "Ride history fetched successfully",
       count: bookings.length,
@@ -685,6 +699,8 @@ const getMyRideHistory = async (req, res) => {
         riderReview: booking.riderReview,
         ratedAt: booking.ratedAt,
         hasRated: !!booking.riderRating,
+        // Report info
+        hasReported: reportedBookingIds.has(booking.id),
         // Ride info
         ride: booking.ride ? {
           id: booking.ride.id,

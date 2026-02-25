@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { bookingAPI } from '../../services/api';
 import '../css/ApplyRideModal.css';
 
@@ -149,22 +150,26 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
     
     // Validation
     if (!cardNumber || !cardHolderName || !cardExpiry || !cvv) {
+      toast.warning('Please fill in all card details');
       setMessage({ type: 'error', text: 'Please fill in all card details' });
       return;
     }
     
     const cleanCardNumber = cardNumber.replace(/\s/g, '');
     if (cleanCardNumber.length !== 16) {
+      toast.warning('Card number must be 16 digits');
       setMessage({ type: 'error', text: 'Card number must be 16 digits' });
       return;
     }
     
     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardExpiry)) {
+      toast.warning('Invalid expiry. Use MM/YY format');
       setMessage({ type: 'error', text: 'Invalid expiry. Use MM/YY format' });
       return;
     }
     
     if (cvv.length !== 3) {
+      toast.warning('CVV must be 3 digits');
       setMessage({ type: 'error', text: 'CVV must be 3 digits' });
       return;
     }
@@ -178,6 +183,7 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
         cvv
       });
       
+      toast.success('Debit card linked successfully! 💳');
       setPaymentStatus(prev => ({
         ...prev,
         hasPaymentSetup: true,
@@ -193,6 +199,7 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
         setCurrentStep('mpin-verify');
       }
     } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to link debit card');
       setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to link debit card' });
     } finally {
       setLoading(false);
@@ -242,11 +249,13 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
     const confirmStr = getConfirmMpinString();
     
     if (mpinStr.length !== 4) {
+      toast.warning('Please enter a 4-digit MPIN');
       setMessage({ type: 'error', text: 'Please enter a 4-digit MPIN' });
       return;
     }
     
     if (mpinStr !== confirmStr) {
+      toast.warning('MPINs do not match. Please try again.');
       setMessage({ type: 'error', text: 'MPINs do not match. Please try again.' });
       return;
     }
@@ -254,11 +263,13 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
     setLoading(true);
     try {
       await bookingAPI.setupMpin(mpinStr);
+      toast.success('MPIN set up successfully! 🔐');
       setPaymentStatus(prev => ({ ...prev, hasMpinSetup: true }));
       
       // Proceed to complete booking with the MPIN
       await completeBooking(mpinStr);
     } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to set up MPIN');
       setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to set up MPIN' });
       setLoading(false);
     }
@@ -269,6 +280,7 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
     const mpinStr = getMpinString();
     
     if (mpinStr.length !== 4) {
+      toast.warning('Please enter your 4-digit MPIN');
       setMessage({ type: 'error', text: 'Please enter your 4-digit MPIN' });
       return;
     }
@@ -286,11 +298,13 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
       const response = await bookingAPI.applyForRide(rideId, seatsToBook, mpinStr);
       setBookingResult(response);
       setCurrentStep('success');
+      toast.success('Ride booked successfully! 🎉');
       
       if (onSuccess) {
         onSuccess(response);
       }
     } catch (error) {
+      toast.error(error.response?.data?.message || 'Booking failed. Please try again.');
       setMessage({ type: 'error', text: error.response?.data?.message || 'Booking failed. Please try again.' });
       setCurrentStep('mpin-verify');
     } finally {

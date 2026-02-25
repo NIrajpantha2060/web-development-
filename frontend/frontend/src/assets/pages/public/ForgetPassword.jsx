@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import '../../css/ForgetPassword.css';
 import { passwordAPI } from "../../../services/api";
 
@@ -61,6 +62,7 @@ const ForgetPassword = () => {
     try {
       const response = await passwordAPI.forgotPassword({ email });
       
+      toast.success('Reset link sent! Check your email inbox. 📧');
       setSuccessMessage(response.message);
       setEmail(''); // Clear the form
       
@@ -68,10 +70,13 @@ const ForgetPassword = () => {
       console.error("Forgot password error:", error);
 
       if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
         setApiError(error.response.data.message);
       } else if (error.message === "Network Error") {
+        toast.error('Cannot connect to server');
         setApiError("Cannot connect to server. Please ensure backend is running.");
       } else {
+        toast.error('Failed to send reset email');
         setApiError("Failed to send reset email. Please try again.");
       }
     } finally {

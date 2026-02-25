@@ -135,9 +135,11 @@ Backend/uploads/
 # Debug/One-time migration scripts
 # =========================
 Backend/check_db.js
+Backend/check_rating.js
 Backend/check_rides.js
 Backend/migrate_card_fields.js
 Backend/run_migration.js
+Backend/run_issues_migration.js
 Backend/backfill_ratings.js
 Backend/run_suspension_migration.js
 Backend/migrate_rating_fields.js
@@ -150,6 +152,7 @@ Backend/migrations/
 # =========================
 # Documentation (internal/team only)
 # =========================
+TODO.md
 ENTITY_RELATIONSHIP.md
 *ENTITY_RELATIONSHIP*
 *entity*relation*

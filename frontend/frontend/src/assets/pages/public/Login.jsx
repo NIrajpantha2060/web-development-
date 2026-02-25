@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import '../../css/Login.css';
 import { useAuth } from "../../../context/AuthContext";
 import { authAPI } from "../../../services/api";
@@ -96,7 +97,7 @@ const Login = () => {
 
       console.log('✅ Context updated, now navigating...');
 
-      alert(`Welcome back, ${response.user.username}!`);
+      toast.success(`Welcome back, ${response.user.username}!`);
 
       // ✅ FIXED: Navigation now happens AFTER context is updated
       if (response.user.role === "admin") {
@@ -109,10 +110,13 @@ const Login = () => {
       console.error("Login error:", error);
 
       if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
         setApiError(error.response.data.message);
       } else if (error.message === "Network Error") {
+        toast.error('Cannot connect to server');
         setApiError("Cannot connect to server. Please ensure backend is running.");
       } else {
+        toast.error('Login failed. Please try again.');
         setApiError("Login failed. Please try again.");
       }
     } finally {
