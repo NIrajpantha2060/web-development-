@@ -4074,7 +4074,8 @@ const Dashboard = () => {
                         id: ride.id,
                         userId: ride.userId || ride.rider?.id, // Fallback to rider.id if userId not present
                         driverName: ride.rider?.username || 'Anonymous',
-                        driverRating: 4.5,
+                        driverRating: ride.rider?.riderAverageRating || null,
+                        driverTotalRatings: ride.rider?.totalRatingsReceived || 0,
                         driverPhone: ride.rider?.phone || '',
                         driverPhoto: ride.rider?.profilePicture || null,
                         driverTotalRides: ride.rider?.totalRides || 0,

@@ -37,7 +37,8 @@ const RideDetailsModal = ({ isOpen, onClose, ride, currentUserId, onCancelRide, 
 
   const {
     driverName = 'Anonymous',
-    driverRating = 4.5,
+    driverRating = null,
+    driverTotalRatings = 0,
     driverPhone = '',
     driverPhoto = null,
     driverTotalRides = 0,
@@ -131,8 +132,12 @@ const RideDetailsModal = ({ isOpen, onClose, ride, currentUserId, onCancelRide, 
                     <svg viewBox="0 0 24 24" fill="currentColor" className="stat-icon star">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
-                    <span className="stat-value">{driverRating.toFixed(1)}</span>
-                    <span className="stat-label">Rating</span>
+                    <span className="stat-value">
+                      {driverRating ? parseFloat(driverRating).toFixed(1) : 'New'}
+                    </span>
+                    <span className="stat-label">
+                      {driverTotalRatings > 0 ? `${driverTotalRatings} Rating${driverTotalRatings > 1 ? 's' : ''}` : 'Rating'}
+                    </span>
                   </div>
                   
                   <div className="stat-divider"></div>

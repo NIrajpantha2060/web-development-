@@ -57,8 +57,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid #E4E7EB;
+  background: linear-gradient(135deg, #0B3C5D 0%, #1a5a8a 100%);
 }
 
 .ride-details-modal-header h2 {
@@ -103,12 +103,12 @@
 .section-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #6b7280;
+  color: #0B3C5D;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 1rem 0;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #E4E7EB;
 }
 
 /* Rider Info Section */
@@ -120,9 +120,9 @@
   display: flex;
   gap: 1.25rem;
   padding: 1rem;
-  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+  background: linear-gradient(135deg, #F7FAFC 0%, #EBF8FF 100%);
   border-radius: 12px;
-  border: 1px solid #e0e7ff;
+  border: 1px solid #E4E7EB;
 }
 
 .rider-avatar-large {
@@ -143,7 +143,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4DA3FF, #0B3C5D);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,7 +151,7 @@
   font-weight: 600;
   color: #fff;
   border: 3px solid #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(11, 60, 93, 0.15);
 }
 
 .verified-badge {
@@ -160,12 +160,13 @@
   right: 0;
   width: 24px;
   height: 24px;
-  background: #8b5cf6;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .verified-badge svg {
@@ -183,8 +184,8 @@
 
 .rider-name {
   font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: #0B3C5D;
   margin: 0;
 }
 
@@ -203,28 +204,28 @@
 .stat-icon {
   width: 18px;
   height: 18px;
-  color: #6b7280;
+  color: #0B3C5D;
 }
 
 .stat-icon.star {
-  color: #f59e0b;
+  color: #FFA500;
 }
 
 .stat-value {
   font-weight: 600;
-  color: #1f2937;
+  color: #0B3C5D;
   font-size: 0.9rem;
 }
 
 .stat-label {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #52606D;
 }
 
 .stat-divider {
   width: 1px;
   height: 24px;
-  background: #d1d5db;
+  background: #CBD5E0;
 }
 
 .rider-phone {
@@ -244,14 +245,14 @@
 }
 
 .phone-link {
-  color: #1f2937;
+  color: #0B3C5D;
   font-weight: 500;
   text-decoration: none;
   font-size: 0.9rem;
 }
 
 .phone-link:hover {
-  color: #667eea;
+  color: #4DA3FF;
 }
 
 /* Route Section */
@@ -261,8 +262,9 @@
 
 .route-details {
   padding: 1rem;
-  background: #f9fafb;
+  background: #F7FAFC;
   border-radius: 12px;
+  border: 1px solid #E4E7EB;
 }
 
 .route-point {
@@ -303,14 +305,14 @@
 
 .route-label {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #52606D;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .route-value {
   font-weight: 600;
-  color: #1f2937;
+  color: #0B3C5D;
   font-size: 1rem;
 }
 
@@ -322,19 +324,19 @@
   padding: 0.75rem;
   background: #fff;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E4E7EB;
 }
 
 .pickup-location svg {
   width: 18px;
   height: 18px;
-  color: #f59e0b;
+  color: #FFA500;
   flex-shrink: 0;
 }
 
 .pickup-location span {
   font-size: 0.9rem;
-  color: #4b5563;
+  color: #52606D;
 }
 
 /* Trip Details Section */
@@ -353,14 +355,15 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.75rem;
-  background: #f9fafb;
+  background: #F7FAFC;
   border-radius: 10px;
+  border: 1px solid #E4E7EB;
 }
 
 .trip-detail-item svg {
   width: 20px;
   height: 20px;
-  color: #6b7280;
+  color: #0B3C5D;
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -372,14 +375,14 @@
 
 .detail-label {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #52606D;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 .detail-value {
   font-weight: 600;
-  color: #1f2937;
+  color: #0B3C5D;
   font-size: 0.9rem;
 }
 
@@ -404,8 +407,9 @@
 
 .vehicle-details {
   padding: 1rem;
-  background: #f9fafb;
+  background: #F7FAFC;
   border-radius: 12px;
+  border: 1px solid #E4E7EB;
 }
 
 .vehicle-info {
@@ -422,9 +426,9 @@
   padding: 0.5rem 1rem;
   background: #fff;
   border-radius: 20px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E4E7EB;
   font-weight: 500;
-  color: #1f2937;
+  color: #0B3C5D;
 }
 
 .vehicle-type-icon {
@@ -440,18 +444,18 @@
   padding: 0.5rem 1rem;
   background: #fff;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E4E7EB;
 }
 
 .vehicle-number svg {
   width: 18px;
   height: 18px;
-  color: #6b7280;
+  color: #0B3C5D;
 }
 
 .vehicle-number span {
   font-weight: 600;
-  color: #1f2937;
+  color: #0B3C5D;
   font-family: monospace;
   font-size: 0.9rem;
 }
@@ -461,7 +465,7 @@
   max-height: 200px;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E4E7EB;
 }
 
 .vehicle-photo {
@@ -477,9 +481,10 @@
 
 .description-text {
   padding: 1rem;
-  background: #f9fafb;
+  background: #F7FAFC;
   border-radius: 10px;
-  color: #4b5563;
+  border: 1px solid #E4E7EB;
+  color: #52606D;
   line-height: 1.6;
   margin: 0;
   font-size: 0.9rem;
@@ -490,16 +495,16 @@
   display: flex;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-top: 1px solid #E4E7EB;
+  background: #F7FAFC;
 }
 
 .btn-close {
   flex: 1;
   padding: 0.75rem 1.5rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #E4E7EB;
   background: #fff;
-  color: #4b5563;
+  color: #52606D;
   font-weight: 500;
   border-radius: 10px;
   cursor: pointer;
@@ -507,15 +512,15 @@
 }
 
 .btn-close:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: #F7FAFC;
+  border-color: #CBD5E0;
 }
 
 .btn-book {
   flex: 1;
   padding: 0.75rem 1.5rem;
   border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4DA3FF 0%, #0B3C5D 100%);
   color: #fff;
   font-weight: 600;
   border-radius: 10px;
@@ -525,14 +530,14 @@
 
 .btn-book:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(77, 163, 255, 0.4);
 }
 
 /* Your Booking Section */
 .your-booking-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #E4E7EB;
 }
 
 .booking-info-card {
@@ -575,18 +580,18 @@
 }
 
 .booking-detail-item .label {
-  color: #4b5563;
+  color: #52606D;
 }
 
 .booking-detail-item .value {
   font-weight: 600;
-  color: #1f2937;
+  color: #0B3C5D;
 }
 
 .booking-detail-item .transaction-id {
   font-family: monospace;
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #52606D;
 }
 
 .btn-cancel-ride {
@@ -614,7 +619,7 @@
 .passengers-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #E4E7EB;
 }
 
 .passengers-section .section-title {
@@ -623,20 +628,20 @@
   gap: 0.5rem;
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #0B3C5D;
   margin-bottom: 1rem;
 }
 
 .passengers-section .section-title svg {
   width: 20px;
   height: 20px;
-  stroke: #667eea;
+  stroke: #0B3C5D;
 }
 
 .loading-passengers {
   text-align: center;
   padding: 1.5rem;
-  color: #6b7280;
+  color: #52606D;
   font-size: 0.9rem;
 }
 
@@ -646,20 +651,21 @@
   align-items: center;
   gap: 0.75rem;
   padding: 2rem;
-  background: #f9fafb;
+  background: #F7FAFC;
   border-radius: 12px;
   text-align: center;
+  border: 1px solid #E4E7EB;
 }
 
 .no-passengers svg {
   width: 40px;
   height: 40px;
-  stroke: #9ca3af;
+  stroke: #CBD5E0;
 }
 
 .no-passengers p {
   margin: 0;
-  color: #6b7280;
+  color: #52606D;
   font-size: 0.9rem;
 }
 
@@ -674,15 +680,15 @@
   align-items: flex-start;
   gap: 1rem;
   padding: 1rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, #F7FAFC 0%, #EBF8FF 100%);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #E4E7EB;
   transition: all 0.2s;
 }
 
 .passenger-card:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  border-color: #4DA3FF;
+  box-shadow: 0 4px 12px rgba(77, 163, 255, 0.15);
 }
 
 .passenger-avatar {
@@ -703,7 +709,7 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4DA3FF 0%, #0B3C5D 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -711,7 +717,7 @@
   font-weight: 600;
   font-size: 1.25rem;
   border: 3px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(11, 60, 93, 0.12);
 }
 
 .verified-badge-small {
@@ -742,7 +748,7 @@
 .passenger-name {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #0B3C5D;
   margin: 0 0 0.5rem 0;
 }
 
@@ -757,18 +763,18 @@
   align-items: center;
   gap: 0.35rem;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: #52606D;
 }
 
 .passenger-detail svg {
   width: 16px;
   height: 16px;
-  stroke: #9ca3af;
+  stroke: #7B8794;
   flex-shrink: 0;
 }
 
 .passenger-detail .phone-link {
-  color: #667eea;
+  color: #4DA3FF;
   text-decoration: none;
   font-weight: 500;
 }

@@ -108,6 +108,12 @@
   color: #FFA500;
 }
 
+.driver-rating .rating-count {
+  font-size: 0.85rem;
+  color: #7B8794;
+  font-weight: 400;
+}
+
 /* Price Section */
 .ride-price {
   text-align: right;

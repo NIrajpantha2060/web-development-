@@ -526,7 +526,7 @@ const getMyRides = async (req, res) => {
         {
           model: User,
           as: 'rider',
-          attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+          attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider', 'riderAverageRating', 'totalRatingsReceived']
         }
       ],
       order: [['date', 'ASC'], ['time', 'ASC']] // Order by closest date first
@@ -562,7 +562,9 @@ const getMyRides = async (req, res) => {
           phone: ride.rider.phone,
           profilePicture: ride.rider.profilePicture,
           isVerifiedUser: ride.rider.isVerifiedUser,
-          isVerifiedRider: ride.rider.isVerifiedRider
+          isVerifiedRider: ride.rider.isVerifiedRider,
+          riderAverageRating: ride.rider.riderAverageRating,
+          totalRatingsReceived: ride.rider.totalRatingsReceived
         } : null
       }))
     });
@@ -620,7 +622,7 @@ const getAllRides = async (req, res) => {
         {
           model: User,
           as: 'rider',
-          attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+          attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider', 'riderAverageRating', 'totalRatingsReceived']
         }
       ],
       order: [['date', 'ASC'], ['time', 'ASC']]
@@ -628,13 +630,16 @@ const getAllRides = async (req, res) => {
 
     console.log(`✅ Found ${rides.length} active/taken rides`);
 
-    // ✅ Get total rides count for each unique rider
+    // ✅ Get total booked rides count for each unique rider (only completed or taken rides, excluding cancelled/active)
     const riderIds = [...new Set(rides.map(r => r.rider?.id).filter(Boolean))];
     const riderTotalRides = {};
     
     for (const riderId of riderIds) {
       const count = await Ride.count({
-        where: { userId: riderId }
+        where: { 
+          userId: riderId,
+          status: { [Op.in]: ['completed', 'taken'] }  // Count completed and taken rides (booked rides)
+        }
       });
       riderTotalRides[riderId] = count;
     }
@@ -667,6 +672,8 @@ const getAllRides = async (req, res) => {
           profilePicture: ride.rider.profilePicture,
           isVerifiedUser: ride.rider.isVerifiedUser,
           isVerifiedRider: ride.rider.isVerifiedRider,
+          riderAverageRating: ride.rider.riderAverageRating,
+          totalRatingsReceived: ride.rider.totalRatingsReceived,
           totalRides: riderTotalRides[ride.rider.id] || 0
         } : null
       }))
@@ -785,7 +792,7 @@ const getMyRideHistory = async (req, res) => {
         {
           model: User,
           as: 'rider',
-          attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+          attributes: ['id', 'username', 'email', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider', 'riderAverageRating', 'totalRatingsReceived']
         },
         // ✅ NEW: Include bookings with passenger details
         {
@@ -838,7 +845,9 @@ const getMyRideHistory = async (req, res) => {
           phone: ride.rider.phone,
           profilePicture: ride.rider.profilePicture,
           isVerifiedUser: ride.rider.isVerifiedUser,
-          isVerifiedRider: ride.rider.isVerifiedRider
+          isVerifiedRider: ride.rider.isVerifiedRider,
+          riderAverageRating: ride.rider.riderAverageRating,
+          totalRatingsReceived: ride.rider.totalRatingsReceived
         } : null,
         // ✅ NEW: Include booking information with customer details
         bookings: (ride.bookings || []).map(booking => ({

@@ -439,7 +439,7 @@ const getMyBookings = async (req, res) => {
             {
               model: User,
               as: 'rider',
-              attributes: ['id', 'username', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+              attributes: ['id', 'username', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider', 'riderAverageRating', 'totalRatingsReceived']
             }
           ]
         }
@@ -657,7 +657,7 @@ const getMyRideHistory = async (req, res) => {
             {
               model: User,
               as: 'rider',
-              attributes: ['id', 'username', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+              attributes: ['id', 'username', 'phone', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider', 'riderAverageRating', 'totalRatingsReceived']
             }
           ]
         }
@@ -782,6 +782,26 @@ const rateRider = async (req, res) => {
       riderReview: review || null,
       ratedAt: new Date()
     });
+
+    // ✅ Update rider's average rating
+    const riderId = booking.ride.userId;
+    const rider = await User.findByPk(riderId);
+    
+    if (rider) {
+      const currentAvg = parseFloat(rider.riderAverageRating) || 0;
+      const currentCount = rider.totalRatingsReceived || 0;
+      
+      // Calculate new average: ((oldAvg * count) + newRating) / (count + 1)
+      const newCount = currentCount + 1;
+      const newAverage = ((currentAvg * currentCount) + rating) / newCount;
+      
+      await rider.update({
+        riderAverageRating: Math.round(newAverage * 10) / 10, // Round to 1 decimal
+        totalRatingsReceived: newCount
+      });
+      
+      console.log(`✅ Updated rider ${riderId} average rating: ${newAverage.toFixed(1)} (${newCount} ratings)`);
+    }
 
     // Send notification to the rider
     await Notification.create({

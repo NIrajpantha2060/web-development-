@@ -5,7 +5,8 @@ import '../css/RideCard.css';
 const RideCard = ({ ride, onDelete, onViewDetails, onBookRide, showDeleteButton = false }) => {
   const {
     driverName = 'Driver Name',
-    driverRating = 4.5,
+    driverRating = null,
+    driverTotalRatings = 0,
     from = 'Kathmandu',
     to = 'Pokhara',
     date = '2026-01-20',
@@ -66,7 +67,8 @@ const RideCard = ({ ride, onDelete, onViewDetails, onBookRide, showDeleteButton 
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
-              <span>{driverRating.toFixed(1)}</span>
+              <span>{driverRating ? parseFloat(driverRating).toFixed(1) : 'New'}</span>
+              {driverTotalRatings > 0 && <span className="rating-count">({driverTotalRatings})</span>}
             </div>
           </div>
         </div>

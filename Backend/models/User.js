@@ -175,6 +175,19 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING(20),
     allowNull: true,
     comment: 'Card brand (Visa, Mastercard, etc.)'
+  },
+  // ✅ Rider Rating fields
+  riderAverageRating: {
+    type: DataTypes.DECIMAL(2, 1),
+    allowNull: true,
+    defaultValue: null,
+    comment: 'Average rating received as a rider (1.0 - 5.0)'
+  },
+  totalRatingsReceived: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    comment: 'Total number of ratings received as a rider'
   }
 }, {
   timestamps: true,
