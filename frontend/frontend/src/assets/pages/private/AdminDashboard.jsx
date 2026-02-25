@@ -624,6 +624,15 @@ const AdminDashboard = () => {
   const [reportAdminRemarks, setReportAdminRemarks] = useState('');
   const [pendingReportsCount, setPendingReportsCount] = useState(0);
 
+  // ✅ NEW: User Management state
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [userModalAction, setUserModalAction] = useState(''); // 'suspend', 'unsuspend', 'delete', 'view'
+  const [suspensionReason, setSuspensionReason] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+
   // ✅ FIX: Only fetch data after auth is loaded
   useEffect(() => {
     if (!authLoading && user) {
@@ -633,6 +642,8 @@ const AdminDashboard = () => {
         fetchAllVerifications();
       } else if (activePage === 'reports') {
         fetchReports();
+      } else if (activePage === 'users') {
+        fetchUsers();
       }
       // Always fetch pending reports count for badge
       fetchPendingReportsCount();
@@ -742,6 +753,115 @@ const AdminDashboard = () => {
         text: error.response?.data?.message || 'Failed to delete report'
       });
     }
+  };
+
+  // =====================================================
+  // ✅ USER MANAGEMENT FUNCTIONS
+  // =====================================================
+
+  // Fetch all users
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const data = await adminAPI.getAllUsers();
+      setUsers(data.users);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setMessage({ type: 'error', text: 'Failed to load users' });
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Open user modal for different actions
+  const openUserModal = (user, action) => {
+    setSelectedUser(user);
+    setUserModalAction(action);
+    setSuspensionReason('');
+    setShowUserModal(true);
+  };
+
+  // Close user modal
+  const closeUserModal = () => {
+    setShowUserModal(false);
+    setSelectedUser(null);
+    setUserModalAction('');
+    setSuspensionReason('');
+  };
+
+  // Handle suspend user
+  const handleSuspendUser = async () => {
+    if (!selectedUser) return;
+    
+    if (!suspensionReason.trim()) {
+      setMessage({ type: 'error', text: 'Please provide a reason for suspension' });
+      return;
+    }
+
+    try {
+      await adminAPI.suspendUser(selectedUser.id, suspensionReason);
+      setMessage({ type: 'success', text: `User ${selectedUser.username} has been suspended` });
+      closeUserModal();
+      fetchUsers();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error suspending user:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to suspend user'
+      });
+    }
+  };
+
+  // Handle unsuspend user
+  const handleUnsuspendUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await adminAPI.unsuspendUser(selectedUser.id);
+      setMessage({ type: 'success', text: `User ${selectedUser.username} has been reactivated` });
+      closeUserModal();
+      fetchUsers();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error reactivating user:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to reactivate user'
+      });
+    }
+  };
+
+  // Handle delete user
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await adminAPI.deleteUser(selectedUser.id);
+      setMessage({ type: 'success', text: `User ${selectedUser.username} has been deleted` });
+      closeUserModal();
+      fetchUsers();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete user'
+      });
+    }
+  };
+
+  // Get filtered users based on search term
+  const getFilteredUsers = () => {
+    if (!userSearchTerm.trim()) return users;
+    
+    const searchLower = userSearchTerm.toLowerCase();
+    return users.filter(u => 
+      u.username.toLowerCase().includes(searchLower) ||
+      u.email.toLowerCase().includes(searchLower) ||
+      u.phone.includes(searchLower) ||
+      u.id.toString().includes(searchLower)
+    );
   };
 
   // ✅ Get issue type label
@@ -1381,6 +1501,177 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
+          ) : activePage === 'users' ? (
+            // =====================================================
+            // ✅ USER MANAGEMENT SECTION
+            // =====================================================
+            <div className="users-section">
+              <div className="section-header">
+                <h2>👥 Manage Users</h2>
+                <p>View all users, manage suspensions, and delete accounts</p>
+              </div>
+
+              {/* Search Bar */}
+              <div className="user-search-bar">
+                <input
+                  type="text"
+                  placeholder="🔍 Search by name, email, phone, or ID..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  className="user-search-input"
+                />
+                {userSearchTerm && (
+                  <button 
+                    className="clear-search-btn"
+                    onClick={() => setUserSearchTerm('')}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {loadingUsers ? (
+                <div className="loading-state">Loading users...</div>
+              ) : users.length === 0 ? (
+                <div className="empty-state">
+                  <h3>No Users</h3>
+                  <p>No registered users found.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="users-summary">
+                    <span className="summary-item">
+                      <strong>Total Users:</strong> {users.length}
+                    </span>
+                    <span className="summary-item">
+                      <strong>Suspended:</strong> {users.filter(u => u.isSuspended).length}
+                    </span>
+                    <span className="summary-item">
+                      <strong>Verified Users:</strong> {users.filter(u => u.isVerifiedUser).length}
+                    </span>
+                    <span className="summary-item">
+                      <strong>Verified Riders:</strong> {users.filter(u => u.isVerifiedRider).length}
+                    </span>
+                  </div>
+
+                  <div className="users-table-container">
+                    <table className="users-table">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>User</th>
+                          <th>Phone</th>
+                          <th>Email</th>
+                          <th>Status</th>
+                          <th>Reports</th>
+                          <th>Rating</th>
+                          <th>Joined</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getFilteredUsers().map(u => (
+                          <tr key={u.id} className={u.isSuspended ? 'suspended-row' : ''}>
+                            <td className="user-id">#{u.id}</td>
+                            <td className="user-info-cell">
+                              <div className="user-info-row">
+                                {u.profilePicture ? (
+                                  <img 
+                                    src={`${BASE_URL}${u.profilePicture.startsWith('/') ? '' : '/'}${u.profilePicture}`}
+                                    alt={u.username}
+                                    className="user-avatar-tiny"
+                                  />
+                                ) : (
+                                  <div className="user-avatar-placeholder-tiny">
+                                    {u.username.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <div className="user-name-badges">
+                                  <span className="user-name">{u.username}</span>
+                                  <div className="user-badges">
+                                    {u.isVerifiedUser && <span className="badge-tick green" title="Verified User">✓</span>}
+                                    {u.isVerifiedRider && <span className="badge-tick blue" title="Verified Rider">🚗</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="user-phone">{u.phone}</td>
+                            <td className="user-email">{u.email}</td>
+                            <td className="user-status">
+                              {u.isSuspended ? (
+                                <span className="badge badge-red">🚫 Suspended</span>
+                              ) : (
+                                <span className="badge badge-green">✓ Active</span>
+                              )}
+                            </td>
+                            <td className="user-reports">
+                              {u.reportCount > 0 ? (
+                                <span className={`report-count ${u.pendingReportCount > 0 ? 'has-pending' : ''}`}>
+                                  {u.reportCount} {u.pendingReportCount > 0 && <span className="pending-badge">({u.pendingReportCount} pending)</span>}
+                                </span>
+                              ) : (
+                                <span className="no-reports">0</span>
+                              )}
+                            </td>
+                            <td className="user-rating">
+                              {u.riderAverageRating ? (
+                                <span className="rating-display">
+                                  ⭐ {parseFloat(u.riderAverageRating).toFixed(1)}
+                                  <span className="rating-count">({u.totalRatingsReceived})</span>
+                                </span>
+                              ) : (
+                                <span className="no-rating">-</span>
+                              )}
+                            </td>
+                            <td className="user-joined">
+                              {new Date(u.createdAt).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </td>
+                            <td className="user-actions">
+                              <div className="action-buttons">
+                                {u.isSuspended ? (
+                                  <button 
+                                    className="btn-action btn-unsuspend"
+                                    onClick={() => openUserModal(u, 'unsuspend')}
+                                    title="Reactivate User"
+                                  >
+                                    ✓ Reactivate
+                                  </button>
+                                ) : (
+                                  <button 
+                                    className="btn-action btn-suspend"
+                                    onClick={() => openUserModal(u, 'suspend')}
+                                    title="Suspend User"
+                                  >
+                                    🚫 Suspend
+                                  </button>
+                                )}
+                                <button 
+                                  className="btn-action btn-delete-user"
+                                  onClick={() => openUserModal(u, 'delete')}
+                                  title="Delete User"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {getFilteredUsers().length === 0 && userSearchTerm && (
+                    <div className="no-search-results">
+                      <p>No users found matching "{userSearchTerm}"</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           ) : (
             <div className="empty-state">
               <h3>Coming Soon</h3>
@@ -1602,6 +1893,168 @@ const AdminDashboard = () => {
               >
                 🗑️ Delete Permanently
               </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ✅ User Management Modal */}
+      {showUserModal && selectedUser && (
+        <>
+          <div className="modal-overlay" onClick={closeUserModal}></div>
+          <div className="modal user-management-modal">
+            <div className="modal-header">
+              <h2>
+                {userModalAction === 'suspend' && '🚫 Suspend User'}
+                {userModalAction === 'unsuspend' && '✓ Reactivate User'}
+                {userModalAction === 'delete' && '🗑️ Delete User'}
+              </h2>
+              <button className="modal-close" onClick={closeUserModal}>×</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="modal-user-info">
+                <div className="user-profile-section">
+                  {selectedUser.profilePicture ? (
+                    <img 
+                      src={`${BASE_URL}${selectedUser.profilePicture.startsWith('/') ? '' : '/'}${selectedUser.profilePicture}`}
+                      alt={selectedUser.username}
+                      className="user-avatar-modal"
+                    />
+                  ) : (
+                    <div className="user-avatar-placeholder-modal">
+                      {selectedUser.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="user-details-modal">
+                    <h3>{selectedUser.username}</h3>
+                    <p>📧 {selectedUser.email}</p>
+                    <p>📞 {selectedUser.phone}</p>
+                    <p>🆔 User ID: #{selectedUser.id}</p>
+                  </div>
+                </div>
+                
+                <div className="user-stats-modal">
+                  <div className="stat-item">
+                    <span className="stat-label">Reports Against:</span>
+                    <span className={`stat-value ${selectedUser.reportCount > 0 ? 'warning' : ''}`}>
+                      {selectedUser.reportCount || 0}
+                    </span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Pending Reports:</span>
+                    <span className={`stat-value ${selectedUser.pendingReportCount > 0 ? 'danger' : ''}`}>
+                      {selectedUser.pendingReportCount || 0}
+                    </span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Rating:</span>
+                    <span className="stat-value">
+                      {selectedUser.riderAverageRating 
+                        ? `⭐ ${parseFloat(selectedUser.riderAverageRating).toFixed(1)} (${selectedUser.totalRatingsReceived})` 
+                        : 'No ratings'}
+                    </span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Verified:</span>
+                    <span className="stat-value">
+                      {selectedUser.isVerifiedUser && '✓ User '}
+                      {selectedUser.isVerifiedRider && '🚗 Rider'}
+                      {!selectedUser.isVerifiedUser && !selectedUser.isVerifiedRider && 'Not verified'}
+                    </span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Status:</span>
+                    <span className={`stat-value ${selectedUser.isSuspended ? 'danger' : 'success'}`}>
+                      {selectedUser.isSuspended ? '🚫 Suspended' : '✓ Active'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Suspend User Form */}
+              {userModalAction === 'suspend' && (
+                <div className="action-form">
+                  <div className="form-group">
+                    <label>Suspension Reason: *</label>
+                    <textarea
+                      className="form-input"
+                      rows="4"
+                      value={suspensionReason}
+                      onChange={(e) => setSuspensionReason(e.target.value)}
+                      placeholder="Please provide a clear reason for suspension (e.g., repeated violations, inappropriate behavior, fraud)..."
+                      required
+                    />
+                  </div>
+                  <div className="warning-box">
+                    <strong>⚠️ Note:</strong> The user will be notified of this suspension and will not be able to use the platform until reactivated.
+                  </div>
+                </div>
+              )}
+
+              {/* Unsuspend User Confirmation */}
+              {userModalAction === 'unsuspend' && (
+                <div className="action-form">
+                  <div className="info-box">
+                    <strong>ℹ️ Reactivate Account</strong>
+                    <p>This will restore the user's account and allow them to use all platform features again.</p>
+                    {selectedUser.suspensionReason && (
+                      <p><strong>Previous suspension reason:</strong> {selectedUser.suspensionReason}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Delete User Confirmation */}
+              {userModalAction === 'delete' && (
+                <div className="action-form">
+                  <div className="danger-box">
+                    <strong>🚨 DANGER: Permanent Deletion</strong>
+                    <p>This action cannot be undone. The following will be permanently deleted:</p>
+                    <ul>
+                      <li>User account and profile</li>
+                      <li>All rides created by this user</li>
+                      <li>All bookings made by this user</li>
+                      <li>All verification documents</li>
+                      <li>All associated data</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeUserModal}>
+                Cancel
+              </button>
+              
+              {userModalAction === 'suspend' && (
+                <button 
+                  className="btn-suspend-action"
+                  onClick={handleSuspendUser}
+                  disabled={!suspensionReason.trim()}
+                >
+                  🚫 Suspend User
+                </button>
+              )}
+              
+              {userModalAction === 'unsuspend' && (
+                <button 
+                  className="btn-unsuspend-action"
+                  onClick={handleUnsuspendUser}
+                >
+                  ✓ Reactivate User
+                </button>
+              )}
+              
+              {userModalAction === 'delete' && (
+                <button 
+                  className="btn-delete-action"
+                  onClick={handleDeleteUser}
+                >
+                  🗑️ Delete Permanently
+                </button>
+              )}
             </div>
           </div>
         </>

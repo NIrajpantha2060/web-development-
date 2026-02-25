@@ -81,6 +81,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  // ✅ NEW: Check if user is suspended
+  const isSuspended = () => {
+    return user?.isSuspended === true;
+  };
+
   const value = {
     user,
     setUser: updateUser,
@@ -88,6 +93,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAuthenticated,
+    isSuspended,
     loading,
   };
 

@@ -15,13 +15,26 @@ const verifyToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // ✅ IMPORTANT: Fetch the full user from database to get current role
+    // ✅ IMPORTANT: Fetch the full user from database to get current role and suspension status
     const user = await User.findByPk(decoded.id, {
-      attributes: ['id', 'username', 'email', 'role', 'phone']
+      attributes: ['id', 'username', 'email', 'role', 'phone', 'isSuspended', 'suspensionReason', 'suspendedAt']
     });
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
+    }
+
+    // ✅ Check if user is suspended (allow only for getting user info so they can see suspension message)
+    // Allow suspension check bypass for user info endpoint so suspended users can see their status
+    const isUserInfoEndpoint = req.originalUrl === '/api/user/info' && req.method === 'GET';
+    
+    if (user.isSuspended && !isUserInfoEndpoint) {
+      return res.status(403).json({ 
+        message: "Your account has been suspended",
+        suspended: true,
+        suspensionReason: user.suspensionReason || "Violation of terms of service",
+        suspendedAt: user.suspendedAt
+      });
     }
 
     // ✅ Attach full user info with current role to request
@@ -30,7 +43,10 @@ const verifyToken = async (req, res, next) => {
       username: user.username,
       email: user.email,
       role: user.role,
-      phone: user.phone
+      phone: user.phone,
+      isSuspended: user.isSuspended,
+      suspensionReason: user.suspensionReason,
+      suspendedAt: user.suspendedAt
     };
 
     console.log("✅ Authenticated user:", req.user); // Debug log

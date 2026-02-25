@@ -452,10 +452,288 @@ const deleteVerification = async (req, res) => {
   }
 };
 
+// =====================================================
+// ✅ USER MANAGEMENT ENDPOINTS
+// =====================================================
+
+const Report = require("../models/Report");
+const sequelize = require("../config/db");
+
+// Get all users with report counts
+const getAllUsers = async (req, res) => {
+  try {
+    // Get all non-admin users with their report counts
+    const users = await User.findAll({
+      where: {
+        role: 'user'
+      },
+      attributes: [
+        'id',
+        'username',
+        'phone',
+        'email',
+        'profilePicture',
+        'isVerifiedUser',
+        'isVerifiedRider',
+        'isSuspended',
+        'createdAt',
+        'riderAverageRating',
+        'totalRatingsReceived'
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Get report counts for each user (reports against them as rider)
+    const usersWithReportCounts = await Promise.all(
+      users.map(async (user) => {
+        const reportCount = await Report.count({
+          where: { reportedRiderId: user.id }
+        });
+        
+        const pendingReportCount = await Report.count({
+          where: { 
+            reportedRiderId: user.id,
+            status: 'pending'
+          }
+        });
+
+        return {
+          ...user.toJSON(),
+          reportCount,
+          pendingReportCount
+        };
+      })
+    );
+
+    res.status(200).json({ users: usersWithReportCounts });
+  } catch (error) {
+    console.error("Get all users error:", error);
+    res.status(500).json({
+      message: "Error fetching users",
+      error: error.message
+    });
+  }
+};
+
+// Get single user details with full info
+const getUserDetails = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findByPk(userId, {
+      attributes: [
+        'id',
+        'username',
+        'phone',
+        'email',
+        'profilePicture',
+        'isVerifiedUser',
+        'isVerifiedRider',
+        'isSuspended',
+        'suspensionReason',
+        'suspendedAt',
+        'createdAt',
+        'riderAverageRating',
+        'totalRatingsReceived',
+        'hasPaymentSetup',
+        'hasMpinSetup'
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get reports against this user
+    const reports = await Report.findAll({
+      where: { reportedRiderId: userId },
+      include: [
+        {
+          model: User,
+          as: 'reporter',
+          attributes: ['id', 'username', 'email']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.status(200).json({ 
+      user: user.toJSON(),
+      reports 
+    });
+  } catch (error) {
+    console.error("Get user details error:", error);
+    res.status(500).json({
+      message: "Error fetching user details",
+      error: error.message
+    });
+  }
+};
+
+// Suspend a user
+const suspendUser = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const userId = req.params.id;
+    const { reason } = req.body;
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ message: "Suspension reason is required" });
+    }
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(403).json({ message: "Cannot suspend an admin user" });
+    }
+
+    if (user.isSuspended) {
+      return res.status(400).json({ message: "User is already suspended" });
+    }
+
+    user.isSuspended = true;
+    user.suspensionReason = reason;
+    user.suspendedAt = new Date();
+    user.suspendedBy = adminId;
+
+    await user.save();
+
+    // Create notification for user
+    await Notification.create({
+      userId: userId,
+      type: 'account_suspended',
+      title: '⚠️ Account Suspended',
+      message: `Your account has been suspended. Reason: ${reason}`,
+      relatedId: null
+    });
+
+    console.log(`Admin ${adminId} suspended user ${userId}. Reason: ${reason}`);
+
+    res.status(200).json({
+      message: "User suspended successfully",
+      user: {
+        id: user.id,
+        username: user.username,
+        isSuspended: user.isSuspended,
+        suspensionReason: user.suspensionReason,
+        suspendedAt: user.suspendedAt
+      }
+    });
+  } catch (error) {
+    console.error("Suspend user error:", error);
+    res.status(500).json({
+      message: "Error suspending user",
+      error: error.message
+    });
+  }
+};
+
+// Unsuspend (reactivate) a user
+const unsuspendUser = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const userId = req.params.id;
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.isSuspended) {
+      return res.status(400).json({ message: "User is not suspended" });
+    }
+
+    user.isSuspended = false;
+    user.suspensionReason = null;
+    user.suspendedAt = null;
+    user.suspendedBy = null;
+
+    await user.save();
+
+    // Create notification for user
+    await Notification.create({
+      userId: userId,
+      type: 'account_reactivated',
+      title: '✅ Account Reactivated',
+      message: 'Your account has been reactivated. You can now use all features again.',
+      relatedId: null
+    });
+
+    console.log(`Admin ${adminId} unsuspended user ${userId}`);
+
+    res.status(200).json({
+      message: "User reactivated successfully",
+      user: {
+        id: user.id,
+        username: user.username,
+        isSuspended: user.isSuspended
+      }
+    });
+  } catch (error) {
+    console.error("Unsuspend user error:", error);
+    res.status(500).json({
+      message: "Error reactivating user",
+      error: error.message
+    });
+  }
+};
+
+// Delete a user
+const deleteUser = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const userId = req.params.id;
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(403).json({ message: "Cannot delete an admin user" });
+    }
+
+    const username = user.username;
+    const email = user.email;
+
+    // Delete the user (cascades will handle related records)
+    await user.destroy();
+
+    console.log(`Admin ${adminId} deleted user ${userId} (${username}, ${email})`);
+
+    res.status(200).json({
+      message: "User deleted successfully",
+      deletedUser: {
+        id: userId,
+        username,
+        email
+      }
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({
+      message: "Error deleting user",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getPendingVerifications,
   getAllVerifications,
   approveVerification,
   rejectVerification,
-  deleteVerification
+  deleteVerification,
+  // User management
+  getAllUsers,
+  getUserDetails,
+  suspendUser,
+  unsuspendUser,
+  deleteUser
 };

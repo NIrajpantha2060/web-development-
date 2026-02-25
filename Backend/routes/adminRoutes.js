@@ -5,7 +5,13 @@ const {
   getAllVerifications,
   approveVerification,
   rejectVerification,
-  deleteVerification
+  deleteVerification,
+  // User management
+  getAllUsers,
+  getUserDetails,
+  suspendUser,
+  unsuspendUser,
+  deleteUser
 } = require("../controllers/adminController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -16,6 +22,10 @@ const adminOnly = (req, res, next) => {
   }
   next();
 };
+
+// =====================================================
+// VERIFICATION ROUTES
+// =====================================================
 
 // Get pending verifications
 router.get("/verifications/pending", authMiddleware, adminOnly, getPendingVerifications);
@@ -31,5 +41,24 @@ router.put("/verifications/:id/reject", authMiddleware, adminOnly, rejectVerific
 
 // Delete verification
 router.delete("/verifications/:id", authMiddleware, adminOnly, deleteVerification);
+
+// =====================================================
+// USER MANAGEMENT ROUTES
+// =====================================================
+
+// Get all users with report counts
+router.get("/users", authMiddleware, adminOnly, getAllUsers);
+
+// Get single user details
+router.get("/users/:id", authMiddleware, adminOnly, getUserDetails);
+
+// Suspend a user
+router.put("/users/:id/suspend", authMiddleware, adminOnly, suspendUser);
+
+// Unsuspend (reactivate) a user
+router.put("/users/:id/unsuspend", authMiddleware, adminOnly, unsuspendUser);
+
+// Delete a user
+router.delete("/users/:id", authMiddleware, adminOnly, deleteUser);
 
 module.exports = router;

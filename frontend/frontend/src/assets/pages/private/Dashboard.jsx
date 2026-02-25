@@ -3619,7 +3619,7 @@ const AddRidePage = ({ onRideAdded }) => {
 // ===================================================================
 
 const Dashboard = () => {
-  const { user, login } = useAuth();
+  const { user, login, isSuspended, logout } = useAuth();
   
   const [activePage, setActivePage] = useState('rides');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -4574,6 +4574,52 @@ const Dashboard = () => {
         return null;
     }
   };
+
+  // ✅ If user is suspended, show suspension notice and block all features
+  if (isSuspended()) {
+    return (
+      <div className="dashboard-container">
+        <div className="suspension-overlay">
+          <div className="suspension-modal">
+            <div className="suspension-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+              </svg>
+            </div>
+            <h2>Account Suspended</h2>
+            <p className="suspension-message">
+              Your account has been suspended and you cannot access the application features.
+            </p>
+            {user?.suspensionReason && (
+              <div className="suspension-reason">
+                <strong>Reason:</strong>
+                <p>{user.suspensionReason}</p>
+              </div>
+            )}
+            {user?.suspendedAt && (
+              <p className="suspension-date">
+                Suspended on: {new Date(user.suspendedAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            )}
+            <p className="suspension-contact">
+              If you believe this is a mistake, please contact our support team at{' '}
+              <a href="mailto:support@liftnepal.com">support@liftnepal.com</a>
+            </p>
+            <button className="suspension-logout-btn" onClick={logout}>
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container">

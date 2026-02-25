@@ -2216,3 +2216,158 @@ html, body {
     font-size: 2rem;
   }
 }
+
+/* ===================================================================
+   SUSPENSION OVERLAY STYLES
+   =================================================================== */
+
+.suspension-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.95) 0%, rgba(139, 0, 0, 0.95) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.suspension-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 3rem;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: suspensionSlideIn 0.4s ease;
+}
+
+@keyframes suspensionSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.suspension-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  background: linear-gradient(135deg, #dc3545 0%, #8b0000 100%);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.suspension-icon svg {
+  width: 48px;
+  height: 48px;
+  stroke: white;
+}
+
+.suspension-modal h2 {
+  color: #dc3545;
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.suspension-message {
+  color: #4a5568;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.suspension-reason {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.suspension-reason strong {
+  color: #c53030;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.suspension-reason p {
+  color: #742a2a;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.suspension-date {
+  color: #718096;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.suspension-contact {
+  color: #4a5568;
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.suspension-contact a {
+  color: #2b6cb0;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.suspension-contact a:hover {
+  text-decoration: underline;
+}
+
+.suspension-logout-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.suspension-logout-btn:hover {
+  background: linear-gradient(135deg, #c82333 0%, #a71d2a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+@media (max-width: 480px) {
+  .suspension-modal {
+    padding: 2rem 1.5rem;
+  }
+
+  .suspension-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .suspension-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .suspension-modal h2 {
+    font-size: 1.5rem;
+  }
+}

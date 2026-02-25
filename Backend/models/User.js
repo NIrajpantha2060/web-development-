@@ -188,6 +188,28 @@ const User = sequelize.define("User", {
     allowNull: false,
     defaultValue: 0,
     comment: 'Total number of ratings received as a rider'
+  },
+  // ✅ Suspension fields for admin user management
+  isSuspended: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'True if user account is suspended by admin'
+  },
+  suspensionReason: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    comment: 'Reason for account suspension'
+  },
+  suspendedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: 'When the account was suspended'
+  },
+  suspendedBy: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Admin ID who suspended the account'
   }
 }, {
   timestamps: true,

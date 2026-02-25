@@ -102,7 +102,7 @@ const getUserInfo = async (req, res) => {
     const userId = req.user.id;
 
     const user = await User.findByPk(userId, {
-      attributes: ['id', 'username', 'email', 'phone', 'role', 'profilePicture', 'createdAt', 'updatedAt', 'isVerifiedUser', 'isVerifiedRider']
+      attributes: ['id', 'username', 'email', 'phone', 'role', 'profilePicture', 'createdAt', 'updatedAt', 'isVerifiedUser', 'isVerifiedRider', 'isSuspended', 'suspensionReason', 'suspendedAt']
     });
 
     if (!user) {
@@ -119,6 +119,9 @@ const getUserInfo = async (req, res) => {
         profilePicture: user.profilePicture,
         isVerifiedUser: user.isVerifiedUser,
         isVerifiedRider: user.isVerifiedRider,
+        isSuspended: user.isSuspended,
+        suspensionReason: user.suspensionReason,
+        suspendedAt: user.suspendedAt,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }

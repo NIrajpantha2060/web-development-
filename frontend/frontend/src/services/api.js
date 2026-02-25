@@ -368,12 +368,34 @@ api.interceptors.request.use(
 // Handle response errors globally
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    // Handle 401 Unauthorized - Token expired or invalid
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    
+    // Handle 403 Forbidden - User is suspended
+    if (error.response?.status === 403 && error.response?.data?.suspended) {
+      // Update user data in localStorage with suspension info
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          userData.isSuspended = true;
+          userData.suspensionReason = error.response.data.suspensionReason;
+          userData.suspendedAt = error.response.data.suspendedAt;
+          localStorage.setItem('user', JSON.stringify(userData));
+          
+          // Reload the page to show suspension screen
+          window.location.reload();
+        } catch (e) {
+          console.error('Error updating user suspension status:', e);
+        }
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -616,6 +638,60 @@ export const adminAPI = {
     const token = localStorage.getItem('token');
     const response = await axios.delete(
       `${API_BASE_URL}/admin/verifications/${id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // =====================================================
+  // USER MANAGEMENT
+  // =====================================================
+
+  // Get all users with report counts
+  getAllUsers: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/admin/users`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get single user details
+  getUserDetails: async (userId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/admin/users/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Suspend a user
+  suspendUser: async (userId, reason) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      `${API_BASE_URL}/admin/users/${userId}/suspend`,
+      { reason },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // Unsuspend (reactivate) a user
+  unsuspendUser: async (userId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      `${API_BASE_URL}/admin/users/${userId}/unsuspend`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // Delete a user
+  deleteUser: async (userId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(
+      `${API_BASE_URL}/admin/users/${userId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
