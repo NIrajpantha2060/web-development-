@@ -840,4 +840,67 @@ export const bookingAPI = {
   }
 };
 
+// ✅ NEW: Report API calls
+export const reportAPI = {
+  // Submit a report against a rider
+  submitReport: async (bookingId, issueType, remarks) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/reports/submit`, { bookingId, issueType, remarks }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get user's own reports
+  getMyReports: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/reports/my-reports`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // ADMIN: Get all reports
+  getAllReports: async (status = null) => {
+    const token = localStorage.getItem('token');
+    const url = status 
+      ? `${API_BASE_URL}/reports/all?status=${status}`
+      : `${API_BASE_URL}/reports/all`;
+    const response = await axios.get(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // ADMIN: Get pending reports count
+  getPendingCount: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/reports/pending-count`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // ADMIN: Update report status
+  updateReportStatus: async (reportId, status, adminRemarks = '') => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      `${API_BASE_URL}/reports/${reportId}/status`,
+      { status, adminRemarks },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // ADMIN: Delete a report
+  deleteReport: async (reportId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(
+      `${API_BASE_URL}/reports/${reportId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  }
+};
+
 export default api;

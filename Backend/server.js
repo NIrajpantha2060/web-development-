@@ -141,6 +141,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const rideRoutes = require("./routes/rideRoutes");
 const vehicleRoutes = require("./routes/vehicleRoutes");
 const bookingRoutes = require("./routes/bookingRoutes"); // ✅ NEW: Booking & Payment routes
+const reportRoutes = require("./routes/reportRoutes"); // ✅ NEW: Report routes
 
 // Import models
 const User = require("./models/User");
@@ -149,6 +150,7 @@ const Notification = require("./models/Notification");
 const Ride = require("./models/Ride");
 const Vehicle = require("./models/Vehicle");
 const RideBooking = require("./models/RideBooking"); // ✅ NEW: Ride bookings
+const Report = require("./models/Report"); // ✅ NEW: Reports
 
 // ✅ Initialize all models in an object
 const models = {
@@ -157,7 +159,8 @@ const models = {
   Notification,
   Ride,
   Vehicle,
-  RideBooking // ✅ NEW: Ride bookings
+  RideBooking, // ✅ NEW: Ride bookings
+  Report // ✅ NEW: Reports
 };
 
 // ✅ Call associate method on each model if it exists
@@ -211,6 +214,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/rides", rideRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes); // ✅ NEW: Booking & Payment routes
+app.use("/api/reports", reportRoutes); // ✅ NEW: Report routes
 
 // Connect database and sync models
 // ✅ NOTE: Use alter: false to prevent enum issues

@@ -1780,7 +1780,7 @@ import ProfileDropdown from '../../components/ProfileDropdown';
 import UpdateVehicleInfoPage from './UpdateVehicleInfo';
 import AddRidePageComponent from './Addridepage'; // ✅ Import smart AddRidePage
 import { useAuth } from '../../../context/AuthContext';
-import { userAPI, verificationAPI, passwordAPI, rideAPI, bookingAPI, notificationAPI } from '../../../services/api';
+import { userAPI, verificationAPI, passwordAPI, rideAPI, bookingAPI, notificationAPI, reportAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 
 // ===================================================================
@@ -3659,6 +3659,13 @@ const Dashboard = () => {
   const [ratingReview, setRatingReview] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
   
+  // ✅ NEW: State for report modal
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [bookingToReport, setBookingToReport] = useState(null);
+  const [reportIssueType, setReportIssueType] = useState('');
+  const [reportRemarks, setReportRemarks] = useState('');
+  const [submittingReport, setSubmittingReport] = useState(false);
+  
   // ✅ State for notifications
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -3763,6 +3770,52 @@ const Dashboard = () => {
       alert(error.response?.data?.message || 'Failed to submit rating');
     } finally {
       setSubmittingRating(false);
+    }
+  };
+
+  // ✅ NEW: Handle opening report modal
+  const handleOpenReportModal = (booking) => {
+    setBookingToReport(booking);
+    setReportIssueType('');
+    setReportRemarks('');
+    setShowReportModal(true);
+  };
+
+  // ✅ NEW: Handle submitting report
+  const handleSubmitReport = async () => {
+    if (!reportIssueType) {
+      alert('Please select an issue type');
+      return;
+    }
+    if (!reportRemarks || reportRemarks.length < 10) {
+      alert('Please provide a detailed description (at least 10 characters)');
+      return;
+    }
+
+    setSubmittingReport(true);
+    try {
+      await reportAPI.submitReport(bookingToReport.id, reportIssueType, reportRemarks);
+      console.log('✅ Report submitted successfully');
+      
+      // Update local state to show report was submitted
+      setUserBookingHistory(prev => 
+        prev.map(b => 
+          b.id === bookingToReport.id 
+            ? { ...b, hasReported: true }
+            : b
+        )
+      );
+      
+      setShowReportModal(false);
+      setBookingToReport(null);
+      setReportIssueType('');
+      setReportRemarks('');
+      alert('Report submitted successfully. Our team will review it shortly.');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      alert(error.response?.data?.message || 'Failed to submit report');
+    } finally {
+      setSubmittingReport(false);
     }
   };
 
@@ -4243,6 +4296,27 @@ const Dashboard = () => {
                                 onClick={() => handleOpenRatingModal(booking)}
                               >
                                 ⭐ Rate This Ride
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Report Rider Section */}
+                        <div className="history-section report-section">
+                          <h4>Report an Issue</h4>
+                          {booking.hasReported ? (
+                            <div className="report-submitted">
+                              <span className="report-badge">⚠️ Report Submitted</span>
+                              <p className="report-note">Your report is under review</p>
+                            </div>
+                          ) : (
+                            <div className="report-prompt">
+                              <p>Had a problem with this ride?</p>
+                              <button 
+                                className="btn-report"
+                                onClick={() => handleOpenReportModal(booking)}
+                              >
+                                🚨 Report Rider
                               </button>
                             </div>
                           )}
@@ -4760,6 +4834,81 @@ const Dashboard = () => {
                 disabled={ratingValue === 0 || submittingRating}
               >
                 {submittingRating ? 'Submitting...' : 'Submit Rating'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Report Modal */}
+      {showReportModal && bookingToReport && (
+        <div className="modal-overlay" onClick={() => setShowReportModal(false)}>
+          <div className="modal-content report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🚨 Report Rider</h3>
+              <button className="modal-close" onClick={() => setShowReportModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="report-ride-info">
+                <p className="report-route">
+                  <strong>{bookingToReport.ride?.from}</strong> → <strong>{bookingToReport.ride?.to}</strong>
+                </p>
+                <p className="report-rider">
+                  Rider: <strong>{bookingToReport.ride?.rider?.username || 'Unknown'}</strong>
+                </p>
+                <p className="report-date">
+                  {new Date(bookingToReport.ride?.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                </p>
+              </div>
+              
+              <div className="report-issue-type">
+                <label>Issue Type *</label>
+                <select
+                  value={reportIssueType}
+                  onChange={(e) => setReportIssueType(e.target.value)}
+                  className="form-input"
+                >
+                  <option value="">Select an issue type</option>
+                  <option value="safety">⚠️ Safety Concern</option>
+                  <option value="behavior">😤 Inappropriate Behavior</option>
+                  <option value="vehicle_condition">🚗 Vehicle Condition</option>
+                  <option value="route_deviation">🗺️ Route Deviation</option>
+                  <option value="overcharging">💰 Overcharging</option>
+                  <option value="late_arrival">⏰ Late Arrival</option>
+                  <option value="other">📋 Other</option>
+                </select>
+              </div>
+              
+              <div className="report-remarks-input">
+                <label>Describe the Issue *</label>
+                <textarea
+                  value={reportRemarks}
+                  onChange={(e) => setReportRemarks(e.target.value)}
+                  placeholder="Please provide detailed information about the issue you experienced..."
+                  maxLength={1000}
+                  rows={5}
+                />
+                <small>{reportRemarks.length}/1000 characters (minimum 10 required)</small>
+              </div>
+
+              <div className="report-notice">
+                <p>⚠️ Please note: Submitting false reports may result in account restrictions. All reports are reviewed by our team.</p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn-secondary" 
+                onClick={() => setShowReportModal(false)}
+                disabled={submittingReport}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-danger"
+                onClick={handleSubmitReport}
+                disabled={!reportIssueType || reportRemarks.length < 10 || submittingReport}
+              >
+                {submittingReport ? 'Submitting...' : 'Submit Report'}
               </button>
             </div>
           </div>

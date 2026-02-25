@@ -590,7 +590,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from 'react-router-dom';
-import { adminAPI } from '../../../services/api';
+import { adminAPI, reportAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 import '../../css/AdminDashboard.css';
 
@@ -615,6 +615,15 @@ const AdminDashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [verificationToDelete, setVerificationToDelete] = useState(null);
 
+  // ✅ NEW: Reports state
+  const [reports, setReports] = useState([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportStatus, setReportStatus] = useState('');
+  const [reportAdminRemarks, setReportAdminRemarks] = useState('');
+  const [pendingReportsCount, setPendingReportsCount] = useState(0);
+
   // ✅ FIX: Only fetch data after auth is loaded
   useEffect(() => {
     if (!authLoading && user) {
@@ -622,7 +631,11 @@ const AdminDashboard = () => {
         fetchPendingVerifications();
       } else if (activePage === 'all-verifications') {
         fetchAllVerifications();
+      } else if (activePage === 'reports') {
+        fetchReports();
       }
+      // Always fetch pending reports count for badge
+      fetchPendingReportsCount();
     }
   }, [activePage, authLoading, user]);
 
@@ -650,6 +663,110 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ NEW: Fetch reports
+  const fetchReports = async (status = null) => {
+    setLoadingReports(true);
+    try {
+      const data = await reportAPI.getAllReports(status);
+      setReports(data.reports);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      setMessage({ type: 'error', text: 'Failed to load reports' });
+    } finally {
+      setLoadingReports(false);
+    }
+  };
+
+  // ✅ NEW: Fetch pending reports count
+  const fetchPendingReportsCount = async () => {
+    try {
+      const data = await reportAPI.getPendingCount();
+      setPendingReportsCount(data.count);
+    } catch (error) {
+      console.error('Error fetching pending reports count:', error);
+    }
+  };
+
+  // ✅ NEW: Open report modal
+  const openReportModal = (report) => {
+    setSelectedReport(report);
+    setReportStatus(report.status);
+    setReportAdminRemarks(report.adminRemarks || '');
+    setShowReportModal(true);
+  };
+
+  // ✅ NEW: Close report modal
+  const closeReportModal = () => {
+    setShowReportModal(false);
+    setSelectedReport(null);
+    setReportStatus('');
+    setReportAdminRemarks('');
+  };
+
+  // ✅ NEW: Handle update report status
+  const handleUpdateReportStatus = async () => {
+    if (!selectedReport) return;
+
+    try {
+      await reportAPI.updateReportStatus(selectedReport.id, reportStatus, reportAdminRemarks);
+      setMessage({ type: 'success', text: `Report status updated to ${reportStatus}` });
+      closeReportModal();
+      fetchReports();
+      fetchPendingReportsCount();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error updating report status:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to update report status'
+      });
+    }
+  };
+
+  // ✅ NEW: Handle delete report
+  const handleDeleteReport = async (reportId) => {
+    if (!window.confirm('Are you sure you want to delete this report?')) return;
+
+    try {
+      await reportAPI.deleteReport(reportId);
+      setMessage({ type: 'success', text: 'Report deleted successfully' });
+      fetchReports();
+      fetchPendingReportsCount();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete report'
+      });
+    }
+  };
+
+  // ✅ Get issue type label
+  const getIssueTypeLabel = (issueType) => {
+    const labels = {
+      safety: '⚠️ Safety Concern',
+      behavior: '😤 Inappropriate Behavior',
+      vehicle_condition: '🚗 Vehicle Condition',
+      route_deviation: '🗺️ Route Deviation',
+      overcharging: '💰 Overcharging',
+      late_arrival: '⏰ Late Arrival',
+      other: '📋 Other'
+    };
+    return labels[issueType] || issueType;
+  };
+
+  // ✅ Get report status badge
+  const getReportStatusBadge = (status) => {
+    const badges = {
+      pending: <span className="badge badge-orange">⏳ Pending</span>,
+      under_review: <span className="badge badge-blue">🔍 Under Review</span>,
+      resolved: <span className="badge badge-green">✓ Resolved</span>,
+      dismissed: <span className="badge badge-gray">✗ Dismissed</span>
+    };
+    return badges[status] || status;
   };
 
   // ✅ UPDATED: Automatically set approval type based on submitted documents
@@ -1116,6 +1233,12 @@ const AdminDashboard = () => {
           📋 All Verifications
         </button>
         <button 
+          className={`admin-tab ${activePage === 'reports' ? 'active' : ''}`}
+          onClick={() => setActivePage('reports')}
+        >
+          🚨 Reports {pendingReportsCount > 0 && <span className="badge-count">{pendingReportsCount}</span>}
+        </button>
+        <button 
           className={`admin-tab ${activePage === 'users' ? 'active' : ''}`}
           onClick={() => setActivePage('users')}
         >
@@ -1132,13 +1255,215 @@ const AdminDashboard = () => {
       <main className="admin-main-content">
         {(activePage === 'pending-verifications' || activePage === 'all-verifications') 
           ? renderContent()
-          : (
+          : activePage === 'reports' ? (
+            // ✅ Reports Section
+            <div className="reports-section">
+              <div className="section-header">
+                <h2>🚨 User Reports</h2>
+                <p>Review and manage reports submitted by users against riders</p>
+              </div>
+              
+              {loadingReports ? (
+                <div className="loading-state">Loading reports...</div>
+              ) : reports.length === 0 ? (
+                <div className="empty-state">
+                  <h3>No Reports</h3>
+                  <p>No reports have been submitted yet.</p>
+                </div>
+              ) : (
+                <div className="reports-list">
+                  {reports.map(report => (
+                    <div key={report.id} className="report-card">
+                      <div className="report-card-header">
+                        <div className="report-info">
+                          <span className="report-id">Report #{report.id}</span>
+                          {getReportStatusBadge(report.status)}
+                        </div>
+                        <span className="report-date">
+                          {new Date(report.createdAt).toLocaleDateString('en-US', { 
+                            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                          })}
+                        </span>
+                      </div>
+                      
+                      <div className="report-card-body">
+                        <div className="report-parties">
+                          <div className="report-party">
+                            <span className="party-label">Reporter:</span>
+                            <div className="party-info">
+                              {report.reporter?.profilePicture ? (
+                                <img 
+                                  src={`${BASE_URL}${report.reporter.profilePicture}`} 
+                                  alt={report.reporter.username}
+                                  className="party-avatar"
+                                />
+                              ) : (
+                                <span className="party-avatar-placeholder">
+                                  {report.reporter?.username?.charAt(0).toUpperCase() || 'U'}
+                                </span>
+                              )}
+                              <div>
+                                <span className="party-name">{report.reporter?.username}</span>
+                                <span className="party-email">{report.reporter?.email}</span>
+                                <span className="party-phone">📞 {report.reporter?.phone || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="report-arrow">→</div>
+                          
+                          <div className="report-party">
+                            <span className="party-label">Reported Rider:</span>
+                            <div className="party-info">
+                              {report.reportedRider?.profilePicture ? (
+                                <img 
+                                  src={`${BASE_URL}${report.reportedRider.profilePicture}`} 
+                                  alt={report.reportedRider.username}
+                                  className="party-avatar"
+                                />
+                              ) : (
+                                <span className="party-avatar-placeholder">
+                                  {report.reportedRider?.username?.charAt(0).toUpperCase() || 'R'}
+                                </span>
+                              )}
+                              <div>
+                                <span className="party-name">{report.reportedRider?.username}</span>
+                                <span className="party-email">{report.reportedRider?.email}</span>
+                                <span className="party-phone">📞 {report.reportedRider?.phone || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="report-ride-details">
+                          <span className="ride-route">
+                            <strong>{report.ride?.from}</strong> → <strong>{report.ride?.to}</strong>
+                          </span>
+                          <span className="ride-info">
+                            {new Date(report.ride?.date).toLocaleDateString()} at {report.ride?.time}
+                          </span>
+                        </div>
+                        
+                        <div className="report-issue">
+                          <span className="issue-type">{getIssueTypeLabel(report.issueType)}</span>
+                          <p className="issue-remarks">{report.remarks}</p>
+                        </div>
+                        
+                        {report.adminRemarks && (
+                          <div className="admin-response">
+                            <span className="response-label">Admin Response:</span>
+                            <p className="response-text">{report.adminRemarks}</p>
+                            {report.reviewer && (
+                              <span className="response-by">
+                                By: {report.reviewer.username} on {new Date(report.reviewedAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="report-card-footer">
+                        <button 
+                          className="btn-review"
+                          onClick={() => openReportModal(report)}
+                        >
+                          {report.status === 'pending' ? '🔍 Review' : '✏️ Update'}
+                        </button>
+                        <button 
+                          className="btn-delete-report"
+                          onClick={() => handleDeleteReport(report.id)}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
             <div className="empty-state">
               <h3>Coming Soon</h3>
               <p>This section is under development.</p>
             </div>
           )}
       </main>
+
+      {/* ✅ Report Review Modal */}
+      {showReportModal && selectedReport && (
+        <>
+          <div className="modal-overlay" onClick={closeReportModal}></div>
+          <div className="modal report-review-modal">
+            <div className="modal-header">
+              <h2>🔍 Review Report #{selectedReport.id}</h2>
+              <button className="modal-close" onClick={closeReportModal}>×</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="report-summary">
+                <div className="summary-row">
+                  <span className="label">Issue Type:</span>
+                  <span className="value">{getIssueTypeLabel(selectedReport.issueType)}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="label">Reporter (Passenger):</span>
+                  <span className="value">{selectedReport.reporter?.username} ({selectedReport.reporter?.email}) - 📞 {selectedReport.reporter?.phone || 'N/A'}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="label">Reported Rider:</span>
+                  <span className="value">{selectedReport.reportedRider?.username} ({selectedReport.reportedRider?.email}) - 📞 {selectedReport.reportedRider?.phone || 'N/A'}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="label">Ride:</span>
+                  <span className="value">{selectedReport.ride?.from} → {selectedReport.ride?.to}</span>
+                </div>
+              </div>
+
+              <div className="report-full-remarks">
+                <label>User's Report:</label>
+                <div className="remarks-box">{selectedReport.remarks}</div>
+              </div>
+
+              <div className="form-group">
+                <label>Update Status: *</label>
+                <select 
+                  className="form-input"
+                  value={reportStatus}
+                  onChange={(e) => setReportStatus(e.target.value)}
+                >
+                  <option value="pending">⏳ Pending</option>
+                  <option value="under_review">🔍 Under Review</option>
+                  <option value="resolved">✓ Resolved</option>
+                  <option value="dismissed">✗ Dismissed</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Admin Remarks:</label>
+                <textarea
+                  className="form-input"
+                  rows="4"
+                  value={reportAdminRemarks}
+                  onChange={(e) => setReportAdminRemarks(e.target.value)}
+                  placeholder="Add notes about the action taken..."
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeReportModal}>
+                Cancel
+              </button>
+              <button 
+                className="btn-approve"
+                onClick={handleUpdateReportStatus}
+              >
+                ✓ Update Status
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ✅✅✅ UPDATED APPROVAL/REJECTION MODAL - "BOTH" OPTION REMOVED ✅✅✅ */}
       {showModal && (
