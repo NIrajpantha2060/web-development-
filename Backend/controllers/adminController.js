@@ -224,6 +224,8 @@
 const Verification = require("../models/Verification");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const Ride = require("../models/Ride");
+const RideBooking = require("../models/RideBooking");
 const { Op } = require('sequelize');
 
 // Get all pending verifications
@@ -724,6 +726,255 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// =====================================================
+// ✅ RIDE MANAGEMENT ENDPOINTS
+// =====================================================
+
+// Get all rides with rider info and booking counts
+const getAllRides = async (req, res) => {
+  try {
+    const { search, status, from, to } = req.query;
+    
+    // Build where clause for rides
+    const whereClause = {};
+    
+    // Search by ride ID
+    if (search) {
+      const searchTerm = search.trim();
+      // If search is numeric, search by ID
+      if (!isNaN(searchTerm)) {
+        whereClause.id = parseInt(searchTerm);
+      } else {
+        // Search by route
+        whereClause[Op.or] = [
+          { from: { [Op.like]: `%${searchTerm}%` } },
+          { to: { [Op.like]: `%${searchTerm}%` } }
+        ];
+      }
+    }
+    
+    // Filter by status
+    if (status && status !== 'all') {
+      whereClause.status = status;
+    }
+    
+    // Filter by from location
+    if (from) {
+      whereClause.from = { [Op.like]: `%${from}%` };
+    }
+    
+    // Filter by to location
+    if (to) {
+      whereClause.to = { [Op.like]: `%${to}%` };
+    }
+
+    const rides = await Ride.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: User,
+          as: 'rider',
+          attributes: ['id', 'username', 'phone', 'email', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider', 'riderAverageRating', 'totalRatingsReceived']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Get booking counts for each ride
+    const ridesWithBookingCounts = await Promise.all(
+      rides.map(async (ride) => {
+        const bookingCount = await RideBooking.count({
+          where: { rideId: ride.id }
+        });
+        
+        const confirmedBookings = await RideBooking.count({
+          where: { 
+            rideId: ride.id,
+            bookingStatus: 'confirmed'
+          }
+        });
+
+        return {
+          ...ride.toJSON(),
+          totalBookings: bookingCount,
+          confirmedBookings
+        };
+      })
+    );
+
+    res.status(200).json({ rides: ridesWithBookingCounts });
+  } catch (error) {
+    console.error("Get all rides error:", error);
+    res.status(500).json({
+      message: "Error fetching rides",
+      error: error.message
+    });
+  }
+};
+
+// Get single ride details with full info (rider + all passengers)
+const getRideDetails = async (req, res) => {
+  try {
+    const rideId = req.params.id;
+
+    const ride = await Ride.findByPk(rideId, {
+      include: [
+        {
+          model: User,
+          as: 'rider',
+          attributes: ['id', 'username', 'phone', 'email', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider', 'riderAverageRating', 'totalRatingsReceived', 'isSuspended']
+        },
+        {
+          model: RideBooking,
+          as: 'bookings',
+          include: [
+            {
+              model: User,
+              as: 'passenger',
+              attributes: ['id', 'username', 'phone', 'email', 'profilePicture', 'isVerifiedUser', 'isVerifiedRider']
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    res.status(200).json({ ride });
+  } catch (error) {
+    console.error("Get ride details error:", error);
+    res.status(500).json({
+      message: "Error fetching ride details",
+      error: error.message
+    });
+  }
+};
+
+// Delete a ride (admin only)
+const deleteRide = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const rideId = req.params.id;
+
+    const ride = await Ride.findByPk(rideId, {
+      include: [
+        {
+          model: User,
+          as: 'rider',
+          attributes: ['id', 'username']
+        }
+      ]
+    });
+
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    const rideInfo = {
+      id: ride.id,
+      from: ride.from,
+      to: ride.to,
+      rider: ride.rider?.username
+    };
+
+    // Delete the ride (cascades will handle bookings)
+    await ride.destroy();
+
+    console.log(`Admin ${adminId} deleted ride ${rideId}`, rideInfo);
+
+    res.status(200).json({
+      message: "Ride deleted successfully",
+      deletedRide: rideInfo
+    });
+  } catch (error) {
+    console.error("Delete ride error:", error);
+    res.status(500).json({
+      message: "Error deleting ride",
+      error: error.message
+    });
+  }
+};
+
+// Cancel a ride (admin action)
+const cancelRide = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const rideId = req.params.id;
+    const { reason } = req.body;
+
+    const ride = await Ride.findByPk(rideId, {
+      include: [
+        {
+          model: User,
+          as: 'rider',
+          attributes: ['id', 'username']
+        }
+      ]
+    });
+
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    if (ride.status === 'cancelled') {
+      return res.status(400).json({ message: "Ride is already cancelled" });
+    }
+
+    ride.status = 'cancelled';
+    await ride.save();
+
+    // Notify the rider
+    await Notification.create({
+      userId: ride.userId,
+      type: 'ride_cancelled',
+      title: '⚠️ Ride Cancelled by Admin',
+      message: `Your ride from ${ride.from} to ${ride.to} has been cancelled by admin.${reason ? ` Reason: ${reason}` : ''}`,
+      relatedId: ride.id
+    });
+
+    // Notify all passengers with confirmed bookings
+    const bookings = await RideBooking.findAll({
+      where: { 
+        rideId: ride.id,
+        bookingStatus: 'confirmed'
+      }
+    });
+
+    for (const booking of bookings) {
+      booking.bookingStatus = 'cancelled';
+      await booking.save();
+
+      await Notification.create({
+        userId: booking.passengerId,
+        type: 'booking_cancelled',
+        title: '⚠️ Booking Cancelled',
+        message: `Your booking for ride from ${ride.from} to ${ride.to} has been cancelled by admin.${reason ? ` Reason: ${reason}` : ''}`,
+        relatedId: booking.id
+      });
+    }
+
+    console.log(`Admin ${adminId} cancelled ride ${rideId}. Reason: ${reason || 'Not specified'}`);
+
+    res.status(200).json({
+      message: "Ride cancelled successfully",
+      ride: {
+        id: ride.id,
+        from: ride.from,
+        to: ride.to,
+        status: ride.status
+      }
+    });
+  } catch (error) {
+    console.error("Cancel ride error:", error);
+    res.status(500).json({
+      message: "Error cancelling ride",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getPendingVerifications,
   getAllVerifications,
@@ -735,5 +986,10 @@ module.exports = {
   getUserDetails,
   suspendUser,
   unsuspendUser,
-  deleteUser
+  deleteUser,
+  // Ride management
+  getAllRides,
+  getRideDetails,
+  deleteRide,
+  cancelRide
 };

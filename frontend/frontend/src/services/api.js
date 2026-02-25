@@ -695,6 +695,52 @@ export const adminAPI = {
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
+  },
+
+  // =====================================================
+  // RIDE MANAGEMENT
+  // =====================================================
+
+  // Get all rides with search/filter
+  getAllRides: async (search = '', status = 'all') => {
+    const token = localStorage.getItem('token');
+    let url = `${API_BASE_URL}/admin/rides?`;
+    if (search) url += `search=${encodeURIComponent(search)}&`;
+    if (status && status !== 'all') url += `status=${status}`;
+    const response = await axios.get(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get single ride details with all passengers
+  getRideDetails: async (rideId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/admin/rides/${rideId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Cancel a ride
+  cancelRide: async (rideId, reason = '') => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      `${API_BASE_URL}/admin/rides/${rideId}/cancel`,
+      { reason },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // Delete a ride
+  deleteRide: async (rideId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(
+      `${API_BASE_URL}/admin/rides/${rideId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
   }
 };
 

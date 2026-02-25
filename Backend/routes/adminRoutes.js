@@ -11,7 +11,12 @@ const {
   getUserDetails,
   suspendUser,
   unsuspendUser,
-  deleteUser
+  deleteUser,
+  // Ride management
+  getAllRides,
+  getRideDetails,
+  deleteRide,
+  cancelRide
 } = require("../controllers/adminController");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -60,5 +65,21 @@ router.put("/users/:id/unsuspend", authMiddleware, adminOnly, unsuspendUser);
 
 // Delete a user
 router.delete("/users/:id", authMiddleware, adminOnly, deleteUser);
+
+// =====================================================
+// RIDE MANAGEMENT ROUTES
+// =====================================================
+
+// Get all rides with search/filter
+router.get("/rides", authMiddleware, adminOnly, getAllRides);
+
+// Get single ride details with all passengers
+router.get("/rides/:id", authMiddleware, adminOnly, getRideDetails);
+
+// Cancel a ride
+router.put("/rides/:id/cancel", authMiddleware, adminOnly, cancelRide);
+
+// Delete a ride
+router.delete("/rides/:id", authMiddleware, adminOnly, deleteRide);
 
 module.exports = router;

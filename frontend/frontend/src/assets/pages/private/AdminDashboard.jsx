@@ -633,6 +633,16 @@ const AdminDashboard = () => {
   const [suspensionReason, setSuspensionReason] = useState('');
   const [userSearchTerm, setUserSearchTerm] = useState('');
 
+  // ✅ NEW: Ride Management state
+  const [rides, setRides] = useState([]);
+  const [loadingRides, setLoadingRides] = useState(false);
+  const [selectedRide, setSelectedRide] = useState(null);
+  const [showRideModal, setShowRideModal] = useState(false);
+  const [rideModalAction, setRideModalAction] = useState(''); // 'view', 'cancel', 'delete'
+  const [rideSearchTerm, setRideSearchTerm] = useState('');
+  const [rideStatusFilter, setRideStatusFilter] = useState('all');
+  const [cancelReason, setCancelReason] = useState('');
+
   // ✅ FIX: Only fetch data after auth is loaded
   useEffect(() => {
     if (!authLoading && user) {
@@ -644,6 +654,8 @@ const AdminDashboard = () => {
         fetchReports();
       } else if (activePage === 'users') {
         fetchUsers();
+      } else if (activePage === 'rides') {
+        fetchRides();
       }
       // Always fetch pending reports count for badge
       fetchPendingReportsCount();
@@ -862,6 +874,120 @@ const AdminDashboard = () => {
       u.phone.includes(searchLower) ||
       u.id.toString().includes(searchLower)
     );
+  };
+
+  // =====================================================
+  // ✅ RIDE MANAGEMENT FUNCTIONS
+  // =====================================================
+
+  // Fetch all rides
+  const fetchRides = async () => {
+    setLoadingRides(true);
+    try {
+      const data = await adminAPI.getAllRides(rideSearchTerm, rideStatusFilter);
+      setRides(data.rides);
+    } catch (error) {
+      console.error('Error fetching rides:', error);
+      setMessage({ type: 'error', text: 'Failed to load rides' });
+    } finally {
+      setLoadingRides(false);
+    }
+  };
+
+  // Search rides
+  const handleRideSearch = () => {
+    fetchRides();
+  };
+
+  // Open ride modal for different actions
+  const openRideModal = async (ride, action) => {
+    setRideModalAction(action);
+    setCancelReason('');
+    
+    if (action === 'view') {
+      // Fetch full ride details with passengers
+      try {
+        const data = await adminAPI.getRideDetails(ride.id);
+        setSelectedRide(data.ride);
+      } catch (error) {
+        console.error('Error fetching ride details:', error);
+        setMessage({ type: 'error', text: 'Failed to load ride details' });
+        return;
+      }
+    } else {
+      setSelectedRide(ride);
+    }
+    setShowRideModal(true);
+  };
+
+  // Close ride modal
+  const closeRideModal = () => {
+    setShowRideModal(false);
+    setSelectedRide(null);
+    setRideModalAction('');
+    setCancelReason('');
+  };
+
+  // Handle cancel ride
+  const handleCancelRide = async () => {
+    if (!selectedRide) return;
+
+    try {
+      await adminAPI.cancelRide(selectedRide.id, cancelReason);
+      setMessage({ type: 'success', text: `Ride #${selectedRide.id} has been cancelled` });
+      closeRideModal();
+      fetchRides();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error cancelling ride:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to cancel ride'
+      });
+    }
+  };
+
+  // Handle delete ride
+  const handleDeleteRide = async () => {
+    if (!selectedRide) return;
+
+    try {
+      await adminAPI.deleteRide(selectedRide.id);
+      setMessage({ type: 'success', text: `Ride #${selectedRide.id} has been deleted` });
+      closeRideModal();
+      fetchRides();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error deleting ride:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete ride'
+      });
+    }
+  };
+
+  // Get filtered rides based on search term
+  const getFilteredRides = () => {
+    if (!rideSearchTerm.trim()) return rides;
+    
+    const searchLower = rideSearchTerm.toLowerCase();
+    return rides.filter(r => 
+      r.id.toString().includes(searchLower) ||
+      r.from.toLowerCase().includes(searchLower) ||
+      r.to.toLowerCase().includes(searchLower) ||
+      r.rider?.username?.toLowerCase().includes(searchLower)
+    );
+  };
+
+  // Get ride status badge
+  const getRideStatusBadge = (status) => {
+    const badges = {
+      active: <span className="badge badge-green">✓ Active</span>,
+      taken: <span className="badge badge-blue">🔒 Fully Booked</span>,
+      completed: <span className="badge badge-purple">✓ Completed</span>,
+      cancelled: <span className="badge badge-red">✗ Cancelled</span>
+    };
+    return badges[status] || <span className="badge">{status}</span>;
   };
 
   // ✅ Get issue type label
@@ -1672,6 +1798,204 @@ const AdminDashboard = () => {
                 </>
               )}
             </div>
+          ) : activePage === 'rides' ? (
+            // =====================================================
+            // ✅ RIDE MANAGEMENT SECTION
+            // =====================================================
+            <div className="rides-section">
+              <div className="section-header">
+                <h2>🚗 Manage Rides</h2>
+                <p>View all rides, search by ride ID, and manage ride status</p>
+              </div>
+
+              {/* Search and Filter Bar */}
+              <div className="ride-filters-bar">
+                <div className="ride-search-container">
+                  <input
+                    type="text"
+                    placeholder="🔍 Search by Ride ID, route, or rider name..."
+                    value={rideSearchTerm}
+                    onChange={(e) => setRideSearchTerm(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleRideSearch()}
+                    className="ride-search-input"
+                  />
+                  <button 
+                    className="ride-search-btn"
+                    onClick={handleRideSearch}
+                  >
+                    Search
+                  </button>
+                  {rideSearchTerm && (
+                    <button 
+                      className="clear-search-btn"
+                      onClick={() => {
+                        setRideSearchTerm('');
+                        fetchRides();
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <div className="ride-status-filter">
+                  <label>Status:</label>
+                  <select 
+                    value={rideStatusFilter}
+                    onChange={(e) => {
+                      setRideStatusFilter(e.target.value);
+                      setTimeout(() => fetchRides(), 0);
+                    }}
+                    className="ride-status-select"
+                  >
+                    <option value="all">All Rides</option>
+                    <option value="active">Active</option>
+                    <option value="taken">Fully Booked</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              {loadingRides ? (
+                <div className="loading-state">Loading rides...</div>
+              ) : rides.length === 0 ? (
+                <div className="empty-state">
+                  <h3>No Rides Found</h3>
+                  <p>{rideSearchTerm ? `No rides matching "${rideSearchTerm}"` : 'No rides available.'}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="rides-summary">
+                    <span className="summary-item">
+                      <strong>Total Rides:</strong> {rides.length}
+                    </span>
+                    <span className="summary-item">
+                      <strong>Active:</strong> {rides.filter(r => r.status === 'active').length}
+                    </span>
+                    <span className="summary-item">
+                      <strong>Completed:</strong> {rides.filter(r => r.status === 'completed').length}
+                    </span>
+                    <span className="summary-item">
+                      <strong>Cancelled:</strong> {rides.filter(r => r.status === 'cancelled').length}
+                    </span>
+                  </div>
+
+                  <div className="rides-table-container">
+                    <table className="rides-table">
+                      <thead>
+                        <tr>
+                          <th>Ride ID</th>
+                          <th>Route</th>
+                          <th>Date & Time</th>
+                          <th>Rider</th>
+                          <th>Vehicle</th>
+                          <th>Seats</th>
+                          <th>Price</th>
+                          <th>Bookings</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getFilteredRides().map(ride => (
+                          <tr key={ride.id} className={ride.status === 'cancelled' ? 'cancelled-row' : ''}>
+                            <td className="ride-id">
+                              <strong>#{ride.id}</strong>
+                            </td>
+                            <td className="ride-route">
+                              <div className="route-info">
+                                <span className="from">{ride.from}</span>
+                                <span className="arrow">→</span>
+                                <span className="to">{ride.to}</span>
+                              </div>
+                              <span className="pickup-location">📍 {ride.pickupLocation}</span>
+                            </td>
+                            <td className="ride-datetime">
+                              <span className="date">{new Date(ride.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                              <span className="time">{ride.time}</span>
+                            </td>
+                            <td className="ride-rider">
+                              <div className="rider-info">
+                                {ride.rider?.profilePicture ? (
+                                  <img 
+                                    src={`${BASE_URL}${ride.rider.profilePicture.startsWith('/') ? '' : '/'}${ride.rider.profilePicture}`}
+                                    alt={ride.rider.username}
+                                    className="rider-avatar-tiny"
+                                  />
+                                ) : (
+                                  <div className="rider-avatar-placeholder-tiny">
+                                    {ride.rider?.username?.charAt(0).toUpperCase() || '?'}
+                                  </div>
+                                )}
+                                <div className="rider-details">
+                                  <span className="rider-name">{ride.rider?.username || 'Unknown'}</span>
+                                  <div className="rider-badges">
+                                    {ride.rider?.isVerifiedUser && <span className="badge-tick green" title="Verified User">✓</span>}
+                                    {ride.rider?.isVerifiedRider && <span className="badge-tick blue" title="Verified Rider">🚗</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="ride-vehicle">
+                              <span className="vehicle-type">{ride.vehicleType === 'car' ? '🚗' : '🏍️'} {ride.vehicleType}</span>
+                              <span className="vehicle-number">{ride.vehicleNumber}</span>
+                            </td>
+                            <td className="ride-seats">
+                              {ride.bookedSeats}/{ride.availableSeats}
+                            </td>
+                            <td className="ride-price">
+                              Rs. {ride.price || 'N/A'}
+                            </td>
+                            <td className="ride-bookings">
+                              <span className={`booking-count ${ride.totalBookings > 0 ? 'has-bookings' : ''}`}>
+                                {ride.totalBookings || 0}
+                                {ride.confirmedBookings > 0 && <span className="confirmed-badge">({ride.confirmedBookings} confirmed)</span>}
+                              </span>
+                            </td>
+                            <td className="ride-status">
+                              {getRideStatusBadge(ride.status)}
+                            </td>
+                            <td className="ride-actions">
+                              <div className="action-buttons">
+                                <button 
+                                  className="btn-action btn-view"
+                                  onClick={() => openRideModal(ride, 'view')}
+                                  title="View Details"
+                                >
+                                  👁️ View
+                                </button>
+                                {ride.status === 'active' && (
+                                  <button 
+                                    className="btn-action btn-cancel-ride"
+                                    onClick={() => openRideModal(ride, 'cancel')}
+                                    title="Cancel Ride"
+                                  >
+                                    ✗ Cancel
+                                  </button>
+                                )}
+                                <button 
+                                  className="btn-action btn-delete-ride"
+                                  onClick={() => openRideModal(ride, 'delete')}
+                                  title="Delete Ride"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {getFilteredRides().length === 0 && rideSearchTerm && (
+                    <div className="no-search-results">
+                      <p>No rides found matching "{rideSearchTerm}"</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           ) : (
             <div className="empty-state">
               <h3>Coming Soon</h3>
@@ -2051,6 +2375,243 @@ const AdminDashboard = () => {
                 <button 
                   className="btn-delete-action"
                   onClick={handleDeleteUser}
+                >
+                  🗑️ Delete Permanently
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ✅ Ride Management Modal */}
+      {showRideModal && selectedRide && (
+        <>
+          <div className="modal-overlay" onClick={closeRideModal}></div>
+          <div className="modal ride-management-modal">
+            <div className="modal-header">
+              <h2>
+                {rideModalAction === 'view' && `🚗 Ride Details #${selectedRide.id}`}
+                {rideModalAction === 'cancel' && `✗ Cancel Ride #${selectedRide.id}`}
+                {rideModalAction === 'delete' && `🗑️ Delete Ride #${selectedRide.id}`}
+              </h2>
+              <button className="modal-close" onClick={closeRideModal}>×</button>
+            </div>
+
+            <div className="modal-body">
+              {/* Ride Info Section */}
+              <div className="ride-details-section">
+                <h3>📍 Route Information</h3>
+                <div className="ride-info-grid">
+                  <div className="info-item">
+                    <span className="label">From:</span>
+                    <span className="value">{selectedRide.from}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">To:</span>
+                    <span className="value">{selectedRide.to}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Pickup Location:</span>
+                    <span className="value">{selectedRide.pickupLocation}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Date:</span>
+                    <span className="value">{new Date(selectedRide.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Time:</span>
+                    <span className="value">{selectedRide.time}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Status:</span>
+                    <span className="value">{getRideStatusBadge(selectedRide.status)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle Info */}
+              <div className="ride-details-section">
+                <h3>🚘 Vehicle Information</h3>
+                <div className="ride-info-grid">
+                  <div className="info-item">
+                    <span className="label">Type:</span>
+                    <span className="value">{selectedRide.vehicleType === 'car' ? '🚗 Car' : '🏍️ Bike'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Number:</span>
+                    <span className="value">{selectedRide.vehicleNumber}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Available Seats:</span>
+                    <span className="value">{selectedRide.availableSeats}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Booked Seats:</span>
+                    <span className="value">{selectedRide.bookedSeats}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label">Price per Seat:</span>
+                    <span className="value">Rs. {selectedRide.price || 'N/A'}</span>
+                  </div>
+                </div>
+                {selectedRide.description && (
+                  <div className="ride-description">
+                    <span className="label">Description:</span>
+                    <p>{selectedRide.description}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Rider Info */}
+              <div className="ride-details-section">
+                <h3>👤 Rider Information</h3>
+                <div className="rider-profile-card">
+                  {selectedRide.rider?.profilePicture ? (
+                    <img 
+                      src={`${BASE_URL}${selectedRide.rider.profilePicture.startsWith('/') ? '' : '/'}${selectedRide.rider.profilePicture}`}
+                      alt={selectedRide.rider.username}
+                      className="rider-avatar-modal"
+                    />
+                  ) : (
+                    <div className="rider-avatar-placeholder-modal">
+                      {selectedRide.rider?.username?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                  )}
+                  <div className="rider-info-modal">
+                    <h4>
+                      {selectedRide.rider?.username || 'Unknown'}
+                      {selectedRide.rider?.isVerifiedUser && <span className="badge-tick green" title="Verified User">✓</span>}
+                      {selectedRide.rider?.isVerifiedRider && <span className="badge-tick blue" title="Verified Rider">🚗</span>}
+                    </h4>
+                    <p>📧 {selectedRide.rider?.email || 'N/A'}</p>
+                    <p>📞 {selectedRide.rider?.phone || 'N/A'}</p>
+                    <p>🆔 User ID: #{selectedRide.rider?.id || 'N/A'}</p>
+                    {selectedRide.rider?.riderAverageRating && (
+                      <p>⭐ {parseFloat(selectedRide.rider.riderAverageRating).toFixed(1)} ({selectedRide.rider.totalRatingsReceived} ratings)</p>
+                    )}
+                    {selectedRide.rider?.isSuspended && (
+                      <span className="badge badge-red">🚫 Suspended</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Passengers/Bookings (only for view action) */}
+              {rideModalAction === 'view' && selectedRide.bookings && selectedRide.bookings.length > 0 && (
+                <div className="ride-details-section">
+                  <h3>👥 Passengers ({selectedRide.bookings.length})</h3>
+                  <div className="passengers-list">
+                    {selectedRide.bookings.map((booking, index) => (
+                      <div key={booking.id} className="passenger-card">
+                        <div className="passenger-header">
+                          <div className="passenger-info">
+                            {booking.passenger?.profilePicture ? (
+                              <img 
+                                src={`${BASE_URL}${booking.passenger.profilePicture.startsWith('/') ? '' : '/'}${booking.passenger.profilePicture}`}
+                                alt={booking.passenger.username}
+                                className="passenger-avatar"
+                              />
+                            ) : (
+                              <div className="passenger-avatar-placeholder">
+                                {booking.passenger?.username?.charAt(0).toUpperCase() || '?'}
+                              </div>
+                            )}
+                            <div className="passenger-details">
+                              <span className="passenger-name">
+                                {booking.passenger?.username || 'Unknown'}
+                                {booking.passenger?.isVerifiedUser && <span className="badge-tick green" title="Verified User">✓</span>}
+                              </span>
+                              <span className="passenger-contact">📧 {booking.passenger?.email || 'N/A'}</span>
+                              <span className="passenger-contact">📞 {booking.passenger?.phone || 'N/A'}</span>
+                              <span className="passenger-id">🆔 User ID: #{booking.passenger?.id || 'N/A'}</span>
+                            </div>
+                          </div>
+                          <div className="booking-info">
+                            <span className="booking-id">Booking #{booking.id}</span>
+                            <span className={`booking-status ${booking.bookingStatus}`}>
+                              {booking.bookingStatus === 'confirmed' && '✓ Confirmed'}
+                              {booking.bookingStatus === 'cancelled' && '✗ Cancelled'}
+                              {booking.bookingStatus === 'completed' && '✓ Completed'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="booking-details">
+                          <span><strong>Seats:</strong> {booking.seatsBooked}</span>
+                          <span><strong>Amount:</strong> Rs. {booking.totalAmount}</span>
+                          <span><strong>Payment:</strong> {booking.paymentMethod} ({booking.paymentStatus})</span>
+                          {booking.riderRating && (
+                            <span><strong>Rating Given:</strong> ⭐ {booking.riderRating}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {rideModalAction === 'view' && (!selectedRide.bookings || selectedRide.bookings.length === 0) && (
+                <div className="ride-details-section">
+                  <h3>👥 Passengers</h3>
+                  <div className="empty-passengers">
+                    <p>No bookings for this ride yet.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Cancel Ride Form */}
+              {rideModalAction === 'cancel' && (
+                <div className="action-form">
+                  <div className="form-group">
+                    <label>Cancel Reason (Optional):</label>
+                    <textarea
+                      className="form-input"
+                      rows="4"
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      placeholder="Please provide a reason for cancellation (optional)..."
+                    />
+                  </div>
+                  <div className="warning-box">
+                    <strong>⚠️ Note:</strong> Cancelling this ride will notify the rider and all passengers with confirmed bookings.
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Ride Confirmation */}
+              {rideModalAction === 'delete' && (
+                <div className="action-form">
+                  <div className="danger-box">
+                    <strong>🚨 DANGER: Permanent Deletion</strong>
+                    <p>This action cannot be undone. The following will be permanently deleted:</p>
+                    <ul>
+                      <li>This ride record</li>
+                      <li>All bookings associated with this ride</li>
+                      <li>All booking history and payment records</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeRideModal}>
+                {rideModalAction === 'view' ? 'Close' : 'Cancel'}
+              </button>
+              
+              {rideModalAction === 'cancel' && (
+                <button 
+                  className="btn-cancel-action"
+                  onClick={handleCancelRide}
+                >
+                  ✗ Cancel Ride
+                </button>
+              )}
+              
+              {rideModalAction === 'delete' && (
+                <button 
+                  className="btn-delete-action"
+                  onClick={handleDeleteRide}
                 >
                   🗑️ Delete Permanently
                 </button>

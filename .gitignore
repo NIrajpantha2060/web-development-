@@ -138,4 +138,18 @@ Backend/check_db.js
 Backend/check_rides.js
 Backend/migrate_card_fields.js
 Backend/run_migration.js
+Backend/backfill_ratings.js
+Backend/run_suspension_migration.js
+Backend/migrate_rating_fields.js
+Backend/migrate_rider_rating.js
+Backend/run_notification_migration.js
+Backend/run_reports_migration.js
 Backend/migrations/
+*.sql
+
+# =========================
+# Documentation (internal/team only)
+# =========================
+ENTITY_RELATIONSHIP.md
+*ENTITY_RELATIONSHIP*
+*entity*relation*
