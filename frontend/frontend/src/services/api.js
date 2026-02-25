@@ -1025,4 +1025,99 @@ export const reportAPI = {
   }
 };
 
+// ✅ NEW: Issue API calls (for general issues, not reports)
+export const issueAPI = {
+  // Submit a new issue
+  submitIssue: async (formData) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_BASE_URL}/issues/submit`, formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  // Get user's own issues
+  getMyIssues: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/issues/my-issues`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // Get single issue details
+  getIssueDetails: async (issueId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/issues/my-issues/${issueId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // ADMIN: Get all issues
+  getAllIssues: async (status = null) => {
+    const token = localStorage.getItem('token');
+    const url = status 
+      ? `${API_BASE_URL}/issues/all?status=${status}`
+      : `${API_BASE_URL}/issues/all`;
+    const response = await axios.get(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // ADMIN: Get open issues count
+  getOpenCount: async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/issues/open-count`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // ADMIN: Get issue details
+  getIssueDetailsAdmin: async (issueId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/issues/${issueId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  // ADMIN: Update issue status
+  updateIssueStatus: async (issueId, status) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.put(
+      `${API_BASE_URL}/issues/${issueId}/status`,
+      { status },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  // ADMIN: Respond to issue
+  respondToIssue: async (issueId, response, status = null) => {
+    const token = localStorage.getItem('token');
+    const resp = await axios.post(
+      `${API_BASE_URL}/issues/${issueId}/respond`,
+      { response, status },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return resp.data;
+  },
+
+  // ADMIN: Delete an issue
+  deleteIssue: async (issueId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.delete(
+      `${API_BASE_URL}/issues/${issueId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  }
+};
+
 export default api;

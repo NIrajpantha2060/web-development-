@@ -142,6 +142,7 @@ const rideRoutes = require("./routes/rideRoutes");
 const vehicleRoutes = require("./routes/vehicleRoutes");
 const bookingRoutes = require("./routes/bookingRoutes"); // ✅ NEW: Booking & Payment routes
 const reportRoutes = require("./routes/reportRoutes"); // ✅ NEW: Report routes
+const issueRoutes = require("./routes/issueRoutes"); // ✅ NEW: Issue routes
 
 // Import models
 const User = require("./models/User");
@@ -151,6 +152,7 @@ const Ride = require("./models/Ride");
 const Vehicle = require("./models/Vehicle");
 const RideBooking = require("./models/RideBooking"); // ✅ NEW: Ride bookings
 const Report = require("./models/Report"); // ✅ NEW: Reports
+const Issue = require("./models/Issue"); // ✅ NEW: Issues
 
 // ✅ Initialize all models in an object
 const models = {
@@ -160,7 +162,8 @@ const models = {
   Ride,
   Vehicle,
   RideBooking, // ✅ NEW: Ride bookings
-  Report // ✅ NEW: Reports
+  Report, // ✅ NEW: Reports
+  Issue // ✅ NEW: Issues
 };
 
 // ✅ Call associate method on each model if it exists
@@ -181,6 +184,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads/profiles', express.static(path.join(__dirname, 'uploads', 'profiles')));
 app.use('/uploads/documents', express.static(path.join(__dirname, 'uploads', 'documents')));
 app.use('/uploads/vehicles', express.static(path.join(__dirname, 'uploads', 'vehicles')));
+app.use('/uploads/issues', express.static(path.join(__dirname, 'uploads', 'issues')));
 
 // Test route
 app.get("/", (req, res) => {
@@ -215,6 +219,7 @@ app.use("/api/rides", rideRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes); // ✅ NEW: Booking & Payment routes
 app.use("/api/reports", reportRoutes); // ✅ NEW: Report routes
+app.use("/api/issues", issueRoutes); // ✅ NEW: Issue routes
 
 // Connect database and sync models
 // ✅ NOTE: Use alter: false to prevent enum issues

@@ -1780,7 +1780,7 @@ import ProfileDropdown from '../../components/ProfileDropdown';
 import UpdateVehicleInfoPage from './UpdateVehicleInfo';
 import AddRidePageComponent from './Addridepage'; // ✅ Import smart AddRidePage
 import { useAuth } from '../../../context/AuthContext';
-import { userAPI, verificationAPI, passwordAPI, rideAPI, bookingAPI, notificationAPI, reportAPI } from '../../../services/api';
+import { userAPI, verificationAPI, passwordAPI, rideAPI, bookingAPI, notificationAPI, reportAPI, issueAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 
 // ===================================================================
@@ -1998,6 +1998,293 @@ const UploadProfilePage = () => {
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+// ✅ Raise Issue Page Component
+const RaiseIssuePage = () => {
+  const [formData, setFormData] = useState({
+    issueType: '',
+    subject: '',
+    description: ''
+  });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [myIssues, setMyIssues] = useState([]);
+  const [showMyIssues, setShowMyIssues] = useState(false);
+  const [loadingIssues, setLoadingIssues] = useState(false);
+
+  const issueTypes = [
+    { value: 'booking', label: 'Booking Issue' },
+    { value: 'verification', label: 'Verification Problem' },
+    { value: 'payment', label: 'Payment Issue' },
+    { value: 'ride_experience', label: 'Ride Experience' },
+    { value: 'technical', label: 'Technical Problem' },
+    { value: 'account', label: 'Account Issue' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setMessage({ type: 'error', text: 'Please select a valid image file (JPEG, PNG, GIF, WEBP)' });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage({ type: 'error', text: 'File size must be less than 5MB' });
+        return;
+      }
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
+
+  const fetchMyIssues = async () => {
+    setLoadingIssues(true);
+    try {
+      const response = await issueAPI.getMyIssues();
+      setMyIssues(response.issues || []);
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+    } finally {
+      setLoadingIssues(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.issueType) {
+      setMessage({ type: 'error', text: 'Please select an issue type' });
+      return;
+    }
+    if (formData.subject.length < 10) {
+      setMessage({ type: 'error', text: 'Subject must be at least 10 characters' });
+      return;
+    }
+    if (formData.description.length < 20) {
+      setMessage({ type: 'error', text: 'Description must be at least 20 characters' });
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const submitData = new FormData();
+      submitData.append('issueType', formData.issueType);
+      submitData.append('subject', formData.subject);
+      submitData.append('description', formData.description);
+      if (selectedFile) {
+        submitData.append('photo', selectedFile);
+      }
+
+      await issueAPI.submitIssue(submitData);
+      
+      setMessage({ type: 'success', text: 'Issue submitted successfully! Our team will review it shortly.' });
+      setFormData({ issueType: '', subject: '', description: '' });
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      
+      // Refresh issues list if shown
+      if (showMyIssues) {
+        fetchMyIssues();
+      }
+
+      setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+    } catch (error) {
+      console.error('Submit issue error:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to submit issue. Please try again.'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      open: <span className="badge badge-orange">⏳ Open</span>,
+      in_progress: <span className="badge badge-blue">🔍 In Progress</span>,
+      resolved: <span className="badge badge-green">✓ Resolved</span>,
+      closed: <span className="badge badge-gray">✗ Closed</span>
+    };
+    return badges[status] || status;
+  };
+
+  const getIssueTypeLabel = (type) => {
+    const found = issueTypes.find(t => t.value === type);
+    return found ? found.label : type;
+  };
+
+  return (
+    <div className="add-issue-page">
+      <div className="page-header">
+        <h1>Raise an Issue</h1>
+        <p>Report any problems you're facing with the platform</p>
+      </div>
+
+      {message.text && (
+        <div className={`update-message ${message.type}`}>
+          {message.text}
+        </div>
+      )}
+
+      <div className="issue-tabs">
+        <button 
+          className={`tab-btn ${!showMyIssues ? 'active' : ''}`}
+          onClick={() => setShowMyIssues(false)}
+        >
+          Submit New Issue
+        </button>
+        <button 
+          className={`tab-btn ${showMyIssues ? 'active' : ''}`}
+          onClick={() => { setShowMyIssues(true); fetchMyIssues(); }}
+        >
+          My Issues
+        </button>
+      </div>
+
+      {!showMyIssues ? (
+        <div className="form-container">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Issue Type *</label>
+              <select 
+                name="issueType"
+                value={formData.issueType}
+                onChange={handleChange}
+                className="form-input"
+                required
+              >
+                <option value="">Select issue type</option>
+                {issueTypes.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Subject * (min 10 characters)</label>
+              <input 
+                type="text" 
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                className="form-input" 
+                placeholder="Brief description of your issue"
+                minLength={10}
+                maxLength={100}
+                required
+              />
+              <small className="form-help">{formData.subject.length}/100 characters</small>
+            </div>
+
+            <div className="form-group">
+              <label>Description * (min 20 characters)</label>
+              <textarea 
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                className="form-input" 
+                rows="6" 
+                placeholder="Describe your issue in detail..."
+                minLength={20}
+                required
+              ></textarea>
+              <small className="form-help">{formData.description.length} characters</small>
+            </div>
+
+            <div className="form-group">
+              <label>Screenshot/Photo (optional)</label>
+              <input 
+                type="file" 
+                className="form-input" 
+                accept="image/*"
+                onChange={handleFileSelect}
+              />
+              <small className="form-help">Max size: 5MB (JPEG, PNG, GIF, WEBP)</small>
+              
+              {previewUrl && (
+                <div className="photo-preview">
+                  <img src={previewUrl} alt="Preview" style={{ maxWidth: '200px', marginTop: '10px', borderRadius: '8px' }} />
+                  <button type="button" className="btn-remove-photo" onClick={clearFile}>
+                    Remove Photo
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button 
+              type="submit" 
+              className="btn-submit"
+              disabled={submitting}
+            >
+              {submitting ? 'Submitting...' : 'Submit Issue'}
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="my-issues-section">
+          {loadingIssues ? (
+            <div className="loading-state">Loading your issues...</div>
+          ) : myIssues.length === 0 ? (
+            <div className="empty-state">
+              <p>You haven't submitted any issues yet.</p>
+            </div>
+          ) : (
+            <div className="issues-list">
+              {myIssues.map(issue => (
+                <div key={issue.id} className="issue-card">
+                  <div className="issue-header">
+                    <span className="issue-type">{getIssueTypeLabel(issue.issueType)}</span>
+                    {getStatusBadge(issue.status)}
+                  </div>
+                  <h3 className="issue-subject">{issue.subject}</h3>
+                  <p className="issue-description">{issue.description}</p>
+                  {issue.photo && (
+                    <div className="issue-photo">
+                      <img 
+                        src={`http://localhost:5000${issue.photo}`} 
+                        alt="Issue attachment" 
+                        style={{ maxWidth: '150px', borderRadius: '8px' }}
+                      />
+                    </div>
+                  )}
+                  <div className="issue-meta">
+                    <span>Submitted: {new Date(issue.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  {issue.adminResponse && (
+                    <div className="admin-response">
+                      <strong>Admin Response:</strong>
+                      <p>{issue.adminResponse}</p>
+                      {issue.respondedAt && (
+                        <small>Responded on: {new Date(issue.respondedAt).toLocaleDateString()}</small>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -4425,37 +4712,7 @@ const Dashboard = () => {
         );
 
       case 'add-issue':
-        return (
-          <div className="add-issue-page">
-            <div className="page-header">
-              <h1>Raise an Issue</h1>
-              <p>Report any problems you're facing</p>
-            </div>
-            <div className="form-container">
-              <div className="form-group">
-                <label>Issue Type</label>
-                <select className="form-input">
-                  <option>Select issue type</option>
-                  <option>Payment Issue</option>
-                  <option>Driver/Rider Behavior</option>
-                  <option>Ride Cancellation</option>
-                  <option>Vehicle Condition</option>
-                  <option>Technical Problem</option>
-                  <option>Other</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Subject</label>
-                <input type="text" className="form-input" placeholder="Brief description" />
-              </div>
-              <div className="form-group">
-                <label>Description</label>
-                <textarea className="form-input" rows="6" placeholder="Describe your issue..."></textarea>
-              </div>
-              <button className="btn-submit">Submit Issue</button>
-            </div>
-          </div>
-        );
+        return <RaiseIssuePage />;
 
       case 'add-ride':
         return <AddRidePageComponent onRideAdded={fetchRides} onNavigate={setActivePage} />;

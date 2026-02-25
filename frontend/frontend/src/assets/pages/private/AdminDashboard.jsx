@@ -590,7 +590,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from 'react-router-dom';
-import { adminAPI, reportAPI } from '../../../services/api';
+import { adminAPI, reportAPI, issueAPI } from '../../../services/api';
 import '../../css/Dashboard.css';
 import '../../css/AdminDashboard.css';
 
@@ -643,6 +643,15 @@ const AdminDashboard = () => {
   const [rideStatusFilter, setRideStatusFilter] = useState('all');
   const [cancelReason, setCancelReason] = useState('');
 
+  // ✅ NEW: Issue Management state
+  const [issues, setIssues] = useState([]);
+  const [loadingIssues, setLoadingIssues] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [showIssueModal, setShowIssueModal] = useState(false);
+  const [issueResponse, setIssueResponse] = useState('');
+  const [issueNewStatus, setIssueNewStatus] = useState('');
+  const [openIssuesCount, setOpenIssuesCount] = useState(0);
+
   // ✅ FIX: Only fetch data after auth is loaded
   useEffect(() => {
     if (!authLoading && user) {
@@ -656,9 +665,13 @@ const AdminDashboard = () => {
         fetchUsers();
       } else if (activePage === 'rides') {
         fetchRides();
+      } else if (activePage === 'issues') {
+        fetchIssues();
       }
       // Always fetch pending reports count for badge
       fetchPendingReportsCount();
+      // Always fetch open issues count for badge
+      fetchOpenIssuesCount();
     }
   }, [activePage, authLoading, user]);
 
@@ -765,6 +778,136 @@ const AdminDashboard = () => {
         text: error.response?.data?.message || 'Failed to delete report'
       });
     }
+  };
+
+  // =====================================================
+  // ✅ ISSUE MANAGEMENT FUNCTIONS
+  // =====================================================
+
+  // Fetch all issues
+  const fetchIssues = async (status = null) => {
+    setLoadingIssues(true);
+    try {
+      const data = await issueAPI.getAllIssues(status);
+      setIssues(data.issues);
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+      setMessage({ type: 'error', text: 'Failed to load issues' });
+    } finally {
+      setLoadingIssues(false);
+    }
+  };
+
+  // Fetch open issues count
+  const fetchOpenIssuesCount = async () => {
+    try {
+      const data = await issueAPI.getOpenCount();
+      setOpenIssuesCount(data.count);
+    } catch (error) {
+      console.error('Error fetching open issues count:', error);
+    }
+  };
+
+  // Open issue modal
+  const openIssueModal = (issue) => {
+    setSelectedIssue(issue);
+    setIssueNewStatus(issue.status);
+    setIssueResponse(issue.adminResponse || '');
+    setShowIssueModal(true);
+  };
+
+  // Close issue modal
+  const closeIssueModal = () => {
+    setShowIssueModal(false);
+    setSelectedIssue(null);
+    setIssueNewStatus('');
+    setIssueResponse('');
+  };
+
+  // Handle respond to issue
+  const handleRespondToIssue = async () => {
+    if (!selectedIssue) return;
+
+    if (!issueResponse || issueResponse.trim().length < 10) {
+      setMessage({ type: 'error', text: 'Please provide a response (at least 10 characters)' });
+      return;
+    }
+
+    try {
+      await issueAPI.respondToIssue(selectedIssue.id, issueResponse, issueNewStatus);
+      setMessage({ type: 'success', text: 'Response sent successfully!' });
+      closeIssueModal();
+      fetchIssues();
+      fetchOpenIssuesCount();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error responding to issue:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to respond to issue'
+      });
+    }
+  };
+
+  // Handle update issue status
+  const handleUpdateIssueStatus = async (issueId, newStatus) => {
+    try {
+      await issueAPI.updateIssueStatus(issueId, newStatus);
+      setMessage({ type: 'success', text: `Issue status updated to ${newStatus}` });
+      fetchIssues();
+      fetchOpenIssuesCount();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error updating issue status:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to update issue status'
+      });
+    }
+  };
+
+  // Handle delete issue
+  const handleDeleteIssue = async (issueId) => {
+    if (!window.confirm('Are you sure you want to delete this issue?')) return;
+
+    try {
+      await issueAPI.deleteIssue(issueId);
+      setMessage({ type: 'success', text: 'Issue deleted successfully' });
+      fetchIssues();
+      fetchOpenIssuesCount();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error deleting issue:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete issue'
+      });
+    }
+  };
+
+  // Get issue type label
+  const getIssueTypeLabel = (issueType) => {
+    const labels = {
+      booking: '📅 Booking',
+      verification: '✓ Verification',
+      payment: '💳 Payment',
+      ride_experience: '🚗 Ride Experience',
+      technical: '🔧 Technical',
+      account: '👤 Account',
+      other: '📋 Other'
+    };
+    return labels[issueType] || issueType;
+  };
+
+  // Get issue status badge
+  const getIssueStatusBadge = (status) => {
+    const badges = {
+      open: <span className="badge badge-orange">⏳ Open</span>,
+      in_progress: <span className="badge badge-blue">🔍 In Progress</span>,
+      resolved: <span className="badge badge-green">✓ Resolved</span>,
+      closed: <span className="badge badge-gray">✗ Closed</span>
+    };
+    return badges[status] || status;
   };
 
   // =====================================================
@@ -990,8 +1133,8 @@ const AdminDashboard = () => {
     return badges[status] || <span className="badge">{status}</span>;
   };
 
-  // ✅ Get issue type label
-  const getIssueTypeLabel = (issueType) => {
+  // ✅ Get report issue type label (for reports against riders)
+  const getReportIssueTypeLabel = (issueType) => {
     const labels = {
       safety: '⚠️ Safety Concern',
       behavior: '😤 Inappropriate Behavior',
@@ -1485,6 +1628,12 @@ const AdminDashboard = () => {
           🚨 Reports {pendingReportsCount > 0 && <span className="badge-count">{pendingReportsCount}</span>}
         </button>
         <button 
+          className={`admin-tab ${activePage === 'issues' ? 'active' : ''}`}
+          onClick={() => setActivePage('issues')}
+        >
+          📝 Issues {openIssuesCount > 0 && <span className="badge-count">{openIssuesCount}</span>}
+        </button>
+        <button 
           className={`admin-tab ${activePage === 'users' ? 'active' : ''}`}
           onClick={() => setActivePage('users')}
         >
@@ -1591,7 +1740,7 @@ const AdminDashboard = () => {
                         </div>
                         
                         <div className="report-issue">
-                          <span className="issue-type">{getIssueTypeLabel(report.issueType)}</span>
+                          <span className="issue-type">{getReportIssueTypeLabel(report.issueType)}</span>
                           <p className="issue-remarks">{report.remarks}</p>
                         </div>
                         
@@ -1618,6 +1767,140 @@ const AdminDashboard = () => {
                         <button 
                           className="btn-delete-report"
                           onClick={() => handleDeleteReport(report.id)}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : activePage === 'issues' ? (
+            // =====================================================
+            // ✅ ISSUES MANAGEMENT SECTION
+            // =====================================================
+            <div className="issues-section">
+              <div className="section-header">
+                <h2>📝 User Issues</h2>
+                <p>Review and respond to issues raised by users</p>
+              </div>
+
+              {loadingIssues ? (
+                <div className="loading-state">Loading issues...</div>
+              ) : issues.length === 0 ? (
+                <div className="empty-state">
+                  <h3>No Issues</h3>
+                  <p>No issues have been raised yet.</p>
+                </div>
+              ) : (
+                <div className="issues-list">
+                  {issues.map(issue => (
+                    <div key={issue.id} className="issue-card-admin">
+                      <div className="issue-card-header">
+                        <div className="issue-info">
+                          <span className="issue-id">Issue #{issue.id}</span>
+                          <span className="issue-type-badge">{getIssueTypeLabel(issue.issueType)}</span>
+                          {getIssueStatusBadge(issue.status)}
+                        </div>
+                        <span className="issue-date">
+                          {new Date(issue.createdAt).toLocaleDateString('en-US', { 
+                            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                          })}
+                        </span>
+                      </div>
+                      
+                      <div className="issue-card-body">
+                        <div className="issue-user-info">
+                          <span className="user-label">Submitted by:</span>
+                          <div className="user-info-row">
+                            {issue.user?.profilePicture ? (
+                              <img 
+                                src={`${BASE_URL}${issue.user.profilePicture}`} 
+                                alt={issue.user.username}
+                                className="user-avatar-small"
+                              />
+                            ) : (
+                              <span className="user-avatar-placeholder-small">
+                                {issue.user?.username?.charAt(0).toUpperCase() || 'U'}
+                              </span>
+                            )}
+                            <div className="user-details">
+                              <span className="user-name">
+                                {issue.user?.username}
+                                {issue.user?.isVerifiedUser && <span className="badge-tick green" title="Verified">✓</span>}
+                                {issue.user?.isVerifiedRider && <span className="badge-tick blue" title="Rider">🚗</span>}
+                              </span>
+                              <span className="user-email">📧 {issue.user?.email || 'N/A'}</span>
+                              <span className="user-phone">📞 {issue.user?.phone || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="issue-content">
+                          <h4 className="issue-subject">{issue.subject}</h4>
+                          <p className="issue-description">{issue.description}</p>
+                          
+                          {issue.photo && (
+                            <div className="issue-photo">
+                              <img 
+                                src={`${BASE_URL}${issue.photo}`} 
+                                alt="Issue attachment"
+                                className="issue-photo-img"
+                                onClick={() => window.open(`${BASE_URL}${issue.photo}`, '_blank')}
+                                style={{ cursor: 'pointer', maxWidth: '200px', borderRadius: '8px' }}
+                              />
+                              <span className="photo-hint">Click to view full size</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {issue.adminResponse && (
+                          <div className="admin-response">
+                            <span className="response-label">Admin Response:</span>
+                            <p className="response-text">{issue.adminResponse}</p>
+                            {issue.assignedAdmin && (
+                              <span className="response-by">
+                                By: {issue.assignedAdmin.username}
+                              </span>
+                            )}
+                            {issue.respondedAt && (
+                              <span className="response-date">
+                                on {new Date(issue.respondedAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="issue-card-footer">
+                        <button 
+                          className="btn-respond"
+                          onClick={() => openIssueModal(issue)}
+                        >
+                          {issue.adminResponse ? '✏️ Update Response' : '💬 Respond'}
+                        </button>
+                        <div className="status-actions">
+                          {issue.status !== 'resolved' && (
+                            <button 
+                              className="btn-resolve"
+                              onClick={() => handleUpdateIssueStatus(issue.id, 'resolved')}
+                            >
+                              ✓ Mark Resolved
+                            </button>
+                          )}
+                          {issue.status !== 'closed' && (
+                            <button 
+                              className="btn-close-issue"
+                              onClick={() => handleUpdateIssueStatus(issue.id, 'closed')}
+                            >
+                              ✕ Close
+                            </button>
+                          )}
+                        </div>
+                        <button 
+                          className="btn-delete-issue"
+                          onClick={() => handleDeleteIssue(issue.id)}
                         >
                           🗑️ Delete
                         </button>
@@ -2018,7 +2301,7 @@ const AdminDashboard = () => {
               <div className="report-summary">
                 <div className="summary-row">
                   <span className="label">Issue Type:</span>
-                  <span className="value">{getIssueTypeLabel(selectedReport.issueType)}</span>
+                  <span className="value">{getReportIssueTypeLabel(selectedReport.issueType)}</span>
                 </div>
                 <div className="summary-row">
                   <span className="label">Reporter (Passenger):</span>
@@ -2074,6 +2357,95 @@ const AdminDashboard = () => {
                 onClick={handleUpdateReportStatus}
               >
                 ✓ Update Status
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ✅ Issue Response Modal */}
+      {showIssueModal && selectedIssue && (
+        <>
+          <div className="modal-overlay" onClick={closeIssueModal}></div>
+          <div className="modal issue-response-modal">
+            <div className="modal-header">
+              <h2>💬 Respond to Issue #{selectedIssue.id}</h2>
+              <button className="modal-close" onClick={closeIssueModal}>×</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="issue-summary">
+                <div className="summary-row">
+                  <span className="label">Issue Type:</span>
+                  <span className="value">{getIssueTypeLabel(selectedIssue.issueType)}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="label">User:</span>
+                  <span className="value">
+                    {selectedIssue.user?.username} ({selectedIssue.user?.email})
+                    <br />📞 {selectedIssue.user?.phone || 'N/A'}
+                  </span>
+                </div>
+                <div className="summary-row">
+                  <span className="label">Subject:</span>
+                  <span className="value">{selectedIssue.subject}</span>
+                </div>
+              </div>
+
+              <div className="issue-full-description">
+                <label>User's Description:</label>
+                <div className="description-box">{selectedIssue.description}</div>
+              </div>
+
+              {selectedIssue.photo && (
+                <div className="issue-attached-photo">
+                  <label>Attached Photo:</label>
+                  <img 
+                    src={`${BASE_URL}${selectedIssue.photo}`} 
+                    alt="Issue attachment"
+                    style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', marginTop: '8px' }}
+                    onClick={() => window.open(`${BASE_URL}${selectedIssue.photo}`, '_blank')}
+                  />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>Update Status:</label>
+                <select 
+                  className="form-input"
+                  value={issueNewStatus}
+                  onChange={(e) => setIssueNewStatus(e.target.value)}
+                >
+                  <option value="open">⏳ Open</option>
+                  <option value="in_progress">🔍 In Progress</option>
+                  <option value="resolved">✓ Resolved</option>
+                  <option value="closed">✕ Closed</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Your Response: * (min 10 characters)</label>
+                <textarea
+                  className="form-input"
+                  rows="4"
+                  value={issueResponse}
+                  onChange={(e) => setIssueResponse(e.target.value)}
+                  placeholder="Enter your response to the user..."
+                />
+                <small className="form-help">{issueResponse.length} characters</small>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeIssueModal}>
+                Cancel
+              </button>
+              <button 
+                className="btn-approve"
+                onClick={handleRespondToIssue}
+                disabled={issueResponse.length < 10}
+              >
+                📤 Send Response
               </button>
             </div>
           </div>
