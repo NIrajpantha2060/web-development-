@@ -136,6 +136,48 @@
 
 ---
 
+### 7. **ISSUE**
+**Table:** `issues`
+
+| Field | Type | Responsibility |
+|-------|------|----------------|
+| `id` | INTEGER (PK) | Unique identifier |
+| `userId` | INTEGER (FK) | User who raised the issue |
+| `issueType` | STRING(50) | `'booking'`, `'verification'`, `'payment'`, `'ride_experience'`, `'technical'`, `'account'`, `'other'` |
+| `subject` | STRING(100) | Brief subject/title (10-100 chars) |
+| `description` | TEXT | Detailed description |
+| `photo` | STRING(255) | Optional screenshot |
+| `status` | STRING(20) | `'open'`, `'in_progress'`, `'resolved'`, `'closed'` |
+| `assignedTo` | INTEGER (FK) | Admin assigned to handle issue |
+| `adminResponse` | TEXT | Admin response |
+| `respondedAt` | DATE | When admin responded |
+| `resolvedAt` | DATE | When issue was resolved |
+
+**Responsibilities:** Track user support issues, admin assignment and resolution workflow
+
+---
+
+### 8. **REPORT**
+**Table:** `reports`
+
+| Field | Type | Responsibility |
+|-------|------|----------------|
+| `id` | INTEGER (PK) | Unique identifier |
+| `bookingId` | INTEGER (FK) | Referenced booking |
+| `rideId` | INTEGER (FK) | Referenced ride |
+| `reporterId` | INTEGER (FK) | User who is reporting |
+| `reportedRiderId` | INTEGER (FK) | Rider being reported |
+| `issueType` | STRING(50) | `'safety'`, `'behavior'`, `'vehicle_condition'`, `'route_deviation'`, `'overcharging'`, `'late_arrival'`, `'other'` |
+| `remarks` | TEXT | Detailed remarks from user |
+| `status` | STRING(20) | `'pending'`, `'under_review'`, `'resolved'`, `'dismissed'` |
+| `reviewedBy` | INTEGER (FK) | Admin who reviewed |
+| `adminRemarks` | TEXT | Admin notes/action taken |
+| `reviewedAt` | DATE | When report was reviewed |
+
+**Responsibilities:** Handle passenger complaints about riders, admin review workflow
+
+---
+
 ## 🔗 RELATIONSHIP SUMMARY
 
 | Relationship | Type | Description |
@@ -146,72 +188,126 @@
 | User → RideBooking | **1:M** | One user can make many bookings |
 | User → Verification | **1:M** | User can submit multiple verification requests |
 | User → Notification | **1:M** | User can receive many notifications |
+| User → Issue | **1:M** | User can raise many issues |
+| User → Issue (assignedTo) | **1:M** | Admin can handle many issues |
+| RideBooking → Report | **1:M** | One booking can have many reports |
+| Ride → Report | **1:M** | One ride can have many reports |
+| User → Report (reporter) | **1:M** | User can make many reports |
+| User → Report (reportedRider) | **1:M** | Rider can receive many reports |
 
 ---
 
-## 📊 ER DIAGRAM
+## 📊 COMPLETE ER DIAGRAM
 
 ```
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│     USER        │       │    VEHICLE      │       │     RIDE        │
-├─────────────────┤       ├─────────────────┤       ├─────────────────┤
-│ id (PK)         │◄──┐   │ id (PK)         │       │ id (PK)         │
-│ username        │   │   │ vehicleNumber   │       │ from            │
-│ phone           │   │   │ vehicleType     │       │ to              │
-│ email           │   │   │ vehiclePhoto   │       │ date            │
-│ password        │   │   │ vehicleBrand   │       │ time            │
-│ role            │   │   │ vehicleModel   │       │ pickupLocation  │
-│ profilePicture  │   │   │ userId (FK) ───┼───────┤ vehicleNumber   │
-│ isVerifiedUser  │   │   └────────────────┘       │ vehiclePhoto    │
-│ isVerifiedRider │   │         │                  │ vehicleType     │
-│ mpin            │   │         │ 1:1              │ description     │
-│ paymentMethod   │   │         │                  │ price           │
-│ cardLastFour    │   │         │                  │ availableSeats  │
-│ cardHolderName  │   │         │                  │ status          │
-│ cardExpiry      │   │         │                  │ bookedSeats     │
-│ cardBrand       │   │         │                  │ userId (FK) ───►│
-└────────┬────────┘   │         │                  └────────┬────────┘
-         │            │         │                           │
-         │            │         │                           │
-         │            │         │                           │
-         │      ┌─────┴─────────┴───────────────────────────┘
-         │      │         1:M (One User → Many Rides)
-         │      │      
-         │      │
-         │      │ M:1 (Many Rides → 1 User as Rider)
-         │      │
-         │      ▼
-         │    ┌───────────────────┐       ┌─────────────────┐
-         │    │   RIDEBOKING     │       │  VERIFICATION  │
-         │    ├───────────────────┤       ├─────────────────┤
-         │    │ id (PK)          │       │ id (PK)         │
-         ├───►│ rideId (FK) ─────┼──────►│ userId (FK) ───►│
-         │    │ passengerId(FK) │       │ citizenshipFront│
-         │    │ seatsBooked     │       │ citizenshipBack  │
-         │    │ totalAmount     │       │ citizenshipNumber│
-         │    │ paymentMethod   │       │ drivingLicenseFr │
-         │    │ paymentStatus   │       │ drivingLicenseBk │
-         │    │ transactionId   │       │ drivingLicenseNo │
-         │    │ bookingStatus   │       │ verificationType │
-         │    │ riderRating     │       │ status           │
-         │    │ riderReview     │       │ adminRemarks     │
-         │    │ ratedAt         │       │ submittedAt      │
-         │    └───────────────────┘       │ reviewedAt       │
-         │                                │ reviewedBy       │
-         │      M:1 (Many Bookings → 1 Ride) └─────────────────┘
-         │      M:1 (Many Bookings → 1 Passenger)
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              LIFT NEPAL - ER DIAGRAM                             │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+                                    ┌──────────────┐
+                                    │     USER     │
+                                    ├──────────────┤
+                                    │ id (PK)      │
+                                    │ username     │
+                                    │ phone        │
+                                    │ email        │
+                                    │ password     │
+                                    │ role         │
+                                    │ profilePictur│
+                                    │ isVerifiedUsr│
+                                    │ isVerifiedRidr│
+                                    │ mpin         │
+                                    │ hasMpinSetup │
+                                    │ paymentMethod│
+                                    │ cardLastFour │
+                                    │ cardHolderNam│
+                                    │ cardExpiry   │
+                                    │ cardBrand    │
+                                    └──────┬───────┘
+                                           │
+           ┌───────────┬───────────────────┼───────────────────┬───────────┐
+           │           │                   │                   │           │
+           ▼           ▼                   ▼                   ▼           ▼
+    ┌────────────┐ ┌──────────┐    ┌─────────────┐    ┌──────────────┐ ┌───────────┐
+    │  VEHICLE   │ │   RIDE   │    │ VERIFICATION│    │  NOTIFICATION│ │  ISSUE   │
+    ├────────────┤ ├──────────┤    ├─────────────┤    ├──────────────┤ ├───────────┤
+    │ id (PK)    │ │ id (PK)  │    │ id (PK)     │    │ id (PK)      │ │ id (PK)   │
+    │vehicleNumbr│ │ from     │    │ userId (FK)│    │ userId (FK)  │ │ userId(FK)│
+    │vehicleType│ │ to       │    │citizenshipFr│   │ type         │ │ issueType │
+    │vehiclePhoto││ date     │    │citizenshipBk│   │ title        │ │ subject   │
+    │vehicleBrand││ time     │    │citizenshipNo│   │ message      │ │ description│
+    │vehicleModel││pickupLoc │    │drivingLicFr │   │ relatedId    │ │ photo     │
+    │userId(FK)  ││vehicleNum│    │drivingLicBk │   │ isRead       │ │ status    │
+    └────────────┘ │vehicleTp │    │drivingLicNo │   │ readAt       │ │ assignedTo│
+         │         │description│   │licenseExpiry│   └──────────────┘ │adminResponse│
+         │1:1      │ price     │    │verifyType   │         │         │ respondedAt│
+         │         │availSeats │    │ status      │         │1:M      │ resolvedAt │
+         │         │ status    │    │adminRemarks │         │         └───────────┘
+         │         │bookedSeats│    │ submittedAt │         │
+         │         │userId(FK) │    │ reviewedAt  │         │           M:1
+         │         └─────┬─────┘    │ reviewedBy  │         │ (Many Issues → 1 User)
+         │               │          └─────────────┘         │ (Many Issues → 1 Admin)
+         │               │                  │                │
+         │               │ M:1             │                │
+         │               ▼                  │                │
+         │        ┌──────────────┐          │                │
+         │        │ RIDEBOKING  │          │                │
+         │        ├─────────────┤          │                │
+         │        │ id (PK)     │◄─────────┘                │
+         │        │ rideId(FK)──┼────────────────────────────┘
+         │        │ passengerId │
+         │        │ seatsBooked │
+         │        │totalAmount  │
+         │        │paymentMethod│
+         │        │paymentStatus│
+         │        │transactionId│
+         │        │bookingStatus│
+         │        │ riderRating │
+         │        │ riderReview │
+         │        │ ratedAt     │
+         │        └──────┬──────┘
+         │               │
+         │         M:1   │  M:1
+         │    (Many      │  (Many
+         │  Bookings  →  │  Bookings →
+         │   1 Ride)     │  1 Passenger)
+         │               │
+         │               ▼
+         │        ┌──────────────┐
+         │        │    REPORT    │
+         │        ├──────────────┤
+         │        │ id (PK)      │
+         │        │ bookingId(FK)│
+         │        │ rideId(FK)   │
+         │        │ reporterId(FK)│
+         │        │reportedRider │
+         │        │ issueType    │
+         │        │ remarks      │
+         │        │ status       │
+         │        │ reviewedBy   │
+         │        │ adminRemarks  │
+         │        │ reviewedAt   │
+         │        └──────────────┘
          │
+         │ M:1 (One User → Many Notifications)
          │
          ▼
-┌─────────────────────┐
-│    NOTIFICATION     │
-├─────────────────────┤
-│ id (PK)             │
-│ userId (FK) ────────┼───────► 1:M (One User → Many Notifications)
-│ type                │
-│ title               │
-│ message             │
-│ relatedId           │
-│ isRead              │
-│ readAt              │
-└─────────────────────┘
+```
+
+---
+
+## 📋 DATABASE SCHEMA SUMMARY
+
+| Entity | Table Name | Key Relationships |
+|--------|------------|-------------------|
+| USER | users | Central entity - links to all other entities |
+| VEHICLE | vehicles | 1:1 with User |
+| RIDE | rides | 1:M with User, 1:M with RideBooking |
+| RIDEBOOKING | ride_bookings | M:1 with Ride, M:1 with User, 1:M with Report |
+| VERIFICATION | verifications | M:1 with User |
+| NOTIFICATION | notifications | M:1 with User |
+| ISSUE | issues | M:1 with User (creator & assignee) |
+| REPORT | reports | M:1 with RideBooking, Ride, User (reporter & reported) |
+
+**Total Entities: 8**
+**Total Tables: 8**

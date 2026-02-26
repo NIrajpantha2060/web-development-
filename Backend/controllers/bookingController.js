@@ -635,11 +635,11 @@ const getRideBookings = async (req, res) => {
 // ✅ NEW: GET MY RIDE HISTORY (completed/past bookings for user mode)
 const getMyRideHistory = async (req, res) => {
   try {
+    // Use local date to avoid timezone issues
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    // Get bookings where ride date has passed OR booking is completed/cancelled
+    // Get bookings where ride date has passed (including today) OR booking is completed/cancelled
     const bookings = await RideBooking.findAll({
       where: { 
         passengerId: req.user.id 
@@ -650,8 +650,8 @@ const getMyRideHistory = async (req, res) => {
           as: 'ride',
           where: {
             [Op.or]: [
-              { date: { [Op.lt]: todayStr } }, // Past rides
-              { status: 'completed' }
+              { date: { [Op.lte]: todayStr } }, // Past rides including today
+              { status: { [Op.in]: ['completed', 'cancelled'] } }
             ]
           },
           include: [
