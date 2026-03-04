@@ -18,7 +18,7 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
-// ============= USER ROUTES =============
+// USER ROUTES 
 
 // Submit a report against a rider
 router.post("/submit", authMiddleware, submitReport);

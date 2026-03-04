@@ -28,9 +28,9 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
-// =====================================================
+// 
 // VERIFICATION ROUTES
-// =====================================================
+// 
 
 // Get pending verifications
 router.get("/verifications/pending", authMiddleware, adminOnly, getPendingVerifications);

@@ -1223,6 +1223,27 @@ select.form-input {
     padding: 0.75rem 1.5rem;
     font-size: 1rem;
   }
+
+  /* ✅ Tablet notification dropdown */
+  .notification-dropdown {
+    width: 340px;
+    right: 0;
+    max-height: 450px;
+  }
+
+  .notification-list {
+    max-height: 380px;
+  }
+
+  .notification-item {
+    padding: 0.9rem 1.1rem;
+  }
+
+  .notification-icon-type {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
 }
 
 /* Mobile Devices */
@@ -1263,9 +1284,17 @@ select.form-input {
 
   /* ✅ Mobile notification dropdown */
   .notification-dropdown {
-    width: calc(100vw - 2rem);
-    right: -1rem;
-    max-height: 60vh;
+    position: fixed;
+    top: 70px;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    max-height: 70vh;
+    border-radius: 12px;
+  }
+
+  .notification-list {
+    max-height: calc(70vh - 60px);
   }
 
   .notification-dropdown-header {
@@ -1274,6 +1303,11 @@ select.form-input {
 
   .notification-dropdown-header h3 {
     font-size: 1rem;
+  }
+
+  .mark-all-read-btn {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.7rem;
   }
 
   .notification-item {
@@ -1389,6 +1423,80 @@ select.form-input {
   .notification-icon svg {
     width: 1.35rem;
     height: 1.35rem;
+  }
+
+  /* ✅ Small mobile notification dropdown */
+  .notification-dropdown {
+    position: fixed;
+    top: 60px;
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+    max-height: 75vh;
+    border-radius: 10px;
+  }
+
+  .notification-list {
+    max-height: calc(75vh - 55px);
+  }
+
+  .notification-dropdown-header {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .notification-dropdown-header h3 {
+    font-size: 0.95rem;
+  }
+
+  .mark-all-read-btn {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  .notification-item {
+    padding: 0.75rem 0.85rem;
+    gap: 0.7rem;
+  }
+
+  .notification-icon-type {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 0.9rem;
+  }
+
+  .notification-title {
+    font-size: 0.8rem;
+  }
+
+  .notification-message {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .notification-time {
+    font-size: 0.68rem;
+  }
+
+  .notification-badge {
+    width: 0.95rem;
+    height: 0.95rem;
+    font-size: 0.6rem;
+    top: 0.1rem;
+    right: 0.1rem;
+  }
+
+  .notification-empty {
+    padding: 2rem 1.5rem;
+  }
+
+  .notification-empty .empty-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .notification-empty p {
+    font-size: 0.85rem;
   }
 
   .dashboard-main-content {

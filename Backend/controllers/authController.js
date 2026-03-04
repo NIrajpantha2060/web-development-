@@ -119,7 +119,7 @@ const login = async (req, res) => {
         phone: user.phone,
         email: user.email,
         role: user.role,
-        profilePicture: user.profilePicture, // ✅ FIX: Include profile picture in login response
+        profilePicture: user.profilePicture, 
         isVerifiedUser: user.isVerifiedUser,
         isVerifiedRider: user.isVerifiedRider,
         createdAt: user.createdAt,
