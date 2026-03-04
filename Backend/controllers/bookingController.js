@@ -241,7 +241,7 @@ const getPaymentStatus = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
       attributes: ['id', 'hasMpinSetup', 'hasPaymentSetup', 'paymentMethod', 'phone', 
-                   'cardLastFour', 'cardHolderName', 'cardExpiry', 'cardBrand']
+                   'cardLastFour', 'cardHolderName', 'cardExpiry', 'cardBrand', 'isVerifiedUser']
     });
 
     res.status(200).json({
@@ -253,7 +253,9 @@ const getPaymentStatus = async (req, res) => {
       cardLastFour: user.cardLastFour,
       cardBrand: user.cardBrand,
       cardHolderName: user.cardHolderName,
-      cardExpiry: user.cardExpiry
+      cardExpiry: user.cardExpiry,
+      // ✅ Include verification status for early check
+      isVerifiedUser: user.isVerifiedUser
     });
   } catch (error) {
     console.error("Get payment status error:", error);
@@ -282,6 +284,14 @@ const applyForRide = async (req, res) => {
   try {
     // Get user with payment info
     const user = await User.findByPk(req.user.id);
+
+    // Check if user is verified
+    if (!user.isVerifiedUser) {
+      return res.status(403).json({ 
+        message: "You must be a verified user to book rides. Please complete your citizenship verification first.",
+        requiresVerification: true 
+      });
+    }
 
     // Check MPIN setup
     if (!user.hasMpinSetup) {
@@ -635,14 +645,18 @@ const getRideBookings = async (req, res) => {
 // ✅ NEW: GET MY RIDE HISTORY (completed/past bookings for user mode)
 const getMyRideHistory = async (req, res) => {
   try {
-    // Use local date to avoid timezone issues
+    // Use local date for comparison
+    // Rides appear in history the day AFTER the ride date
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    // Get bookings where ride date has passed (including today) OR booking is completed/cancelled
+    // Get bookings where:
+    // 1. Ride date is in the past (date < today) - rides appear the day AFTER the ride date
+    // 2. Ride status is completed/cancelled (regardless of date)
     const bookings = await RideBooking.findAll({
       where: { 
-        passengerId: req.user.id 
+        passengerId: req.user.id,
+        hiddenFromHistory: false // ✅ Exclude hidden bookings
       },
       include: [
         {
@@ -650,7 +664,7 @@ const getMyRideHistory = async (req, res) => {
           as: 'ride',
           where: {
             [Op.or]: [
-              { date: { [Op.lte]: todayStr } }, // Past rides including today
+              { date: { [Op.lt]: todayStr } }, // Past dates (before today) - shows the day after ride date
               { status: { [Op.in]: ['completed', 'cancelled'] } }
             ]
           },
@@ -848,6 +862,41 @@ const rateRider = async (req, res) => {
   }
 };
 
+// ✅ DELETE BOOKING FROM HISTORY (soft delete - hides from passenger's history view)
+const deleteBookingFromHistory = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find the booking
+    const booking = await RideBooking.findByPk(id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    // Check if the logged-in user is the passenger of this booking
+    if (booking.passengerId !== req.user.id) {
+      return res.status(403).json({ message: "You can only delete your own booking history" });
+    }
+
+    // Update hiddenFromHistory to true (soft delete)
+    await booking.update({ hiddenFromHistory: true });
+
+    console.log(`✅ Booking ${id} removed from history by user ${req.user.id}`);
+
+    res.status(200).json({
+      message: "Booking removed from history successfully",
+      bookingId: booking.id
+    });
+  } catch (error) {
+    console.error("Delete booking from history error:", error);
+    res.status(500).json({ 
+      message: "Server error while deleting booking from history",
+      error: error.message 
+    });
+  }
+};
+
 module.exports = { 
   setupMpin,
   verifyMpin,
@@ -859,5 +908,6 @@ module.exports = {
   cancelBooking,
   getRideBookings,
   getMyRideHistory,
-  rateRider
+  rateRider,
+  deleteBookingFromHistory
 };

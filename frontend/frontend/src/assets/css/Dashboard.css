@@ -1557,6 +1557,39 @@ html, body {
   color: #d97706;
 }
 
+/* ✅ Ride history actions container */
+.ride-history-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ✅ Delete history button */
+.delete-history-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #fee2e2;
+  border: none;
+  border-radius: 8px;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-history-btn:hover {
+  background: #fecaca;
+  color: #b91c1c;
+  transform: scale(1.05);
+}
+
+.delete-history-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .ride-history-details {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

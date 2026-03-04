@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { addRide, getMyRides, getMyRideHistory, getAllRides, deleteRide, checkActiveRide } = require("../controllers/Ridecontroller");
+const { addRide, getMyRides, getMyRideHistory, getAllRides, deleteRide, checkActiveRide, deleteRideFromHistory } = require("../controllers/Ridecontroller");
 const authMiddleware = require("../middleware/authMiddleware");
 const uploadVehicle = require("../middleware/Vehicleuploadmiddleware");
 
@@ -15,6 +15,9 @@ router.get("/my-rides", authMiddleware, getMyRides);
 
 // ✅ GET - Get my ride history (past/cancelled/completed rides)
 router.get("/my-history", authMiddleware, getMyRideHistory);
+
+// ✅ DELETE - Remove ride from history (soft delete)
+router.delete("/history/:id", authMiddleware, deleteRideFromHistory);
 
 // ✅ GET - Get all active rides (protected - for browsing)
 router.get("/", authMiddleware, getAllRides);

@@ -127,19 +127,24 @@ Thumbs.db
 # yarn.lock
 
 # =========================
-# Uploads
+# Uploads (ignore files but keep folder structure)
 # =========================
-Backend/uploads/
+Backend/uploads/**/*
+!Backend/uploads/**/
+!Backend/uploads/**/.gitkeep
 
 # =========================
 # Debug/One-time migration scripts
 # =========================
 Backend/check_db.js
+Backend/check_columns.js
 Backend/check_rating.js
 Backend/check_rides.js
+Backend/update_nulls.js
 Backend/migrate_card_fields.js
 Backend/run_migration.js
 Backend/run_issues_migration.js
+Backend/run_hidden_history_migration.js
 Backend/backfill_ratings.js
 Backend/run_suspension_migration.js
 Backend/migrate_rating_fields.js
@@ -156,5 +161,3 @@ TODO.md
 ENTITY_RELATIONSHIP.md
 *ENTITY_RELATIONSHIP*
 *entity*relation*
-
-frontend/Test_Documentation.md

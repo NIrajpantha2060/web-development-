@@ -16,7 +16,8 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
     hasPaymentSetup: false,
     cardLastFour: null,
     cardBrand: null,
-    cardHolderName: null
+    cardHolderName: null,
+    isVerifiedUser: false
   });
   
   // Debit Card form
@@ -127,6 +128,16 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
   // Step 1: Confirm booking - proceed to payment
   const handleConfirmBooking = async () => {
     setMessage({ type: '', text: '' });
+    
+    // ✅ Check verification status FIRST before allowing booking
+    if (!paymentStatus.isVerifiedUser) {
+      toast.warning('Please verify your citizenship to book rides');
+      setMessage({ 
+        type: 'error', 
+        text: 'You must complete citizenship verification before booking rides. Go to Dashboard → Verification to get verified.' 
+      });
+      return;
+    }
     
     // Check if payment is set up
     if (!paymentStatus.hasPaymentSetup) {
@@ -300,13 +311,25 @@ const ApplyRideModal = ({ isOpen, onClose, ride, onSuccess }) => {
       setCurrentStep('success');
       toast.success('Ride booked successfully! 🎉');
       
+      // Wait for parent to refresh data before proceeding
       if (onSuccess) {
-        onSuccess(response);
+        await onSuccess(response);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Booking failed. Please try again.');
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Booking failed. Please try again.' });
-      setCurrentStep('mpin-verify');
+      const errorMessage = error.response?.data?.message || 'Booking failed. Please try again.';
+      const requiresVerification = error.response?.data?.requiresVerification;
+      
+      toast.error(errorMessage);
+      setMessage({ type: 'error', text: errorMessage });
+      
+      // ✅ Handle verification error by going back to confirm step
+      if (requiresVerification) {
+        setCurrentStep('confirm');
+        // Update local state to reflect user is not verified
+        setPaymentStatus(prev => ({ ...prev, isVerifiedUser: false }));
+      } else {
+        setCurrentStep('mpin-verify');
+      }
     } finally {
       setLoading(false);
     }

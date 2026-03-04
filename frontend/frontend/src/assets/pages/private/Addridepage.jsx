@@ -144,7 +144,9 @@ const AddRidePage = ({ onRideAdded, onNavigate }) => {
       newErrors.description = 'Description must be 400 characters or less';
     }
 
-    if (formData.price && (isNaN(formData.price) || parseFloat(formData.price) < 0)) {
+    if (!formData.price || formData.price.toString().trim() === '') {
+      newErrors.price = 'Price per seat is required';
+    } else if (isNaN(formData.price) || parseFloat(formData.price) <= 0) {
       newErrors.price = 'Price must be a valid positive number';
     }
 

@@ -85,6 +85,12 @@ const RideBooking = sequelize.define("RideBooking", {
     type: DataTypes.DATE,
     allowNull: true,
     comment: 'When the rating was submitted'
+  },
+  hiddenFromHistory: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'When true, this booking is hidden from passenger history view'
   }
 }, {
   timestamps: true,

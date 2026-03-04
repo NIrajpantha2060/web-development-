@@ -1,7 +1,7 @@
 
 
 import { useState, useEffect, useRef } from 'react';
-import { FiEye, FiEyeOff, FiPhone } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiPhone, FiTrash2 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import RideCard from '../../components/RideCard';
 import RideDetailsModal from '../../components/RideDetailsModal';
@@ -1865,7 +1865,9 @@ const AddRidePage = ({ onRideAdded }) => {
       newErrors.description = 'Description must be 400 characters or less';
     }
 
-    if (formData.price && (isNaN(formData.price) || parseFloat(formData.price) < 0)) {
+    if (!formData.price || formData.price.toString().trim() === '') {
+      newErrors.price = 'Price per seat is required';
+    } else if (isNaN(formData.price) || parseFloat(formData.price) <= 0) {
       newErrors.price = 'Price must be a valid positive number';
     }
 
@@ -2378,6 +2380,22 @@ const Dashboard = () => {
     }
   };
 
+  // ✅ Handle delete ride from history (soft delete)
+  const handleDeleteFromRideHistory = async (rideId) => {
+    if (!window.confirm('Are you sure you want to remove this ride from your history?')) {
+      return;
+    }
+    try {
+      await rideAPI.deleteRideFromHistory(rideId);
+      console.log('✅ Ride removed from history');
+      toast.success('Ride removed from history');
+      setRideHistory(prev => prev.filter(ride => ride.id !== rideId));
+    } catch (error) {
+      console.error('Error removing ride from history:', error);
+      toast.error(error.response?.data?.message || 'Failed to remove ride from history');
+    }
+  };
+
   // ✅ Handle view ride details
   const handleViewRideDetails = (rideData) => {
     // Check if user has booked this ride
@@ -2402,20 +2420,21 @@ const Dashboard = () => {
     setShowApplyRideModal(true);
   };
 
-  const closeApplyRideModal = (success = false) => {
+  const closeApplyRideModal = () => {
     setShowApplyRideModal(false);
     setRideToBook(null);
-    
-    // Refresh rides if booking was successful
-    if (success) {
-      fetchRides();
-    }
   };
 
-  const handleBookingSuccess = (response) => {
+  const handleBookingSuccess = async (response) => {
     console.log('✅ Booking successful:', response);
-    // Refresh bookings when a new booking is made
-    fetchMyBookings();
+    // Refresh both bookings and rides immediately when a new booking is made
+    // Using Promise.all for concurrent fetch - faster and ensures both complete
+    try {
+      await Promise.all([fetchMyBookings(), fetchRides()]);
+      console.log('✅ Data refreshed after booking');
+    } catch (error) {
+      console.error('Error refreshing data after booking:', error);
+    }
   };
 
   // ✅ Fetch user's bookings
@@ -2436,9 +2455,8 @@ const Dashboard = () => {
       await bookingAPI.cancelBooking(bookingId);
       console.log('✅ Booking cancelled successfully');
       toast.success('Booking cancelled successfully!');
-      // Refresh bookings and rides
-      fetchMyBookings();
-      fetchRides();
+      // Refresh bookings and rides concurrently
+      await Promise.all([fetchMyBookings(), fetchRides()]);
       closeRideDetailsModal();
     } catch (error) {
       console.error('Error cancelling booking:', error);
@@ -2916,10 +2934,19 @@ const Dashboard = () => {
                         <span className="ride-arrow">→</span>
                         <span className="ride-to">{ride.to}</span>
                       </div>
-                      <span className={`ride-status-badge ${ride.status}`}>
-                        {ride.status === 'cancelled' ? 'Cancelled' : 
-                         ride.status === 'completed' ? 'Completed' : 'Expired'}
-                      </span>
+                      <div className="ride-history-actions">
+                        <span className={`ride-status-badge ${ride.status}`}>
+                          {ride.status === 'cancelled' ? 'Cancelled' : 
+                           ride.status === 'completed' ? 'Completed' : 'Expired'}
+                        </span>
+                        <button 
+                          className="delete-history-btn"
+                          onClick={() => handleDeleteFromRideHistory(ride.id)}
+                          title="Remove from history"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="ride-history-details">

@@ -165,7 +165,7 @@ const ResetPassword = () => {
                     value={formData.newPassword}
                     onChange={handleChange}
                     className={`form-input ${errors.newPassword ? 'input-error' : ''}`}
-                    placeholder="Enter new password (min 6 characters)"
+                    placeholder="Enter new password (min 8 characters)"
                     disabled={loading || successMessage}
                   />
                   <button

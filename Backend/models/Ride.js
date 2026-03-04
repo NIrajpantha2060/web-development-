@@ -83,6 +83,12 @@ const Ride = sequelize.define("Ride", {
     },
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
+  },
+  hiddenFromHistory: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'When true, this ride is hidden from rider history view'
   }
 }, {
   timestamps: true,
