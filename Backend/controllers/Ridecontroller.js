@@ -224,6 +224,11 @@ const addRide = async (req, res) => {
 // ✅ GET MY ACTIVE RIDES (only upcoming/active rides - date >= today)
 const getMyRides = async (req, res) => {
   try {
+    // Set no-cache headers to prevent browser caching
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     // Get today's date at midnight
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -296,6 +301,11 @@ const getMyRides = async (req, res) => {
 // ✅ GET ALL ACTIVE RIDES (for users to browse - only upcoming rides)
 const getAllRides = async (req, res) => {
   try {
+    // Set no-cache headers to prevent browser caching
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     const { vehicleType, from, to, date } = req.query;
 
     // Get today's date at midnight

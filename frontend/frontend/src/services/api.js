@@ -429,11 +429,21 @@ export const rideAPI = {
   },
 
   // Get my active/upcoming rides (date >= today)
-  getMyRides: async () => {
+  getMyRides: async (options = {}) => {
     const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_BASE_URL}/rides/my-rides`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const headers = { Authorization: `Bearer ${token}` };
+    
+    // Add cache-busting headers when forceRefresh is true
+    if (options.forceRefresh) {
+      headers['Cache-Control'] = 'no-cache';
+      headers['Pragma'] = 'no-cache';
+    }
+    
+    const url = options.forceRefresh 
+      ? `${API_BASE_URL}/rides/my-rides?_t=${Date.now()}`
+      : `${API_BASE_URL}/rides/my-rides`;
+    
+    const response = await axios.get(url, { headers });
     return response.data;
   },
 
@@ -447,7 +457,7 @@ export const rideAPI = {
   },
 
   // Get all active rides (with optional filters)
-  getAllRides: async (filters = {}) => {
+  getAllRides: async (filters = {}, options = {}) => {
     const token = localStorage.getItem('token');
     const params = new URLSearchParams();
 
@@ -455,14 +465,25 @@ export const rideAPI = {
     if (filters.from) params.append('from', filters.from);
     if (filters.to) params.append('to', filters.to);
     if (filters.date) params.append('date', filters.date);
+    
+    // Add cache-busting timestamp when forceRefresh is true
+    if (options.forceRefresh) {
+      params.append('_t', Date.now());
+    }
 
     const url = params.toString()
       ? `${API_BASE_URL}/rides?${params.toString()}`
       : `${API_BASE_URL}/rides`;
 
-    const response = await axios.get(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const headers = { Authorization: `Bearer ${token}` };
+    
+    // Add cache-busting headers when forceRefresh is true
+    if (options.forceRefresh) {
+      headers['Cache-Control'] = 'no-cache';
+      headers['Pragma'] = 'no-cache';
+    }
+
+    const response = await axios.get(url, { headers });
     return response.data;
   },
 

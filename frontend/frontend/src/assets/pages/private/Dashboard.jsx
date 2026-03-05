@@ -2222,23 +2222,26 @@ const Dashboard = () => {
     phone: ''
   });
 
-  const fetchRides = async () => {
+  const fetchRides = async (forceRefresh = false, clearFilters = false) => {
     setLoadingRides(true);
     try {
       if (isRiderMode) {
-        const response = await rideAPI.getMyRides();
+        const response = await rideAPI.getMyRides({ forceRefresh });
         console.log('✅ My rides fetched:', response.count);
         const activeRides = (response.rides || []).filter(ride => ride.status !== 'cancelled');
         setRides(activeRides);
       } else {
+        // If clearFilters is true, don't apply any filters (used after booking)
         const filters = {};
-        if (vehicleFilter !== 'all') {
-          filters.vehicleType = vehicleFilter;
+        if (!clearFilters) {
+          if (vehicleFilter !== 'all') {
+            filters.vehicleType = vehicleFilter;
+          }
+          if (destinationSearch.trim()) {
+            filters.to = destinationSearch.trim();
+          }
         }
-        if (destinationSearch.trim()) {
-          filters.to = destinationSearch.trim();
-        }
-        const response = await rideAPI.getAllRides(filters);
+        const response = await rideAPI.getAllRides(filters, { forceRefresh });
         console.log('✅ All rides fetched:', response.count);
         setRides(response.rides || []);
       }
@@ -2429,8 +2432,17 @@ const Dashboard = () => {
     console.log('✅ Booking successful:', response);
     // Refresh both bookings and rides immediately when a new booking is made
     // Using Promise.all for concurrent fetch - faster and ensures both complete
+    // Pass forceRefresh=true to bypass browser cache and get fresh data
     try {
-      await Promise.all([fetchMyBookings(), fetchRides()]);
+      // Clear search filters to show all rides after booking
+      setDestinationSearch('');
+      setVehicleFilter('all');
+      
+      // Small delay to ensure database transaction is fully committed
+      await new Promise(resolve => setTimeout(resolve, 300));
+      console.log('🔄 Refreshing rides with forceRefresh=true, clearFilters=true...');
+      // Pass clearFilters=true to ignore current filter state and fetch all rides
+      await Promise.all([fetchMyBookings(), fetchRides(true, true)]);
       console.log('✅ Data refreshed after booking');
     } catch (error) {
       console.error('Error refreshing data after booking:', error);
@@ -2455,8 +2467,8 @@ const Dashboard = () => {
       await bookingAPI.cancelBooking(bookingId);
       console.log('✅ Booking cancelled successfully');
       toast.success('Booking cancelled successfully!');
-      // Refresh bookings and rides concurrently
-      await Promise.all([fetchMyBookings(), fetchRides()]);
+      // Refresh bookings and rides concurrently with forceRefresh and clearFilters to bypass cache
+      await Promise.all([fetchMyBookings(), fetchRides(true, true)]);
       closeRideDetailsModal();
     } catch (error) {
       console.error('Error cancelling booking:', error);
